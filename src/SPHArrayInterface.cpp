@@ -284,110 +284,111 @@ void SPHArrayInterface::initialize() {
  * @brief Initialize the pre-computed array of density values.
  */
 void SPHArrayInterface::gridding() {
-  double phi, r0, R_0, h, mu0;
-  int i, j, k, n, nr1, nr2;
-  double rl, mul, cphil;
+  double phi, r0, R_0, mu0;
+  int_fast32_t i, j, k;
 
   _time_log.start("Gridding");
 
-  h = 1.0;
-  n = 150;
-  nr1 = 50;
-  nr2 = 199;
-  rl = 0.1;
-  mul = 0.98;
-  cphil = 0.98;
+  const double h = 1.0;
+  const int_fast32_t n = 150;
+  const int_fast32_t nr1 = 50;
+  const int_fast32_t nr2 = 199;
+  const double rl = 0.1;
+  const double mul = 0.98;
+  const double cphil = 0.98;
 
   _density_values.resize(nr1 + nr2 + 2);
-  for (i = 0; i <= nr1 + nr2 + 1; i++) {
+  for (i = 0; i <= nr1 + nr2 + 1; ++i) {
     _density_values[i].resize(2 * n + 1);
-    for (j = 0; j <= 2 * n; j++) {
+    for (j = 0; j <= 2 * n; ++j) {
       _density_values[i][j].resize(2 * n + 1, 0.);
     }
   }
 
-  for (i = 0; i < nr1; i++) {
+  for (i = 0; i < nr1; ++i) {
     r0 = (rl / nr1) * (i + 1) * h;
-    for (j = 0; j < n; j++) {
+    for (j = 0; j < n; ++j) {
       mu0 = (mul / (n - 1)) * j;
-      R_0 = r0 * (sqrt(1.0 - mu0 * mu0)) / mu0;
-      for (k = 0; k < n; k++) {
-        phi = acos((cphil / (n - 1)) * k);
-        _density_values[i + 1][j][k] = full_integral(phi, r0, R_0, h);
+      R_0 = r0 * (std::sqrt(1.0 - mu0 * mu0)) / mu0;
+      for (k = 0; k < n; ++k) {
+        const double cosphi = (cphil / (n - 1)) * k;
+        phi = std::acos(cosphi);
+        _density_values[i + 1][j][k] = full_integral(phi, cosphi, r0, R_0, h);
       }
 
-      for (k = 1; k <= n; k++) {
-        phi = acos(cphil + ((1.0 - cphil) / n) * k);
-        _density_values[i + 1][j][n + k - 1] = full_integral(phi, r0, R_0, h);
+      for (k = 1; k <= n; ++k) {
+        const double cosphi = cphil + ((1.0 - cphil) / n) * k;
+        phi = std::acos(cosphi);
+        _density_values[i + 1][j][n + k - 1] =
+            full_integral(phi, cosphi, r0, R_0, h);
       }
     }
 
-    for (j = 1; j <= n; j++) {
+    for (j = 1; j <= n; ++j) {
       mu0 = mul + ((1.0 - mul) / n) * j;
-      R_0 = r0 * (sqrt(1.0 - mu0 * mu0)) / mu0;
-      for (k = 0; k < n; k++) {
-        phi = acos((cphil / (n - 1)) * k);
-        _density_values[i + 1][n + j - 1][k] = full_integral(phi, r0, R_0, h);
+      R_0 = r0 * (std::sqrt(1.0 - mu0 * mu0)) / mu0;
+      for (k = 0; k < n; ++k) {
+        const double cosphi = (cphil / (n - 1)) * k;
+        phi = std::acos(cosphi);
+        _density_values[i + 1][n + j - 1][k] =
+            full_integral(phi, cosphi, r0, R_0, h);
       }
 
-      for (k = 1; k <= n; k++) {
-        phi = acos(cphil + ((1.0 - cphil) / n) * k);
+      for (k = 1; k <= n; ++k) {
+        const double cosphi = cphil + ((1.0 - cphil) / n) * k;
+        phi = std::acos(cosphi);
         _density_values[i + 1][n + j - 1][n + k - 1] =
-            full_integral(phi, r0, R_0, h);
+            full_integral(phi, cosphi, r0, R_0, h);
       }
     }
   }
 
-  for (i = 1; i <= nr2; i++) {
+  for (i = 1; i <= nr2; ++i) {
     r0 = rl + ((2.0 - rl) / nr2) * i * h;
-    for (j = 0; j < n; j++) {
+    for (j = 0; j < n; ++j) {
       mu0 = (mul / (n - 1)) * j;
-      R_0 = r0 * (sqrt(1.0 - mu0 * mu0)) / mu0;
+      R_0 = r0 * (std::sqrt(1.0 - mu0 * mu0)) / mu0;
 
-      for (k = 0; k < n; k++) {
-        phi = acos((cphil / (n - 1)) * k);
-        _density_values[nr1 + i][j][k] = full_integral(phi, r0, R_0, h);
+      for (k = 0; k < n; ++k) {
+        const double cosphi = (cphil / (n - 1)) * k;
+        phi = std::acos(cosphi);
+        _density_values[nr1 + i][j][k] = full_integral(phi, cosphi, r0, R_0, h);
       }
 
-      for (k = 1; k <= n; k++) {
-        phi = acos(cphil + ((1.0 - cphil) / n) * k);
-        _density_values[nr1 + i][j][n + k - 1] = full_integral(phi, r0, R_0, h);
+      for (k = 1; k <= n; ++k) {
+        const double cosphi = cphil + ((1.0 - cphil) / n) * k;
+        phi = std::acos(cosphi);
+        _density_values[nr1 + i][j][n + k - 1] =
+            full_integral(phi, cosphi, r0, R_0, h);
       }
     }
 
-    for (j = 1; j <= n; j++) {
+    for (j = 1; j <= n; ++j) {
       mu0 = mul + ((1.0 - mul) / n) * j;
-      R_0 = r0 * (sqrt(1.0 - mu0 * mu0)) / mu0;
+      R_0 = r0 * (std::sqrt(1.0 - mu0 * mu0)) / mu0;
 
-      for (k = 0; k < n; k++) {
-        phi = acos((cphil / (n - 1)) * k);
-        _density_values[nr1 + i][n + j - 1][k] = full_integral(phi, r0, R_0, h);
+      for (k = 0; k < n; ++k) {
+        const double cosphi = (cphil / (n - 1)) * k;
+        phi = std::acos(cosphi);
+        _density_values[nr1 + i][n + j - 1][k] =
+            full_integral(phi, cosphi, r0, R_0, h);
       }
 
-      for (k = 1; k <= n; k++) {
-        phi = acos(cphil + ((1.0 - cphil) / n) * k);
+      for (k = 1; k <= n; ++k) {
+        const double cosphi = cphil + ((1.0 - cphil) / n) * k;
+        phi = std::acos(cosphi);
         _density_values[nr1 + i][n + j - 1][n + k - 1] =
-            full_integral(phi, r0, R_0, h);
+            full_integral(phi, cosphi, r0, R_0, h);
       }
     }
   }
 
   i = nr1 + nr2;
-  for (j = 0; j < 2 * n; j++) {
-    for (k = 0; k < 2 * n; k++) {
+  for (j = 0; j < 2 * n; ++j) {
+    for (k = 0; k < 2 * n; ++k) {
       _density_values[i + 1][j][k] = _density_values[i][j][k];
     }
   }
-
-  /*  for(i=0;i<10;i++) {
-    for(j=0;j<10;j++) {
-      for(k=0;k<10;k++) {
-        printf("%g, ",_density_values[i][j][k]);
-      }
-      printf("\n");
-    }
-    printf("\n");
-    }*/
 
   _time_log.end("Gridding");
 }
@@ -413,14 +414,14 @@ double SPHArrayInterface::gridded_integral(const double phi,
                                            const double h_old) const {
 
   double r0, R_0, cphi, mu0, h;
-  int i, j, k;
+  int_fast32_t i, j, k;
   double fx1, fx2, fx3, fx4, fy1, fy2, fz, frac;
-  const int nr01 = 50;
-  const int nr02 = 199;
-  const int nR_01 = 150;
-  const int nR_02 = 150;
-  const int nphi1 = 150;
-  const int nphi2 = 150;
+  const int_fast32_t nr01 = 50;
+  const int_fast32_t nr02 = 199;
+  const int_fast32_t nR_01 = 150;
+  const int_fast32_t nR_02 = 150;
+  const int_fast32_t nphi1 = 150;
+  const int_fast32_t nphi2 = 150;
   const double rl = 0.1;
   const double mul = 0.98;
   const double cphil = 0.98;
@@ -431,49 +432,49 @@ double SPHArrayInterface::gridded_integral(const double phi,
   R_0 = R_0_old * h_old_inverse;
   cphi = cosphi;
 
-  if (r0 < 0.0) {
-    printf("Error: r0 < 0: %g %g\n", r0, r0_old);
-    r0 = 0.0;
+  cmac_assert_message(r0 >= 0., "r0 < 0: %g %g", r0, r0_old);
+  cmac_assert_message(R_0 >= 0., "R_0 < 0: %g %g", R_0, R_0_old);
+
+  if (r0 == 0.0) {
+    return 0.0;
+  }
+  if (R_0 == 0.0) {
+    return 0.0;
+  }
+  if (phi == 0.0) {
+    return 0.0;
   }
 
-  if (R_0 < 0.0) {
-    printf("Error: R_0 < 0: %g %g\n", R_0, R_0_old);
-    R_0 = 0.0;
-  }
-
-  if (r0 == 0.0)
-    return 0.0;
-  if (R_0 == 0.0)
-    return 0.0;
-  if (phi == 0.0)
-    return 0.0;
-
-  mu0 = r0 / sqrt(r0 * r0 + R_0 * R_0);
+  mu0 = r0 / std::sqrt(r0 * r0 + R_0 * R_0);
 
   if (r0 > 2.0)
     r0 = 2.0;
 
   if (r0 < rl) {
-    i = int(r0 * nr01 / rl);
+    i = static_cast< int_fast32_t >(r0 * nr01 / rl);
   } else {
-    i = nr01 + int((r0 - rl) * nr02 / ((2.0 - rl) * h));
+    i = nr01 + static_cast< int_fast32_t >((r0 - rl) * nr02 / ((2.0 - rl) * h));
   }
 
   if (mu0 < mul) {
-    j = int(mu0 * (nR_01 - 1) / mul);
+    j = static_cast< int_fast32_t >(mu0 * (nR_01 - 1) / mul);
   } else {
-    j = nR_01 - 1 + int((mu0 - mul) * nR_02 / ((1.0 - mul)));
+    j = nR_01 - 1 +
+        static_cast< int_fast32_t >((mu0 - mul) * nR_02 / ((1.0 - mul)));
   }
 
   if (cphi < cphil) {
-    k = int(cphi * (nphi1 - 1) / cphil);
+    k = static_cast< int_fast32_t >(cphi * (nphi1 - 1) / cphil);
   } else {
-    k = nphi1 - 1 + int((cphi - cphil) * nphi2 / ((1.0 - cphil)));
+    k = nphi1 - 1 +
+        static_cast< int_fast32_t >((cphi - cphil) * nphi2 / ((1.0 - cphil)));
   }
 
   if (i < 0 || i > nr01 + nr02 || j < 0 || j > nR_01 + nR_02 - 1 || k < 0 ||
-      k > nphi1 + nphi2)
-    printf("i, j, k: %d %d %d \n", i, j, k);
+      k > nphi1 + nphi2) {
+    cmac_warning("i, j, k: %" PRIiFAST32 " %" PRIiFAST32 " %" PRIiFAST32 " \n",
+                 i, j, k);
+  }
 
   if (r0 < rl) {
     frac = (r0 * nr01 - rl * i * h) / (rl * h);
@@ -492,13 +493,6 @@ double SPHArrayInterface::gridded_integral(const double phi,
       (1. - frac) *
           SPHArrayInterface::get_gridded_density_value(i, j + 1, k + 1);
 
-  /*if(j < nR_0/2-1) {
-    frac = (mu0 - (1.0/(nR_0/2))*j)/(1.0/(nR_0/2));
-  } else {
-    frac = (mu0 - (nR_0/2-1)*(1.0/(nR_0/2)) -
-  (1.0/(nR_0/2)/(nR_0/2))*(j-(nR_0/2-1)))/(1.0/(nR_0/2)/(nR_0/2));
-    }*/
-
   if (mu0 < mul) {
     frac = (mu0 * (nR_01 - 1) - mul * j) / mul;
   } else {
@@ -507,13 +501,6 @@ double SPHArrayInterface::gridded_integral(const double phi,
   }
   fy1 = frac * fx2 + (1. - frac) * fx1;
   fy2 = frac * fx4 + (1. - frac) * fx3;
-
-  /*if(k < nphi/2-1) {
-    frac = (cphi - (1.0/(nphi/2))*k)/(1.0/(nphi/2));
-  } else {
-    frac = (cphi - (nphi/2-1)*(1.0/(nphi/2)) -
-  (1.0/(nphi/2)/(nphi/2))*(k-(nphi/2-1)))/(1.0/(nphi/2)/(nphi/2));
-    }*/
 
   if (cphi < cphil) {
     frac = (cphi * (nphi1 - 1) - cphil * k) / cphil;
@@ -535,6 +522,7 @@ double SPHArrayInterface::gridded_integral(const double phi,
  * a particle for a given vertex of a cell face.
  *
  * @param phi Azimuthal angle of the vertex.
+ * @param cosphi Cosine of the azimuthal angle.
  * @param r0 Distance from the particle to the face of the cell.
  * @param R_0 Distance from the orthogonal projection of the particle
  * onto the face of the cell to a side of the face (containing the vertex).
@@ -542,13 +530,14 @@ double SPHArrayInterface::gridded_integral(const double phi,
  * @return The integral of the kernel for the given vertex.
  */
 
-double SPHArrayInterface::full_integral(double phi, double r0, double R_0,
-                                        double h) {
+double SPHArrayInterface::full_integral(const double phi, const double cosphi,
+                                        const double r0, const double R_0,
+                                        const double h) {
 
   double B1, B2, B3, mu, a, logs, u;
   double full_int;
-  double a2, cosp, cosp2, r03, r0h2, r0h3, r0h_2, r0h_3, tanp;
-  double r2, R, linedist2, phi1, phi2, h2;
+  double a2, cosp, cosp2, tanp;
+  double r2, R, linedist2, phi1, phi2;
   double I0, I1, I_1, I_2, I_3, I_4, I_5;
   double D2, D3;
 
@@ -556,21 +545,27 @@ double SPHArrayInterface::full_integral(double phi, double r0, double R_0,
   B2 = 0.0;
   B3 = 0.0;
 
-  if (r0 == 0.0)
+  if (r0 == 0.0) {
     return 0.0;
-  if (R_0 == 0.0)
+  }
+  if (R_0 == 0.0) {
     return 0.0;
-  if (phi == 0.0)
+  }
+  if (phi == 0.0) {
     return 0.0;
+  }
 
   const double h_inv = 1. / h;
   const double r0_inv = 1. / r0;
-  h2 = h * h;
-  r03 = r0 * r0 * r0;
-  r0h2 = r0 * h_inv * r0 * h_inv;
-  r0h3 = r0h2 * r0 * h_inv;
-  r0h_2 = h * r0_inv * h * r0_inv;
-  r0h_3 = r0h_2 * h * r0_inv;
+  const double h2 = h * h;
+  const double r02 = r0 * r0;
+  const double R_02 = R_0 * R_0;
+  const double r03 = r02 * r0;
+  const double r0h = r0 * h_inv;
+  const double r0h2 = r0h * r0h;
+  const double r0h3 = r0h2 * r0h;
+  const double r0h_2 = h2 * r0_inv * r0_inv;
+  const double r0h_3 = r0h_2 * h * r0_inv;
 
   // Setting up the B1, B2, B3 constants of integration.
 
@@ -578,11 +573,10 @@ double SPHArrayInterface::full_integral(double phi, double r0, double R_0,
     B3 = 0.25 * h2 * h;
   } else if (r0 > h) {
     B3 = 0.25 * r03 *
-         (-4. / 3. + (r0 / h) - 0.3 * r0h2 + 1. / 30. * r0h3 -
-          1. / 15. * r0h_3 + 8. / 5. * r0h_2);
-    B2 =
-        0.25 * r03 *
-        (-4. / 3. + (r0 / h) - 0.3 * r0h2 + 1. / 30. * r0h3 - 1. / 15. * r0h_3);
+         (-4. / 3. + r0h - 0.3 * r0h2 + 1. / 30. * r0h3 - 1. / 15. * r0h_3 +
+          8. / 5. * r0h_2);
+    B2 = 0.25 * r03 *
+         (-4. / 3. + r0h - 0.3 * r0h2 + 1. / 30. * r0h3 - 1. / 15. * r0h_3);
   } else {
     B3 = 0.25 * r03 * (-2. / 3. + 0.3 * r0h2 - 0.1 * r0h3 + 7. / 5. * r0h_2);
     B2 = 0.25 * r03 * (-2. / 3. + 0.3 * r0h2 - 0.1 * r0h3 - 1. / 5. * r0h_2);
@@ -592,9 +586,9 @@ double SPHArrayInterface::full_integral(double phi, double r0, double R_0,
   a = R_0 * r0_inv;
   a2 = a * a;
 
-  linedist2 = r0 * r0 + R_0 * R_0;
-  R = R_0 / std::cos(phi);
-  r2 = r0 * r0 + R * R;
+  linedist2 = r02 + R_02;
+  R = R_0 / cosphi;
+  r2 = r02 + R * R;
 
   full_int = 0.0;
   D2 = 0.0;
@@ -602,82 +596,89 @@ double SPHArrayInterface::full_integral(double phi, double r0, double R_0,
 
   if (linedist2 <= h2) {
     ////// phi1 business /////
-    phi1 = acos(R_0 / sqrt(h * h - r0 * r0));
+    cosp = R_0 / std::sqrt(h2 - r02);
+    const double sinphi1 = std::sqrt((1. + cosp) * (1. - cosp));
+    phi1 = acos(cosp);
 
-    cosp = cos(phi1);
     cosp2 = cosp * cosp;
-    mu = cosp / a / sqrt(1. + cosp2 / a2);
+    mu = cosp / std::sqrt(a2 + cosp2);
 
-    tanp = tan(phi1);
+    tanp = sinphi1 / cosp;
 
     I0 = phi1;
     I_2 = phi1 + a2 * tanp;
     I_4 = phi1 + 2 * a2 * tanp + 1. / 3. * a2 * a2 * tanp * (2. + 1. / cosp2);
 
-    u = sin(phi1) * sqrt(1 - mu * mu);
-    logs = log(1 + u) - log(1 - u);
-    I1 = atan(u / a);
+    u = sinphi1 * std::sqrt((1. - mu) * (1. + mu));
+    const double u2 = u * u;
+    const double u3 = u2 * u;
+    logs = std::log((1. + u) / (1. - u));
+    I1 = std::atan(u / a);
 
-    I_1 = a / 2. * logs + I1;
-    I_3 = I_1 + a * (1. + a2) / 4. * (2 * u / (1 - u * u) + logs);
+    I_1 = 0.5 * a * logs + I1;
+    I_3 = I_1 + 0.25 * a * (1. + a2) * (2 * u / (1. - u2) + logs);
     I_5 = I_3 + a * (1. + a2) * (1. + a2) / 16. *
-                    ((10 * u - 6 * u * u * u) / (1 - u * u) / (1 - u * u) +
-                     3. * logs);
+                    ((10 * u - 6 * u3) / ((1. - u2) * (1. - u2)) + 3. * logs);
 
-    D2 = -1. / 6. * I_2 + 0.25 * (r0 / h) * I_3 - 0.15 * r0h2 * I_4 +
+    D2 = -1. / 6. * I_2 + 0.25 * r0h * I_3 - 0.15 * r0h2 * I_4 +
          1. / 30. * r0h3 * I_5 - 1. / 60. * r0h_3 * I1 + (B1 - B2) / r03 * I0;
 
     ////// phi2 business /////
-    phi2 = acos(R_0 / sqrt(4.0 * h * h - r0 * r0));
+    cosp = R_0 / std::sqrt(4.0 * h * h - r0 * r0);
+    const double sinphi2 = std::sqrt((1. - cosp) * (1. + cosp));
+    phi2 = std::acos(cosp);
 
-    cosp = cos(phi2);
     cosp2 = cosp * cosp;
-    mu = cosp / a / sqrt(1. + cosp2 / a2);
+    mu = cosp / std::sqrt(a2 + cosp2);
 
-    tanp = tan(phi2);
+    tanp = sinphi2 / cosp;
 
     I0 = phi2;
     I_2 = phi2 + a2 * tanp;
     I_4 = phi2 + 2 * a2 * tanp + 1. / 3. * a2 * a2 * tanp * (2. + 1. / cosp2);
 
-    u = sin(phi2) * sqrt(1 - mu * mu);
-    logs = log(1 + u) - log(1 - u);
-    I1 = atan(u / a);
+    u = sinphi2 * std::sqrt((1. - mu) * (1. + mu));
+    const double uu2 = u * u;
+    const double uu3 = uu2 * u;
+    logs = std::log((1. + u) / (1. - u));
+    I1 = std::atan(u / a);
 
-    I_1 = a / 2. * logs + I1;
-    I_3 = I_1 + a * (1. + a2) / 4. * (2 * u / (1 - u * u) + logs);
-    I_5 = I_3 + a * (1. + a2) * (1. + a2) / 16. *
-                    ((10 * u - 6 * u * u * u) / (1 - u * u) / (1 - u * u) +
-                     3. * logs);
+    I_1 = 0.5 * a * logs + I1;
+    I_3 = I_1 + 0.25 * a * (1. + a2) * (2 * u / (1. - uu2) + logs);
+    I_5 = I_3 +
+          a * (1. + a2) * (1. + a2) / 16. *
+              ((10. * u - 6. * uu3) / ((1. - uu2) * (1. - uu2)) + 3. * logs);
 
-    D3 = 1. / 3. * I_2 - 0.25 * (r0 / h) * I_3 + 3. / 40. * r0h2 * I_4 -
+    D3 = 1. / 3. * I_2 - 0.25 * r0h * I_3 + 3. / 40. * r0h2 * I_4 -
          1. / 120. * r0h3 * I_5 + 4. / 15. * r0h_3 * I1 + (B2 - B3) / r03 * I0 +
          D2;
   } else if (linedist2 <= 4.0 * h2) {
     ////// phi2 business /////
-    phi2 = acos(R_0 / sqrt(4.0 * h * h - r0 * r0));
+    cosp = R_0 / std::sqrt(4.0 * h2 - r02);
+    const double sinphi2 = std::sqrt((1. - cosp) * (1. + cosp));
+    phi2 = std::acos(cosp);
 
-    cosp = cos(phi2);
     cosp2 = cosp * cosp;
-    mu = cosp / a / sqrt(1. + cosp2 / a2);
+    mu = cosp / std::sqrt(a2 + cosp2);
 
-    tanp = tan(phi2);
+    tanp = sinphi2 / cosp;
 
     I0 = phi2;
     I_2 = phi2 + a2 * tanp;
-    I_4 = phi2 + 2 * a2 * tanp + 1. / 3. * a2 * a2 * tanp * (2. + 1. / cosp2);
+    I_4 = phi2 + 2. * a2 * tanp + 1. / 3. * a2 * a2 * tanp * (2. + 1. / cosp2);
 
-    u = sin(phi2) * sqrt(1 - mu * mu);
-    logs = log(1 + u) - log(1 - u);
-    I1 = atan(u / a);
+    u = sinphi2 * std::sqrt((1. - mu) * (1. + mu));
+    const double u2 = u * u;
+    const double u3 = u2 * u;
+    logs = std::log((1. + u) / (1. - u));
+    I1 = std::atan(u / a);
 
-    I_1 = a / 2. * logs + I1;
-    I_3 = I_1 + a * (1. + a2) / 4. * (2 * u / (1 - u * u) + logs);
+    I_1 = 0.5 * a * logs + I1;
+    I_3 = I_1 + 0.25 * a * (1. + a2) * (2. * u / (1. - u2) + logs);
     I_5 = I_3 + a * (1. + a2) * (1. + a2) / 16. *
-                    ((10 * u - 6 * u * u * u) / (1 - u * u) / (1 - u * u) +
-                     3. * logs);
+                    ((10. * u - 6. * u3) / ((1. - u2) * (1. - u2)) + 3. * logs);
 
-    D3 = 1. / 3. * I_2 - 0.25 * (r0 / h) * I_3 + 3. / 40. * r0h2 * I_4 -
+    D3 = 1. / 3. * I_2 - 0.25 * r0h * I_3 + 3. / 40. * r0h2 * I_4 -
          1. / 120. * r0h3 * I_5 + 4. / 15. * r0h_3 * I1 + (B2 - B3) / r03 * I0 +
          D2;
   }
@@ -686,39 +687,41 @@ double SPHArrayInterface::full_integral(double phi, double r0, double R_0,
   // Calculating I_n expressions. //
   //////////////////////////////////
 
-  cosp = cos(phi);
+  cosp = cosphi;
+  const double sinphi = std::sqrt((1. - cosp) * (1. + cosp));
   cosp2 = cosp * cosp;
-  mu = cosp / a / sqrt(1. + cosp2 / a2);
+  mu = cosp / std::sqrt(a2 + cosp2);
 
-  tanp = tan(phi);
+  tanp = sinphi / cosphi;
 
   I0 = phi;
   I_2 = phi + a2 * tanp;
-  I_4 = phi + 2 * a2 * tanp + 1. / 3. * a2 * a2 * tanp * (2. + 1. / cosp2);
+  I_4 = phi + 2. * a2 * tanp + 1. / 3. * a2 * a2 * tanp * (2. + 1. / cosp2);
 
-  u = sin(phi) * sqrt(1 - mu * mu);
-  logs = log(1 + u) - log(1 - u);
-  I1 = atan(u / a);
+  u = sinphi * std::sqrt((1. - mu) * (1. + mu));
+  const double u2 = u * u;
+  logs = std::log((1. + u) / (1. - u));
+  I1 = std::atan(u / a);
 
-  I_1 = a / 2. * logs + I1;
-  I_3 = I_1 + a * (1. + a2) / 4. * (2 * u / (1 - u * u) + logs);
-  I_5 = I_3 +
-        a * (1. + a2) * (1. + a2) / 16. *
-            ((10 * u - 6 * u * u * u) / (1 - u * u) / (1 - u * u) + 3. * logs);
+  I_1 = 0.5 * a * logs + I1;
+  I_3 = I_1 + 0.25 * a * (1. + a2) * (2 * u / (1. - u2) + logs);
+  I_5 =
+      I_3 + a * (1. + a2) * (1. + a2) / 16. *
+                ((10. * u - 6. * u2 * u) / ((1. - u2) * (1. - u2)) + 3. * logs);
 
   // Calculating the integral expression.
 
   if (r2 < h2) {
-    full_int = r0h3 / M_PI *
+    full_int = M_1_PI * r0h3 *
                (1. / 6. * I_2 - 3. / 40. * r0h2 * I_4 + 1. / 40. * r0h3 * I_5 +
                 B1 / r03 * I0);
   } else if (r2 < 4.0 * h2) {
-    full_int = r0h3 / M_PI *
-               (0.25 * (4. / 3. * I_2 - (r0 / h) * I_3 + 0.3 * r0h2 * I_4 -
+    full_int = M_1_PI * r0h3 *
+               (0.25 * (4. / 3. * I_2 - r0h * I_3 + 0.3 * r0h2 * I_4 -
                         1. / 30. * r0h3 * I_5 + 1. / 15. * r0h_3 * I1) +
                 B2 / r03 * I0 + D2);
   } else {
-    full_int = r0h3 / M_PI * (-0.25 * r0h_3 * I1 + B3 / r03 * I0 + D3);
+    full_int = M_1_PI * r0h3 * (-0.25 * r0h_3 * I1 + B3 / r03 * I0 + D3);
   }
 
   return full_int;
@@ -833,7 +836,7 @@ double SPHArrayInterface::mass_contribution(const Cell &cell,
         if (std::fabs(cosa) - 1.0 < 0.00001) {
           cosphi1 = 0.0;
         } else {
-          printf("Error: cosa > 1: %g\n", cosa);
+          cmac_warning("Error: cosa > 1: %g\n", cosa);
         }
       }
       const double R_0 = r12 * cosphi1;
@@ -853,7 +856,7 @@ double SPHArrayInterface::mass_contribution(const Cell &cell,
         if ((R_0 - r12) < 0.00001 * h) {
           phi1 = 0.0;
         } else {
-          printf("Error: R0 > r12: %g\n", R_0 - r12);
+          cmac_warning("Error: R0 > r12: %g\n", R_0 - r12);
         }
       }
       if (R_0 < r13) {
@@ -862,7 +865,7 @@ double SPHArrayInterface::mass_contribution(const Cell &cell,
         if ((R_0 - r13) < 0.00001 * h) {
           phi2 = 0.0;
         } else {
-          printf("Error: R0 > r13: %g\n", R_0 - r13);
+          cmac_warning("Error: R0 > r13: %g\n", R_0 - r13);
         }
       }
 
@@ -889,16 +892,16 @@ double SPHArrayInterface::mass_contribution(const Cell &cell,
             M = M * (gridded_integral(phi1, cosphi1, ar0, R_0, h) -
                      gridded_integral(phi2, cosphi2, ar0, R_0, h));
           } else {
-            M = M * (full_integral(phi1, ar0, R_0, h) -
-                     full_integral(phi2, ar0, R_0, h));
+            M = M * (full_integral(phi1, cosphi1, ar0, R_0, h) -
+                     full_integral(phi2, cosphi2, ar0, R_0, h));
           }
         } else {
           if (is_pre_computed) {
             M = M * (gridded_integral(phi2, cosphi2, ar0, R_0, h) -
                      gridded_integral(phi1, cosphi1, ar0, R_0, h));
           } else {
-            M = M * (full_integral(phi2, ar0, R_0, h) -
-                     full_integral(phi1, ar0, R_0, h));
+            M = M * (full_integral(phi2, cosphi2, ar0, R_0, h) -
+                     full_integral(phi1, cosphi1, ar0, R_0, h));
           }
         }
       } else {
@@ -906,8 +909,8 @@ double SPHArrayInterface::mass_contribution(const Cell &cell,
           M = M * (gridded_integral(phi1, cosphi1, ar0, R_0, h) +
                    gridded_integral(phi2, cosphi2, ar0, R_0, h));
         } else {
-          M = M * (full_integral(phi1, ar0, R_0, h) +
-                   full_integral(phi2, ar0, R_0, h));
+          M = M * (full_integral(phi1, cosphi1, ar0, R_0, h) +
+                   full_integral(phi2, cosphi2, ar0, R_0, h));
         }
       }
       Msum = Msum + M;
@@ -983,7 +986,7 @@ DensityValues SPHArrayInterface::operator()(const Cell &cell) const {
       const double h = _smoothing_lengths[index] / 2.0;
       const CoordinateVector<> particle = _positions[index];
       if (h < 0)
-        printf("h < 0: %g, %u", h, index);
+        cmac_warning("h < 0: %g, %u", h, index);
       density += SPHArrayInterface::mass_contribution(cell, particle, h) *
                  _masses[index];
     }

@@ -283,7 +283,9 @@ public:
                           const double r0_old, const double R_0_old,
                           const double h_old) const;
 
-  static double full_integral(double phi, double r0, double R_0, double h);
+  static double full_integral(const double phi, const double cosphi,
+                              const double r0, const double R_0,
+                              const double h);
 
   double mass_contribution(const Cell &cell, const CoordinateVector<> particle,
                            const double h) const;
