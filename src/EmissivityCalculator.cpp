@@ -340,6 +340,9 @@ EmissivityValues EmissivityCalculator::calculate_emissivities(
     // Osterbrock & Ferland (2006), table 3.9
     // ground state: 2P1/2
     // excited states: 2P3/2, 4P1/2, 4P3/2, 4P5/2
+    // this is the 0 to 1 transition
+    eval.set_emissivity(EMISSIONLINE_CII_158mu,
+                        ntot * (line_strengths[CII][TRANSITION_0_to_1]));
     // this should be the sum of all 4P to 2P transitions
     // note that Kenny's code wrongly includes some 4P to 4P transitions...
     eval.set_emissivity(EMISSIONLINE_CII_2325,

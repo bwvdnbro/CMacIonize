@@ -66,6 +66,7 @@ enum EmissionLine {
   EMISSIONLINE_NIII_57mu,
   EMISSIONLINE_NeIII_15mu,
   EMISSIONLINE_NII_122mu,
+  EMISSIONLINE_CII_158mu,
   EMISSIONLINE_CII_2325,
   EMISSIONLINE_CIII_1908,
   EMISSIONLINE_OII_7325,
@@ -186,6 +187,8 @@ public:
       return "NeIII_15mu";
     case EMISSIONLINE_NII_122mu:
       return "NII_122mu";
+    case EMISSIONLINE_CII_158mu:
+      return "CII_158mu";
     case EMISSIONLINE_CII_2325:
       return "CII_2325";
     case EMISSIONLINE_CIII_1908:
