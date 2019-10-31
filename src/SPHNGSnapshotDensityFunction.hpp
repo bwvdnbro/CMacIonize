@@ -67,19 +67,19 @@ private:
   Octree *_octree;
 
   /*! @brief Initial temperature of the gas (in K). */
-  double _initial_temperature;
+  const double _initial_temperature;
 
   /*! @brief Number of bins to use when writing particle statistics. */
-  uint_fast32_t _stats_numbin;
+  const uint_fast32_t _stats_numbin;
 
   /*! @brief Minimum distance to use for particle statistics. */
-  double _stats_mindist;
+  const double _stats_mindist;
 
   /*! @brief Maximum distance to use for particle statistics. */
-  double _stats_maxdist;
+  const double _stats_maxdist;
 
   /*! @brief Name of the file with particle statistics. */
-  std::string _stats_filename;
+  const std::string _stats_filename;
 
   /*! @brief Log to write logging info to. */
   Log *_log;
@@ -239,12 +239,12 @@ private:
   }
 
 public:
-  SPHNGSnapshotDensityFunction(std::string filename, double initial_temperature,
-                               bool write_stats, uint_fast32_t stats_numbin,
-                               double stats_mindist, double stats_maxdist,
-                               std::string stats_filename,
-                               bool use_new_algorithm = false,
-                               Log *log = nullptr);
+  SPHNGSnapshotDensityFunction(
+      const std::string filename, const double initial_temperature,
+      const bool write_stats, const uint_fast32_t stats_numbin,
+      const double stats_mindist, const double stats_maxdist,
+      const std::string stats_filename, const bool use_new_algorithm = false,
+      Log *log = nullptr);
 
   SPHNGSnapshotDensityFunction(ParameterFile &params, Log *log = nullptr);
 
