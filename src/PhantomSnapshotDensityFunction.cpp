@@ -430,14 +430,23 @@ double PhantomSnapshotDensityFunction::mass_contribution(
  * @param initial_temperature Initial temperature of the gas (in K).
  * @param use_new_algorithm Use the new mapping algorithm?
  * @param use_periodic_box Use a periodic box for the density mapping?
+ * @param binary_dump Dump the particle positions and densities to a binary
+ * file?
+ * @param binary_dump_name Name of the file in which the particle positions and
+ * densities are dumped.
  * @param log Log to write logging info to.
  */
 PhantomSnapshotDensityFunction::PhantomSnapshotDensityFunction(
     std::string filename, double initial_temperature,
-    const bool use_new_algorithm, const bool use_periodic_box, Log *log)
+    const bool use_new_algorithm, const bool use_periodic_box,
+    const bool binary_dump, const std::string binary_dump_name, Log *log)
     : _octree(nullptr), _initial_temperature(initial_temperature),
       _use_new_algorithm(use_new_algorithm),
       _use_periodic_box(use_periodic_box), _log(log) {
+
+  if (binary_dump && binary_dump_name == "") {
+    cmac_error("No valid name provided for binary dump file!");
+  }
 
   std::ifstream file(filename, std::ios::binary | std::ios::in);
 
@@ -585,6 +594,23 @@ PhantomSnapshotDensityFunction::PhantomSnapshotDensityFunction(
     _partbox.get_sides() = CoordinateVector<>::max(_partbox.get_sides(), p);
   }
 
+  if (binary_dump) {
+    std::ofstream dump_file(binary_dump_name);
+    for (uint_fast32_t i = 0; i < _positions.size(); ++i) {
+      const double xi = _positions[i].x();
+      const double yi = _positions[i].y();
+      const double zi = _positions[i].z();
+      const double hi = _smoothing_lengths[i];
+      const double mi = _masses[i];
+      // we approximate the particle density using the mass and smoothing length
+      const double rhoi = 0.75 * M_1_PI * mi / (hi * hi * hi);
+      dump_file.write(reinterpret_cast< const char * >(&xi), sizeof(double));
+      dump_file.write(reinterpret_cast< const char * >(&yi), sizeof(double));
+      dump_file.write(reinterpret_cast< const char * >(&zi), sizeof(double));
+      dump_file.write(reinterpret_cast< const char * >(&rhoi), sizeof(double));
+    }
+  }
+
   // convert max positions to box sides and add safety margins
   _partbox.get_sides() -= _partbox.get_anchor();
   // add some margin to the box
@@ -627,6 +653,10 @@ PhantomSnapshotDensityFunction::PhantomSnapshotDensityFunction(
  *  - use new algorithm: Use the new algorithm of Maya Petkova? (default: false)
  *  - use periodic box: Use a periodic box for the density mapping? (default:
  *    false)
+ *  - binary dump: Produce a binary dump of the particle positions and
+ *    densities (default: false)?
+ *  - binary dump name: Name of the file in which to dump the particle positions
+ *    and densities.
  *
  * @param params ParameterFile to read from.
  * @param log Log to write logging info to.
@@ -639,6 +669,9 @@ PhantomSnapshotDensityFunction::PhantomSnapshotDensityFunction(
               "DensityFunction:initial temperature", "8000. K"),
           params.get_value< bool >("DensityFunction:use new algorithm", false),
           params.get_value< bool >("DensityFunction:use periodic box", false),
+          params.get_value< bool >("DensityFunction:binary dump", false),
+          params.get_value< std::string >("DensityFunction:binary dump name",
+                                          ""),
           log) {}
 
 /**

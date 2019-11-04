@@ -236,6 +236,8 @@ public:
                                  double initial_temperature,
                                  const bool use_new_algorithm,
                                  const bool use_periodic_box,
+                                 const bool binary_dump = false,
+                                 const std::string binary_dump_name = "",
                                  Log *log = nullptr);
 
   PhantomSnapshotDensityFunction(ParameterFile &params, Log *log = nullptr);
