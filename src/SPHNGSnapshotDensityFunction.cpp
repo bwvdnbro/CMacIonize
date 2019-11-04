@@ -85,18 +85,27 @@ double SPHNGSnapshotDensityFunction::kernel(const double q, const double h) {
  * @param stats_filename Name of the file with neighbour statistics that will be
  * written out.
  * @param use_new_algorithm Use the new mapping algorithm?
+ * @param binary_dump Dump the particle positions and densities to a binary
+ * file?
+ * @param binary_dump_name Name of the file in which the particle positions and
+ * densities are dumped.
  * @param log Log to write logging info to.
  */
 SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
     const std::string filename, const double initial_temperature,
     const bool write_stats, const uint_fast32_t stats_numbin,
     const double stats_mindist, const double stats_maxdist,
-    const std::string stats_filename, const bool use_new_algorithm, Log *log)
+    const std::string stats_filename, const bool use_new_algorithm,
+    const bool binary_dump, const std::string binary_dump_name, Log *log)
     : _use_new_algorithm(use_new_algorithm), _octree(nullptr),
       _initial_temperature(initial_temperature),
       _stats_numbin(write_stats ? stats_numbin : 0),
       _stats_mindist(stats_mindist), _stats_maxdist(stats_maxdist),
       _stats_filename(stats_filename), _log(log) {
+
+  if (binary_dump && binary_dump_name == "") {
+    cmac_error("No valid name provided for binary dump file!");
+  }
 
   std::ifstream file(filename, std::ios::binary | std::ios::in);
 
@@ -140,7 +149,7 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
     }
   }
   if (!tagged) {
-    size_t numnumbers = numbers.size();
+    const size_t numnumbers = numbers.size();
     numbers["nparttot"] = numbers["tag"];
     if (numnumbers == 6) {
       numbers["nblocks"] = 1;
@@ -148,8 +157,8 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
       numbers["nblocks"] = numbers["tag6"];
     }
   }
-  uint_fast32_t numpart = numbers["nparttot"];
-  uint_fast32_t numblock = numbers["nblocks"];
+  const uint_fast32_t numpart = numbers["nparttot"];
+  const uint_fast32_t numblock = numbers["nblocks"];
   if (_log) {
     _log->write_info("nparttot: ", numbers["nparttot"]);
     _log->write_info("nblocks: ", numbers["nblocks"]);
@@ -236,15 +245,23 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
   rawunitsbox.get_sides()[1] = -DBL_MAX;
   rawunitsbox.get_sides()[2] = -DBL_MAX;
 
-  double unit_length =
+  const double unit_length =
       UnitConverter::to_SI< QUANTITY_LENGTH >(units["udist"], "cm");
-  double unit_mass = UnitConverter::to_SI< QUANTITY_MASS >(units["umass"], "g");
+  const double unit_mass =
+      UnitConverter::to_SI< QUANTITY_MASS >(units["umass"], "g");
+  const double unit_density =
+      unit_mass / (unit_length * unit_length * unit_length);
 
   _positions.reserve(numpart);
   _masses.reserve(numpart);
   _smoothing_lengths.reserve(numpart);
   //  std::vector<uint64_t> all_iunique;
   //  all_iunique.reserve(numpart);
+
+  std::ofstream bfile;
+  if (binary_dump) {
+    bfile.open(binary_dump_name);
+  }
 
   // read blocks
   for (uint_fast32_t iblock = 0; iblock < numblock; ++iblock) {
@@ -344,8 +361,35 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
     }
     read_block(file, h);
 
-    // skip velocity, thermal energy and density blocks
-    for (uint_fast8_t i = 0; i < 5; ++i) {
+    // skip velocity and thermal energy blocks
+    for (uint_fast8_t i = 0; i < 4; ++i) {
+      if (tagged) {
+        skip_block(file);
+      }
+      skip_block(file);
+    }
+
+    if (binary_dump) {
+      std::vector< float > rho(npart);
+      if (tagged) {
+        skip_block(file);
+      }
+      read_block(file, rho);
+
+      for (uint_fast32_t i = 0; i < npart; ++i) {
+        if (iphase[i] == 0) {
+          const double xi = x[i] * unit_length;
+          const double yi = y[i] * unit_length;
+          const double zi = z[i] * unit_length;
+          const double rhoi = rho[i] * unit_density;
+          bfile.write(reinterpret_cast< const char * >(&xi), sizeof(double));
+          bfile.write(reinterpret_cast< const char * >(&yi), sizeof(double));
+          bfile.write(reinterpret_cast< const char * >(&zi), sizeof(double));
+          bfile.write(reinterpret_cast< const char * >(&rhoi), sizeof(double));
+        }
+      }
+    } else {
+      // skip density block
       if (tagged) {
         skip_block(file);
       }
@@ -448,6 +492,10 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
  *    (default: ngb_statistics.txt)
  *  - use new algorithm: Use Maya Petkova's more accurate mapping algorithm
  *    (default: false)?
+ *  - binary dump: Produce a binary dump of the particle positions and
+ *    densities (default: false)?
+ *  - binary dump name: Name of the file in which to dump the particle positions
+ *    and densities.
  *
  * @param params ParameterFile to read from.
  * @param log Log to write logging info to.
@@ -468,6 +516,9 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
           params.get_value< std::string >("DensityFunction:statistics filename",
                                           "ngb_statistics.txt"),
           params.get_value< bool >("DensityFunction:use new algorithm", false),
+          params.get_value< bool >("DensityFunction:binary dump", false),
+          params.get_value< std::string >("DensityFunction:binary dump name",
+                                          ""),
           log) {}
 
 /**
