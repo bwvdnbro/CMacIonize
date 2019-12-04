@@ -65,6 +65,21 @@ specific use case was required for teaching purposes, and should be
 considered as an unstable hack. This mode only accepts a subset of the 
 available modules and is not suited for scientific simulations.
 
+```
+--emission
+```
+
+_NEW_ This mode of the code computes line emission strengths for a 
+snapshot that was generated using the full version of the code in 
+post-processing, and that contains accurate temperature values and ionic 
+fractions for all elements.
+
+When run in this mode, CMacIonize will simply read the snapshot that is 
+passed on to the program and compute the requested line emissivities 
+using the temperature and ionic fractions present in the snapshot file. 
+It will then append the emissivities as additional datasets to the 
+snapshot.
+
 ## Command line parameters that affect performance
 
 ```
