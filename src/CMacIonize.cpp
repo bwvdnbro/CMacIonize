@@ -356,15 +356,12 @@ int main(int argc, char **argv) {
  * @mainpage
  *
  * @author Bert Vandenbroucke \n
- *         School of Physics and Astronomy \n
- *         University of St Andrews \n
- *         North Haugh \n
- *         St Andrews \n
- *         Fife \n
- *         KY16 9SS \n
- *         Scotland \n
- *         United Kingdom \n
- *         bv7@st-andrews.ac.uk
+ *         Sterrenkundig Observatorium \n
+ *         Universiteit Gent \n
+ *         Krijgslaan 281, S9 \n
+ *         B-9000 Gent \n
+ *         Belgium \n
+ *         bert.vandenbroucke@ugent.be
  *
  * @section purpose Purpose of the program.
  *
@@ -404,5 +401,6 @@ int main(int argc, char **argv) {
  * all files, functions, classes... in the source code are fully documented
  * (the Doxygen configuration enforces this), so most of it should be easy to
  * understand. The main program entry point can be found in the file
- * CMacIonize.cpp.
+ * CMacIonize.cpp. Tutorials about program usage can be found on
+ * https://bwvdnbro.github.io/CMacIonize/tutorials/.
  */
