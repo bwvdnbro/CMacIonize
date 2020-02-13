@@ -407,6 +407,12 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
     grid->initialize(block, *density_function);
   }
 
+#ifdef VARIABLE_ABUNDANCES
+  for (auto it = grid->begin(); it != grid->end(); ++it) {
+    it.get_ionization_variables().get_abundances().set_abundances(abundances);
+  }
+#endif
+
   // object used to distribute jobs in a shared memory parallel context
   WorkDistributor< IonizationPhotonShootJobMarket, IonizationPhotonShootJob >
       workdistributor(parser.get_value< int_fast32_t >("threads"));

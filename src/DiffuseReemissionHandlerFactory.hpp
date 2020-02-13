@@ -70,7 +70,7 @@ public:
       return new FixedValueDiffuseReemissionHandler(params);
     } else if (type == "Physical") {
       return new PhysicalDiffuseReemissionHandler(cross_sections);
-    } else if ("None") {
+    } else if (type == "None") {
       return nullptr;
     } else {
       cmac_error("Unknown DiffuseReemissionHandler type: \"%s\"!",

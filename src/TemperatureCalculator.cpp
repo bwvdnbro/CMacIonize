@@ -184,7 +184,7 @@ TemperatureCalculator::TemperatureCalculator(
  * @param cell_midpoint Midpoint of the cell for which we compute the ionization
  * equilibrium and cooling and heating.
  * @param j Mean ionizing intensity integrals (in s^-1).
- * @param abundances Abundances.
+ * @param input_abundances Abundances.
  * @param h Heating integrals (in J s^-1).
  * @param pahfac Normalization factor for PAH heating.
  * @param crfac Normalization factor for cosmic ray heating.
@@ -200,7 +200,7 @@ void TemperatureCalculator::compute_cooling_and_heating_balance(
     double &h0, double &he0, double &gain, double &loss, double T,
     IonizationVariables &ionization_variables,
     const CoordinateVector<> cell_midpoint, const double j[NUMBER_OF_IONNAMES],
-    const Abundances &abundances, const double h[NUMBER_OF_HEATINGTERMS],
+    const Abundances &input_abundances, const double h[NUMBER_OF_HEATINGTERMS],
     double pahfac, double crfac, double crscale,
     const LineCoolingData &line_cooling_data,
     const RecombinationRates &recombination_rates,
@@ -241,6 +241,12 @@ void TemperatureCalculator::compute_cooling_and_heating_balance(
   const double T4 = T * 1.e-4;
   const double sqrtT = std::sqrt(T);
   const double logT = std::log(T);
+
+#ifdef VARIABLE_ABUNDANCES
+  const Abundances &abundances = ionization_variables.get_abundances();
+#else
+  const Abundances &abundances = input_abundances;
+#endif
 
 #ifdef HAS_HELIUM
   // helium abundance. Used to scale the helium number density.
@@ -625,7 +631,12 @@ void TemperatureCalculator::calculate_temperature(
 #endif
     const double nH = ionization_variables.get_number_density();
 #ifdef HAS_HELIUM
+#ifdef VARIABLE_ABUNDANCES
+    const double AHe =
+        ionization_variables.get_abundances().get_abundance(ELEMENT_He);
+#else
     const double AHe = _abundances.get_abundance(ELEMENT_He);
+#endif
 #else
     const double AHe = 0.;
 #endif

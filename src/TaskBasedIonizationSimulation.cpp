@@ -461,6 +461,17 @@ void TaskBasedIonizationSimulation::initialize(
   start_parallel_timing_block();
   _grid_creator->initialize(*density_function);
   stop_parallel_timing_block();
+
+#ifdef VARIABLE_ABUNDANCES
+  for (auto gridit = _grid_creator->begin();
+       gridit != _grid_creator->original_end(); ++gridit) {
+    for (auto cellit = (*gridit).begin(); cellit != (*gridit).end(); ++cellit) {
+      cellit.get_ionization_variables().get_abundances().set_abundances(
+          _abundances);
+    }
+  }
+#endif
+
   _memory_log.finalize_entry();
   _time_log.end("grid");
 
@@ -928,9 +939,11 @@ void TaskBasedIonizationSimulation::run(
               for (int_fast32_t ion = 0; ion < NUMBER_OF_IONNAMES; ++ion) {
                 double sigma =
                     _cross_sections->get_cross_section(ion, frequency);
+#ifndef VARIABLE_ABUNDANCES
                 if (ion != ION_H_n) {
                   sigma *= _abundances.get_abundance(get_element(ion));
                 }
+#endif
                 photon.set_photoionization_cross_section(ion, sigma);
               }
             }
@@ -1002,9 +1015,11 @@ void TaskBasedIonizationSimulation::run(
               for (int_fast32_t ion = 0; ion < NUMBER_OF_IONNAMES; ++ion) {
                 double sigma =
                     _cross_sections->get_cross_section(ion, frequency);
+#ifndef VARIABLE_ABUNDANCES
                 if (ion != ION_H_n) {
                   sigma *= _abundances.get_abundance(get_element(ion));
                 }
+#endif
                 photon.set_photoionization_cross_section(ion, sigma);
               }
 
@@ -1153,7 +1168,14 @@ void TaskBasedIonizationSimulation::run(
                   subgrid.get_cell(old_photon.get_position())
                       .get_ionization_variables();
 #ifdef HAS_HELIUM
-              const double AHe = _abundances.get_abundance(ELEMENT_He);
+#ifdef VARIABLE_ABUNDANCES
+              const double AHe =
+                  ionization_variables.get_abundances().get_abundance(
+                      ELEMENT_He);
+#else
+              // the helium abundance is already part of the cross section
+              const double AHe = 1.;
+#endif
 #else
               const double AHe = 0.;
 #endif
@@ -1171,9 +1193,11 @@ void TaskBasedIonizationSimulation::run(
                 for (int_fast32_t ion = 0; ion < NUMBER_OF_IONNAMES; ++ion) {
                   double sigma =
                       _cross_sections->get_cross_section(ion, new_frequency);
+#ifndef VARIABLE_ABUNDANCES
                   if (ion != ION_H_n) {
                     sigma *= _abundances.get_abundance(get_element(ion));
                   }
+#endif
                   new_photon.set_photoionization_cross_section(ion, sigma);
                 }
 
@@ -1477,6 +1501,7 @@ void TaskBasedIonizationSimulation::run(
           task.set_type(TASKTYPE_TEMPERATURE_STATE);
           task.start(get_thread_index());
 
+#ifndef VARIABLE_ABUNDANCES
           // correct the intensity counters for abundance factors
           for (auto cellit = (*gridit).begin(); cellit != (*gridit).end();
                ++cellit) {
@@ -1495,6 +1520,7 @@ void TaskBasedIonizationSimulation::run(
                                  _abundances.get_abundance(ELEMENT_He));
 #endif
           }
+#endif
           _temperature_calculator->calculate_temperature(
               iloop, _number_of_photons, *gridit);
           task.stop();

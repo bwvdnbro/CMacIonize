@@ -84,6 +84,15 @@ public:
   }
 
   /**
+   * @brief Empty constructor.
+   */
+  inline Abundances() {
+    for (int_fast32_t i = 0; i < NUMBER_OF_ELEMENTNAMES; ++i) {
+      _abundances[i] = 0.;
+    }
+  }
+
+  /**
    * @brief ParameterFile constructor.
    *
    * Parameters are:
@@ -111,7 +120,7 @@ public:
    *
    * @param abundances Abundances to copy into this instance.
    */
-  inline Abundances(Abundances &abundances) {
+  inline Abundances(const Abundances &abundances) {
     for (int_fast32_t i = 0; i < NUMBER_OF_ELEMENTNAMES; ++i) {
       _abundances[i] = abundances._abundances[i];
     }
@@ -124,7 +133,31 @@ public:
    * @return Abundance of the atom with that name.
    */
   inline double get_abundance(const int_fast32_t name) const {
+    if (name == ELEMENT_He) {
+      cmac_assert(_abundances[name] == 0.1);
+    }
     return _abundances[name];
+  }
+
+  /**
+   * @brief Set the abundance for the atom with the given name.
+   *
+   * @param name Valid ElementName.
+   * @param value Abundance of the atom with that name.
+   */
+  inline void set_abundance(const int_fast32_t name, const double value) {
+    _abundances[name] = value;
+  }
+
+  /**
+   * @brief Set the abundances to a copy of the given abundances.
+   *
+   * @param abundances Abundances to copy.
+   */
+  inline void set_abundances(const Abundances &abundances) {
+    for (int_fast32_t i = 0; i < NUMBER_OF_ELEMENTNAMES; ++i) {
+      _abundances[i] = abundances._abundances[i];
+    }
   }
 };
 

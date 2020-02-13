@@ -268,6 +268,12 @@ void IonizationSimulation::initialize(DensityFunction *density_function) {
   _density_grid->initialize(block, *density_function, &_time_log);
   stop_parallel_timing_block();
 
+#ifdef VARIABLE_ABUNDANCES
+  for (auto it = _density_grid->begin(); it != _density_grid->end(); ++it) {
+    it.get_ionization_variables().get_abundances().set_abundances(_abundances);
+  }
+#endif
+
   // check that the trackers can be sensibly placed within the grid
   if (_trackers != nullptr) {
     // add trackers

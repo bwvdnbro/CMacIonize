@@ -32,6 +32,10 @@
 #include "RestartWriter.hpp"
 #include "Tracker.hpp"
 
+#ifdef VARIABLE_ABUNDANCES
+#include "Abundances.hpp"
+#endif
+
 #ifdef USE_LOCKFREE
 #include "Atomic.hpp"
 #endif
@@ -105,6 +109,10 @@ private:
 
   /*! @brief Cosmic ray heating factor (in kg m A^-1 s^-4). */
   double _cosmic_ray_factor;
+
+#ifdef VARIABLE_ABUNDANCES
+  Abundances _abundances;
+#endif
 
   /*! @brief (Optional) tracker for this cell. */
   Tracker *_tracker;
@@ -458,6 +466,22 @@ public:
    * @return Tracker for this cell.
    */
   inline Tracker *get_tracker() { return _tracker; }
+
+#ifdef VARIABLE_ABUNDANCES
+  /**
+   * @brief Access the abundances for this cell.
+   *
+   * @return Reference to the cell abundances.
+   */
+  inline Abundances &get_abundances() { return _abundances; }
+
+  /**
+   * @brief Read-only access to the abundances for this cell.
+   *
+   * @return Reference to the cell abundances.
+   */
+  inline const Abundances &get_abundances() const { return _abundances; }
+#endif
 };
 
 #endif // IONIZATIONVARIABLES_HPP

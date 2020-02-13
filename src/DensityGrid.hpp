@@ -118,11 +118,20 @@ protected:
   get_optical_depth(double ds, const IonizationVariables &ionization_variables,
                     const Photon &photon) {
 #ifdef HAS_HELIUM
+#ifdef VARIABLE_ABUNDANCES
+    return ds * ionization_variables.get_number_density() *
+           (photon.get_cross_section(ION_H_n) *
+                ionization_variables.get_ionic_fraction(ION_H_n) +
+            ionization_variables.get_abundances().get_abundance(ELEMENT_He) *
+                photon.get_cross_section(ION_He_n) *
+                ionization_variables.get_ionic_fraction(ION_He_n));
+#else
     return ds * ionization_variables.get_number_density() *
            (photon.get_cross_section(ION_H_n) *
                 ionization_variables.get_ionic_fraction(ION_H_n) +
             photon.get_cross_section_He_corr() *
                 ionization_variables.get_ionic_fraction(ION_He_n));
+#endif
 #else
     return ds * ionization_variables.get_number_density() *
            photon.get_cross_section(ION_H_n) *
@@ -225,10 +234,15 @@ public:
    */
   inline void allocate_memory(cellsize_t numcell) {
     if (_log) {
-      _log->write_status(
-          "Allocating memory for ", numcell, " cells (",
-          Utilities::human_readable_bytes(numcell * sizeof(DensityValues)),
-          ")...");
+      uint_fast32_t cellsize = sizeof(IonizationVariables);
+      cellsize += sizeof(EmissivityValues *);
+      cellsize += sizeof(uint_fast32_t);
+#ifndef USE_LOCKFREE
+      cellsize += sizeof(Lock);
+#endif
+      _log->write_status("Allocating memory for ", numcell, " cells (",
+                         Utilities::human_readable_bytes(numcell * cellsize),
+                         ")...");
     }
     // we allocate memory for the cells, so that --dry-run can already check the
     // available memory

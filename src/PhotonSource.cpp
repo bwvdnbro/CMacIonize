@@ -276,7 +276,12 @@ bool PhotonSource::reemit(Photon &photon,
   if (_reemission_handler) {
     PhotonType type;
 #ifdef HAS_HELIUM
+#ifdef VARIABLE_ABUNDANCES
+    const double AHe =
+        ionization_variables.get_abundances().get_abundance(ELEMENT_He);
+#else
     const double AHe = _abundances.get_abundance(ELEMENT_He);
+#endif
 #else
     const double AHe = 0.;
 #endif

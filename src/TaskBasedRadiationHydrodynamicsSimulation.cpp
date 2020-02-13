@@ -1194,6 +1194,18 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
     start_parallel_timing_block();
     grid_creator->initialize(*density_function);
     stop_parallel_timing_block();
+
+#ifdef VARIABLE_ABUNDANCES
+    for (auto gridit = grid_creator->begin();
+         gridit != grid_creator->original_end(); ++gridit) {
+      for (auto cellit = (*gridit).begin(); cellit != (*gridit).end();
+           ++cellit) {
+        cellit.get_ionization_variables().get_abundances().set_abundances(
+            abundances);
+      }
+    }
+#endif
+
     memory_logger.finalize_entry();
     if (log) {
       log->write_status("Done.");
@@ -1892,9 +1904,11 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
                          ++ion) {
                       double sigma =
                           cross_sections->get_cross_section(ion, frequency);
+#ifndef VARIABLE_ABUNDANCES
                       if (ion != ION_H_n) {
                         sigma *= abundances.get_abundance(get_element(ion));
                       }
+#endif
                       // this is the fixed cross section we use for the moment
                       photon.set_photoionization_cross_section(ion, sigma);
                     }
@@ -2302,6 +2316,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
                 task.set_type(TASKTYPE_TEMPERATURE_STATE);
                 task.start(get_thread_index());
 
+#ifndef VARIABLE_ABUNDANCES
                 // correct the intensity counters for abundance factors
                 for (auto cellit = (*gridit).begin(); cellit != (*gridit).end();
                      ++cellit) {
@@ -2315,6 +2330,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
                     }
                   }
                 }
+#endif
                 temperature_calculator->calculate_temperature(iloop, numphoton,
                                                               *gridit);
                 task.stop();

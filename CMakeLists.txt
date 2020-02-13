@@ -401,6 +401,14 @@ else(HYDROGEN_ONLY)
   add_configuration_option(HAVE_HYDROGEN_ONLY False)
 endif(HYDROGEN_ONLY)
 
+if(ACTIVATE_VARIABLE_ABUNDANCES)
+  message(STATUS "Compiling support for variable abundances.")
+  add_configuration_option(VARIABLE_ABUNDANCES True)
+else(ACTIVATE_VARIABLE_ABUNDANCES)
+  message(STATUS "Not compiling support for variable abundances.")
+  add_configuration_option(VARIABLE_ABUNDANCES False)
+endif(ACTIVATE_VARIABLE_ABUNDANCES)
+
 ## Code configuration ##########################################################
 
 # Tell CMake that headers are in one of the src folders.
