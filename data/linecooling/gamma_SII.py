@@ -30,131 +30,281 @@
 
 ## load modules
 import numpy as np
+
 # for curve_fit
 import scipy.optimize as opt
+
 # for plotting (using a backend that does not require a graphics environment)
 import matplotlib
+
 matplotlib.use("Agg")
 import pylab as pl
+
 # for the fitting curve
-from fitting_curve import fitting_curve, print_fit_variables, \
-                          initialize_data_values, append_data_values, \
-                          print_data_values, get_code, jacobian_fitting_curve, \
-                          round_parameters
+from fitting_curve import (
+    fitting_curve,
+    print_fit_variables,
+    initialize_data_values,
+    append_data_values,
+    print_data_values,
+    get_code,
+    jacobian_fitting_curve,
+    round_parameters,
+)
 
 # dictionary that links abbreviated transition names to the full names used in
 # LineCoolingData
 transitions = {
-  "G0t1": "TRANSITION_0_to_1",
-  "G0t2": "TRANSITION_0_to_2",
-  "G0t3": "TRANSITION_0_to_3",
-  "G0t4": "TRANSITION_0_to_4",
-  "G1t2": "TRANSITION_1_to_2",
-  "G1t3": "TRANSITION_1_to_3",
-  "G1t4": "TRANSITION_1_to_4",
-  "G2t3": "TRANSITION_2_to_3",
-  "G2t4": "TRANSITION_2_to_4",
-  "G3t4": "TRANSITION_3_to_4"
+    "G0t1": "TRANSITION_0_to_1",
+    "G0t2": "TRANSITION_0_to_2",
+    "G0t3": "TRANSITION_0_to_3",
+    "G0t4": "TRANSITION_0_to_4",
+    "G1t2": "TRANSITION_1_to_2",
+    "G1t3": "TRANSITION_1_to_3",
+    "G1t4": "TRANSITION_1_to_4",
+    "G2t3": "TRANSITION_2_to_3",
+    "G2t4": "TRANSITION_2_to_4",
+    "G3t4": "TRANSITION_3_to_4",
 }
 
 # main function: computes fits to the data and plots the data and fits for
 # visual comparison
 # the fitted curve coefficients are printed to the stdout
 if __name__ == "__main__":
-  data = {}
+    data = {}
 
-  # data from Tayal & Zatsarinny (2010), table 5
-  T = np.array([5000., 7000., 10000., 15000., 20000., 25000., 30000., 40000.,
-                50000., 70000., 100000.])
-  # 4S3/2 to 2D3/2
-  data["G0t1"] = np.array([2.66e+0, 2.62e+0, 2.56e+0, 2.48e+0, 2.41e+0,
-                           2.35e+0, 2.30e+0, 2.20e+0, 2.10e+0, 1.93e+0,
-                           1.71e+0])
-  # 4S3/2 to 2D5/2
-  data["G0t2"] = np.array([3.98e+0, 3.91e+0, 3.83e+0, 3.71e+0, 3.61e+0,
-                           3.52e+0, 3.44e+0, 3.30e+0, 3.16e+0, 2.90e+0,
-                           2.58e+0])
-  # 2D3/2 to 2D5/2
-  data["G1t2"] = np.array([7.32e+0, 7.13e+0, 6.89e+0, 6.58e+0, 6.35e+0,
-                           6.17e+0, 6.02e+0, 5.76e+0, 5.51e+0, 5.06e+0,
-                           4.48e+0])
-  # 2P1/2 to 2P3/2
-  data["G3t4"] = np.array([1.76e+0, 1.78e+0, 1.80e+0, 1.82e+0, 1.84e+0,
-                           1.85e+0, 1.86e+0, 1.84e+0, 1.80e+0, 1.70e+0,
-                           1.54e+0])
-  # 4S3/2 to 2P1/2
-  data["G0t3"] = np.array([6.86e-1, 6.94e-1, 7.04e-1, 7.17e-1, 7.27e-1,
-                           7.33e-1, 7.36e-1, 7.30e-1, 7.15e-1, 6.70e-1,
-                           5.97e-1])
-  # 4S3/2 to 2P3/2
-  data["G0t4"] = np.array([1.38e+0, 1.39e+0, 1.42e+0, 1.44e+0, 1.46e+0,
-                           1.47e+0, 1.48e+0, 1.47e+0, 1.43e+0, 1.34e+0,
-                           1.19e+0])
-  # 2D3/2 to 2P1/2
-  data["G1t3"] = np.array([1.48e+0, 1.48e+0, 1.47e+0, 1.48e+0, 1.48e+0,
-                           1.49e+0, 1.50e+0, 1.50e+0, 1.50e+0, 1.49e+0,
-                           1.45e+0])
-  # 2D3/2 to 2P3/2
-  data["G1t4"] = np.array([2.40e+0, 2.40e+0, 2.39e+0, 2.39e+0, 2.38e+0,
-                           2.38e+0, 2.38e+0, 2.36e+0, 2.33e+0, 2.25e+0,
-                           2.13e+0])
-  # 2D5/2 to 2P1/2
-  data["G2t3"] = np.array([1.79e+0, 1.78e+0, 1.78e+0, 1.77e+0, 1.76e+0,
-                           1.76e+0, 1.75e+0, 1.73e+0, 1.70e+0, 1.63e+0,
-                           1.53e+0])
-  # 2D5/2 to 2P3/2
-  data["G2t4"] = np.array([4.07e+0, 4.07e+0, 4.06e+0, 4.06e+0, 4.07e+0,
-                           4.08e+0, 4.08e+0, 4.08e+0, 4.06e+0, 3.97e+0,
-                           3.83e+0])
+    # data from Tayal & Zatsarinny (2010), table 5
+    T = np.array(
+        [
+            5000.0,
+            7000.0,
+            10000.0,
+            15000.0,
+            20000.0,
+            25000.0,
+            30000.0,
+            40000.0,
+            50000.0,
+            70000.0,
+            100000.0,
+        ]
+    )
+    # 4S3/2 to 2D3/2
+    data["G0t1"] = np.array(
+        [
+            2.66e0,
+            2.62e0,
+            2.56e0,
+            2.48e0,
+            2.41e0,
+            2.35e0,
+            2.30e0,
+            2.20e0,
+            2.10e0,
+            1.93e0,
+            1.71e0,
+        ]
+    )
+    # 4S3/2 to 2D5/2
+    data["G0t2"] = np.array(
+        [
+            3.98e0,
+            3.91e0,
+            3.83e0,
+            3.71e0,
+            3.61e0,
+            3.52e0,
+            3.44e0,
+            3.30e0,
+            3.16e0,
+            2.90e0,
+            2.58e0,
+        ]
+    )
+    # 2D3/2 to 2D5/2
+    data["G1t2"] = np.array(
+        [
+            7.32e0,
+            7.13e0,
+            6.89e0,
+            6.58e0,
+            6.35e0,
+            6.17e0,
+            6.02e0,
+            5.76e0,
+            5.51e0,
+            5.06e0,
+            4.48e0,
+        ]
+    )
+    # 2P1/2 to 2P3/2
+    data["G3t4"] = np.array(
+        [
+            1.76e0,
+            1.78e0,
+            1.80e0,
+            1.82e0,
+            1.84e0,
+            1.85e0,
+            1.86e0,
+            1.84e0,
+            1.80e0,
+            1.70e0,
+            1.54e0,
+        ]
+    )
+    # 4S3/2 to 2P1/2
+    data["G0t3"] = np.array(
+        [
+            6.86e-1,
+            6.94e-1,
+            7.04e-1,
+            7.17e-1,
+            7.27e-1,
+            7.33e-1,
+            7.36e-1,
+            7.30e-1,
+            7.15e-1,
+            6.70e-1,
+            5.97e-1,
+        ]
+    )
+    # 4S3/2 to 2P3/2
+    data["G0t4"] = np.array(
+        [
+            1.38e0,
+            1.39e0,
+            1.42e0,
+            1.44e0,
+            1.46e0,
+            1.47e0,
+            1.48e0,
+            1.47e0,
+            1.43e0,
+            1.34e0,
+            1.19e0,
+        ]
+    )
+    # 2D3/2 to 2P1/2
+    data["G1t3"] = np.array(
+        [
+            1.48e0,
+            1.48e0,
+            1.47e0,
+            1.48e0,
+            1.48e0,
+            1.49e0,
+            1.50e0,
+            1.50e0,
+            1.50e0,
+            1.49e0,
+            1.45e0,
+        ]
+    )
+    # 2D3/2 to 2P3/2
+    data["G1t4"] = np.array(
+        [
+            2.40e0,
+            2.40e0,
+            2.39e0,
+            2.39e0,
+            2.38e0,
+            2.38e0,
+            2.38e0,
+            2.36e0,
+            2.33e0,
+            2.25e0,
+            2.13e0,
+        ]
+    )
+    # 2D5/2 to 2P1/2
+    data["G2t3"] = np.array(
+        [
+            1.79e0,
+            1.78e0,
+            1.78e0,
+            1.77e0,
+            1.76e0,
+            1.76e0,
+            1.75e0,
+            1.73e0,
+            1.70e0,
+            1.63e0,
+            1.53e0,
+        ]
+    )
+    # 2D5/2 to 2P3/2
+    data["G2t4"] = np.array(
+        [
+            4.07e0,
+            4.07e0,
+            4.06e0,
+            4.06e0,
+            4.07e0,
+            4.08e0,
+            4.08e0,
+            4.08e0,
+            4.06e0,
+            3.97e0,
+            3.83e0,
+        ]
+    )
 
-  # initialize the strings for code and value output
-  code = ""
-  data_values = initialize_data_values()
-  # do the curve fitting
-  for key in sorted(data):
-    imin = 0
-    imax = len(T)
-    # fit the curve
-    A,_ = opt.curve_fit(fitting_curve, T[imin:imax], data[key][imin:imax],
-                        maxfev = 100000,
-                        p0 = (0., 1., 1., 1., 0., 0., 0.),
-                        jac = jacobian_fitting_curve)
-    A = round_parameters(*A)
-    # compute the xi2 difference between the data values (in the fitting
-    # interval) and the curve
-    xi2 = sum( (data[key][imin:imax] - fitting_curve(T[imin:imax], *A))**2 )
-    # output some info
-    print "Transition:", key
-    print_fit_variables(*A)
-    print "convergence:", xi2
-    print "validity: [", T[imin], ",", T[imax-1], "]"
-    # write the fitting code for this transition
-    code += get_code("SII", transitions[key], *A)
-    # add the values to the list strings
-    append_data_values(data_values, *A)
+    # initialize the strings for code and value output
+    code = ""
+    data_values = initialize_data_values()
+    # do the curve fitting
+    for key in sorted(data):
+        imin = 0
+        imax = len(T)
+        # fit the curve
+        A, _ = opt.curve_fit(
+            fitting_curve,
+            T[imin:imax],
+            data[key][imin:imax],
+            maxfev=100000,
+            p0=(0.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0),
+            jac=jacobian_fitting_curve,
+        )
+        A = round_parameters(*A)
+        # compute the xi2 difference between the data values (in the fitting
+        # interval) and the curve
+        xi2 = sum((data[key][imin:imax] - fitting_curve(T[imin:imax], *A)) ** 2)
+        # output some info
+        print("Transition:", key)
+        print_fit_variables(*A)
+        print("convergence:", xi2)
+        print("validity: [", T[imin], ",", T[imax - 1], "]")
+        # write the fitting code for this transition
+        code += get_code("SII", transitions[key], *A)
+        # add the values to the list strings
+        append_data_values(data_values, *A)
 
-    # plot the data and fit for visual comparison
-    Trange = np.logspace(3., 5., 100)
-    pl.plot(T, data[key], "k.")
-    pl.plot(Trange, fitting_curve(Trange, *A), "r-")
-    pl.xlim(0., 1.e5)
-    pl.savefig("tmp/SII_{key}.png".format(key = key))
-    pl.close()
+        # plot the data and fit for visual comparison
+        Trange = np.logspace(3.0, 5.0, 100)
+        pl.plot(T, data[key], "k.")
+        pl.plot(Trange, fitting_curve(Trange, *A), "r-")
+        pl.xlim(0.0, 1.0e5)
+        pl.savefig("tmp/SII_{key}.png".format(key=key))
+        pl.close()
 
-    # save the plot values in separate files
-    dfile = open("tmp/SII_{key}_data.txt".format(key = key), "w")
-    for i in range(len(T)):
-      dfile.write("{T}\t{data}\n".format(T = T[i], data = data[key][i]))
-    dfile.close()
-    ffile = open("tmp/SII_{key}_fit.txt".format(key = key), "w")
-    for i in range(len(Trange)):
-      ffile.write("{T}\t{fit}\n".format(T = Trange[i],
-                                        fit = fitting_curve(Trange[i], *A)))
-    ffile.close()
+        # save the plot values in separate files
+        dfile = open("tmp/SII_{key}_data.txt".format(key=key), "w")
+        for i in range(len(T)):
+            dfile.write("{T}\t{data}\n".format(T=T[i], data=data[key][i]))
+        dfile.close()
+        ffile = open("tmp/SII_{key}_fit.txt".format(key=key), "w")
+        for i in range(len(Trange)):
+            ffile.write(
+                "{T}\t{fit}\n".format(
+                    T=Trange[i], fit=fitting_curve(Trange[i], *A)
+                )
+            )
+        ffile.close()
 
-  # output the code to put into the LineCoolingData constructor
-  print "code:"
-  print code
-  # output the values to put in atom4.dat in Kenny's code (to update the
-  # reference values for the unit tests)
-  print_data_values(data_values)
+    # output the code to put into the LineCoolingData constructor
+    print("code:")
+    print(code)
+    # output the values to put in atom4.dat in Kenny's code (to update the
+    # reference values for the unit tests)
+    print_data_values(data_values)
