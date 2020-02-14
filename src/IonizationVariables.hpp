@@ -154,6 +154,9 @@ public:
     _number_density = other._number_density;
     _temperature = other._temperature;
     _cosmic_ray_factor = other._cosmic_ray_factor;
+#ifdef VARIABLE_ABUNDANCES
+    _abundances = other._abundances;
+#endif
 
     // ionic variables
     for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {

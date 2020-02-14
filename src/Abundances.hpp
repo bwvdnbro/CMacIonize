@@ -133,9 +133,6 @@ public:
    * @return Abundance of the atom with that name.
    */
   inline double get_abundance(const int_fast32_t name) const {
-    if (name == ELEMENT_He) {
-      cmac_assert(_abundances[name] == 0.1);
-    }
     return _abundances[name];
   }
 
