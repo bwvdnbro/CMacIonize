@@ -103,6 +103,9 @@ private:
    *  before computing the temperature. */
   const uint_fast32_t _minimum_iteration_number;
 
+  /*! @brief Log to write logging info to. */
+  Log *_log;
+
 public:
   TemperatureCalculator(
       bool do_temperature_computation, uint_fast32_t minimum_iteration_number,

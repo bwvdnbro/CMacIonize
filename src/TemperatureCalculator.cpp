@@ -83,13 +83,13 @@ TemperatureCalculator::TemperatureCalculator(
       _do_temperature_computation(do_temperature_computation),
       _epsilon_convergence(epsilon_convergence),
       _maximum_number_of_iterations(maximum_number_of_iterations),
-      _minimum_iteration_number(minimum_iteration_number) {
+      _minimum_iteration_number(minimum_iteration_number), _log(log) {
 
-  if (log) {
-    log->write_status("Set up TemperatureCalculator with total luminosity ",
-                      _luminosity, " s^-1, PAH factor ", _pahfac,
-                      ", and cosmic ray factor ", _crfac, " (limit: ", _crlim,
-                      ", scale height: ", _crscale, " m).");
+  if (_log) {
+    _log->write_status("Set up TemperatureCalculator with total luminosity ",
+                       _luminosity, " s^-1, PAH factor ", _pahfac,
+                       ", and cosmic ray factor ", _crfac, " (limit: ", _crlim,
+                       ", scale height: ", _crscale, " m).");
   }
 }
 
@@ -811,11 +811,11 @@ void TemperatureCalculator::calculate_temperature(
     }
   }
   if (niter == _maximum_number_of_iterations) {
-    cmac_warning("Maximum number of iterations (%" PRIuFAST32
-                 ") reached (temperature: %g, "
-                 "relative difference cooling/heating: %g, aim: %g)!",
-                 niter, T0, std::abs(loss0 - gain0) / gain0,
-                 _epsilon_convergence);
+    _log->write_info(
+        "Maximum number of iterations (", niter, ") reached (temperature: ", T0,
+        ","
+        "relative difference cooling/heating: ",
+        std::abs(loss0 - gain0) / gain0, ", aim: ", _epsilon_convergence, ")!");
   }
 
   // cap the temperature at 30,000 K, since helium charge transfer rates are
