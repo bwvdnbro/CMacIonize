@@ -810,7 +810,7 @@ void TemperatureCalculator::calculate_temperature(
       loss0 = 1.;
     }
   }
-  if (niter == _maximum_number_of_iterations) {
+  if (_log != nullptr && niter == _maximum_number_of_iterations) {
     _log->write_info(
         "Maximum number of iterations (", niter, ") reached (temperature: ", T0,
         ","
