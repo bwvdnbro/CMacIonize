@@ -260,8 +260,9 @@ EmissivityValues EmissivityCalculator::calculate_emissivities(
     // excited states: 3P1, 3P0, 1D2, 1S0
     // this is the sum of the 6300.3 and 6363.8 angstrom transitions
     eval.set_emissivity(EMISSIONLINE_OI_6300,
-                        ntot * (line_strengths[OI][TRANSITION_0_to_3] +
-                                line_strengths[OI][TRANSITION_1_to_3]));
+                        ntot * line_strengths[OI][TRANSITION_0_to_3]);
+    eval.set_emissivity(EMISSIONLINE_OI_6364,
+                        ntot * line_strengths[OI][TRANSITION_1_to_3]);
 
     // OII
     // Osterbrock & Ferland (2006), table 3.13

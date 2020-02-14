@@ -153,7 +153,8 @@ int main(int argc, char **argv) {
                                  "J m^-3 s^-1 angstrom^-1"),
           1.e-3);
       assert_values_equal_rel(
-          values.get_emissivity(EMISSIONLINE_OI_6300),
+          values.get_emissivity(EMISSIONLINE_OI_6300) +
+              values.get_emissivity(EMISSIONLINE_OI_6364),
           UnitConverter::to_SI< QUANTITY_ENERGY_CHANGE_RATE >(em[5] * 1.e-20,
                                                               "erg cm^-3 s^-1"),
           tolerance);

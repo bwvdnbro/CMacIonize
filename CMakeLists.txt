@@ -409,6 +409,14 @@ else(ACTIVATE_VARIABLE_ABUNDANCES)
   add_configuration_option(VARIABLE_ABUNDANCES False)
 endif(ACTIVATE_VARIABLE_ABUNDANCES)
 
+if(ACTIVATE_ADDITIONAL_COOLANTS)
+  message(STATUS "Compiling support for additional coolants.")
+  add_configuration_option(ADDITIONAL_COOLANTS True)
+else(ACTIVATE_ADDITIONAL_COOLANTS)
+  message(STATUS "Not compiling support for additional coolants.")
+  add_configuration_option(ADDITIONAL_COOLANTS False)
+endif(ACTIVATE_ADDITIONAL_COOLANTS)
+
 ## Code configuration ##########################################################
 
 # Tell CMake that headers are in one of the src folders.

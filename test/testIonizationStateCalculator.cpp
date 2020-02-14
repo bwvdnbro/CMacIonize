@@ -59,6 +59,9 @@ int main(int argc, char **argv) {
       std::make_pair(0, grid.get_number_of_cells());
   grid.initialize(block, function);
   DensityGrid::iterator cell = grid.begin();
+#ifdef VARIABLE_ABUNDANCES
+  cell.get_ionization_variables().get_abundances().set_abundances(abundances);
+#endif
 
   // test find_H0
   std::ifstream file("h0_testdata.txt");

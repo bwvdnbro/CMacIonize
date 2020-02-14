@@ -42,6 +42,11 @@
 #define HAS_SULPHUR
 #endif
 
+// activate new additional metals
+#ifdef ADDITIONAL_COOLANTS
+#define HAS_ARGON
+#endif
+
 /**
  * @brief Names of supported atoms.
  *
@@ -76,6 +81,9 @@ enum ElementName {
 #ifdef HAS_SULPHUR
   /*! @brief Sulphur. */
   ELEMENT_S,
+#endif
+#ifdef HAS_ARGON
+  ELEMENT_Ar,
 #endif
   /*! @brief Atom number counter. Add new atoms above this element! */
   NUMBER_OF_ELEMENTNAMES
@@ -131,6 +139,16 @@ enum IonName {
   /*! @brief Triple ionized sulphur. */
   ION_S_p3,
 #endif
+#ifdef HAS_ARGON
+  /*! @brief Ionized argon. */
+  ION_Ar_p1,
+  /*! @brief Double ionized argon. */
+  ION_Ar_p2,
+  /*! @brief Triple ionized argon. */
+  ION_Ar_p3,
+  /*! @brief Quadruple ionized argon. */
+  ION_Ar_p4,
+#endif
   /*! @brief Number of supported elements. */
   NUMBER_OF_IONNAMES
 };
@@ -170,6 +188,10 @@ static inline std::string get_element_name(const int_fast32_t element) {
 #ifdef HAS_SULPHUR
   case ELEMENT_S:
     return "S";
+#endif
+#ifdef HAS_ARGON
+  case ELEMENT_Ar:
+    return "Ar";
 #endif
   default:
     cmac_error("Unknown element: %" PRIiFAST32 "!", element);
@@ -234,6 +256,17 @@ static inline std::string get_ion_name(const int_fast32_t ion) {
     return "S+++";
 #endif
 
+#ifdef HAS_ARGON
+  case ION_Ar_p1:
+    return "Ar+";
+  case ION_Ar_p2:
+    return "Ar++";
+  case ION_Ar_p3:
+    return "Ar+++";
+  case ION_Ar_p4:
+    return "Ar++++";
+#endif
+
   default:
     cmac_error("Unknown ion: %" PRIiFAST32 "!", ion);
     return "";
@@ -295,6 +328,17 @@ static inline int_fast32_t get_element(const int_fast32_t ion) {
     return ELEMENT_S;
   case ION_S_p3:
     return ELEMENT_S;
+#endif
+
+#ifdef HAS_ARGON
+  case ION_Ar_p1:
+    return ELEMENT_Ar;
+  case ION_Ar_p2:
+    return ELEMENT_Ar;
+  case ION_Ar_p3:
+    return ELEMENT_Ar;
+  case ION_Ar_p4:
+    return ELEMENT_Ar;
 #endif
 
   default:

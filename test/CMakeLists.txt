@@ -1384,6 +1384,8 @@ configure_file(
   ${PROJECT_SOURCE_DIR}/test/test_emissivitycalculationsimulation.param
   ${PROJECT_BINARY_DIR}/rundir/test/test_emissivitycalculationsimulation.param
   COPYONLY)
+configure_file(${PROJECT_SOURCE_DIR}/test/python_test.hdf5
+               ${PROJECT_BINARY_DIR}/rundir/test/python_test.hdf5 COPYONLY)
 endif(HAVE_HDF5)
 
 ## Unit test for StatisticsLogger
@@ -1739,8 +1741,6 @@ add_python_unit_test(NAME test_linecoolingdata.py)
 
 ## DensityGridModule test
 if(HAVE_HDF5)
-  configure_file(${PROJECT_SOURCE_DIR}/test/python_test.hdf5
-                 ${PROJECT_BINARY_DIR}/rundir/test/python_test.hdf5 COPYONLY)
   add_python_unit_test(NAME test_densitygrid.py)
 endif(HAVE_HDF5)
 

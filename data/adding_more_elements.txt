@@ -1,0 +1,6 @@
+To add additional elements, a number of things need to be done:
+
+1. Make an entry for the element and all relevant ions of the element in 
+src/ElementNames.hpp. Start by adding a HAS_ELEMENT define in the 
+appropriate place at the top of the file, and then work your way down. 
+Make sure not to touch the position of the counters in the enums!
