@@ -1465,6 +1465,17 @@ void TaskBasedIonizationSimulation::run(
             }
           }
 
+          if (_verbose && _log != nullptr && thread_id == 0) {
+            if (verbose_timer.interval() > 60.) {
+              _log->write_info(
+                  "num_empty: ", num_empty.value(), " (", num_empty_target,
+                  "), num_active_buffers: ", num_active_buffers.value(),
+                  ", num_photon_done: ", num_photon_done.value());
+              // reset the timer
+              verbose_timer.start();
+            }
+          }
+
           current_index = get_task(thread_id);
         }
 
@@ -1475,16 +1486,6 @@ void TaskBasedIonizationSimulation::run(
                      num_empty.value(), num_empty_target,
                      num_active_buffers.value(), num_photon_done.value());
 #endif
-        if (_verbose && _log != nullptr && thread_id == 0) {
-          if (verbose_timer.interval() > 60.) {
-            _log->write_info(
-                "num_empty: ", num_empty.value(), " (", num_empty_target,
-                "), num_active_buffers: ", num_active_buffers.value(),
-                ", num_photon_done: ", num_photon_done.value());
-            // reset the timer
-            verbose_timer.start();
-          }
-        }
         if (num_empty.value() == num_empty_target &&
             num_active_buffers.value() == 0 &&
             num_photon_done.value() == _number_of_photons) {
