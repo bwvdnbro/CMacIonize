@@ -32,6 +32,7 @@
 
 // implementations
 #include "FaucherGiguerePhotonSourceSpectrum.hpp"
+#include "HolmesPhotonSourceSpectrum.hpp"
 #include "MaskedPhotonSourceSpectrum.hpp"
 #include "MonochromaticPhotonSourceSpectrum.hpp"
 #include "PlanckPhotonSourceSpectrum.hpp"
@@ -61,6 +62,8 @@ public:
 
     if (type == "FaucherGiguere") {
       return new FaucherGiguerePhotonSourceSpectrum(role, params, log);
+    } else if (type == "Holmes") {
+      return new HolmesPhotonSourceSpectrum(role, params, log);
     } else if (type == "Masked") {
       return new MaskedPhotonSourceSpectrum(role, params, log);
     } else if (type == "Monochromatic") {
@@ -86,6 +89,7 @@ public:
    * Supported types are (default: Planck):
    *  - FaucherGiguere: Redshift dependent UVB spectrum of Faucher-Giguère et
    *    al. (2009)
+   *  - Holmes: HOt Low-Mass Evolved Star spectrum
    *  - Monochromatic: Monochromatic spectrum
    *  - Planck: Black body spectrum
    *  - WMBasic: Realistic stellar atmosphere spectrum of Sternberg, Hoffmann &

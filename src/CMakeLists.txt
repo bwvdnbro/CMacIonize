@@ -91,6 +91,14 @@ message(STATUS "WMBasicDataLocation.hpp: ${WMBASICDATALOCATION}")
 configure_file(${PROJECT_SOURCE_DIR}/src/WMBasicDataLocation.hpp.in
                ${PROJECT_BINARY_DIR}/src/WMBasicDataLocation.hpp @ONLY)
 
+# HolmesDataLocation.hpp
+configure_file(${PROJECT_SOURCE_DIR}/data/pegase3_Z02_10Gyr_chab.spec
+               ${PROJECT_BINARY_DIR}/data/pegase3_Z02_10Gyr_chab.spec COPYONLY)
+set(HOLMESDATALOCATION ${PROJECT_BINARY_DIR}/data/pegase3_Z02_10Gyr_chab.spec)
+message(STATUS "HolmesDataLocation.hpp: ${HOLMESDATALOCATION}")
+configure_file(${PROJECT_SOURCE_DIR}/src/HolmesDataLocation.hpp.in
+               ${PROJECT_BINARY_DIR}/src/HolmesDataLocation.hpp @ONLY)
+
 # Configuration files
 configure_file(${PROJECT_SOURCE_DIR}/src/Configuration.hpp.in
                ${PROJECT_BINARY_DIR}/src/Configuration.hpp @ONLY)
@@ -113,6 +121,7 @@ set(LIBIONIZATIONSIMULATION_SOURCES
     FixedValueDiffuseReemissionHandler.hpp
     HeliumLymanContinuumSpectrum.cpp
     HeliumTwoPhotonContinuumSpectrum.cpp
+    HolmesPhotonSourceSpectrum.cpp
     HydrogenLymanContinuumSpectrum.cpp
     InterpolatedDensityFunction.cpp
     IonizationSimulation.cpp
@@ -321,6 +330,7 @@ set(LIBTASKBASEDIONIZATIONSIMULATION_SOURCES
     GadgetSnapshotPhotonSourceDistribution.cpp
     HeliumLymanContinuumSpectrum.cpp
     HeliumTwoPhotonContinuumSpectrum.cpp
+    HolmesPhotonSourceSpectrum.cpp
     HydrogenLymanContinuumSpectrum.cpp
     InterpolatedDensityFunction.cpp
     IonizationStateCalculator.cpp

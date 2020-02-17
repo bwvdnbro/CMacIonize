@@ -1081,6 +1081,7 @@ set(TESTMASKEDPHOTONSOURCESPECTRUM_SOURCES
     testMaskedPhotonSourceSpectrum.cpp
 
     ../src/FaucherGiguerePhotonSourceSpectrum.cpp
+    ../src/HolmesPhotonSourceSpectrum.cpp
     ../src/LinearPhotonSourceSpectrumMask.hpp
     ../src/MaskedPhotonSourceSpectrum.cpp
     ../src/MaskedPhotonSourceSpectrum.hpp
@@ -1704,6 +1705,17 @@ configure_file(${PROJECT_SOURCE_DIR}/test/Phantomtest.dat
                ${PROJECT_BINARY_DIR}/rundir/test/Phantomtest.dat COPYONLY)
 configure_file(${PROJECT_SOURCE_DIR}/test/Phantom_data.txt
                ${PROJECT_BINARY_DIR}/rundir/test/Phantom_data.txt COPYONLY)
+
+## HolmesPhotonSourceSpectrum test
+set(TESTHOLMESPHOTONSOURCESPECTRUM_SOURCES
+    testHolmesPhotonSourceSpectrum.cpp
+
+    ../src/HolmesDataLocation.hpp.in
+    ../src/HolmesPhotonSourceSpectrum.cpp
+    ../src/HolmesPhotonSourceSpectrum.hpp
+)
+add_unit_test(NAME testHolmesPhotonSourceSpectrum
+             SOURCES ${TESTHOLMESPHOTONSOURCESPECTRUM_SOURCES})
 
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
