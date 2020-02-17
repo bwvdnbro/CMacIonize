@@ -223,11 +223,12 @@ TaskBasedIonizationSimulation::get_task(const int_fast8_t thread_id) {
  * @param num_thread Number of shared memory parallel threads to use.
  * @param parameterfile_name Name of the parameter file to use.
  * @param task_plot Output task plot information?
+ * @param verbose Output detailed diagnostic output to the standard output?
  * @param log Log to write logging info to.
  */
 TaskBasedIonizationSimulation::TaskBasedIonizationSimulation(
     const int_fast32_t num_thread, const std::string parameterfile_name,
-    const bool task_plot, Log *log)
+    const bool task_plot, const bool verbose, Log *log)
     : _parameter_file(parameterfile_name),
       _number_of_iterations(_parameter_file.get_value< uint_fast32_t >(
           "TaskBasedIonizationSimulation:number of iterations", 10)),
@@ -236,7 +237,7 @@ TaskBasedIonizationSimulation::TaskBasedIonizationSimulation(
       _source_copy_level(_parameter_file.get_value< uint_fast32_t >(
           "TaskBasedIonizationSimulation:source copy level", 4)),
       _simulation_box(_parameter_file), _abundances(_parameter_file, nullptr),
-      _log(log), _task_plot(task_plot) {
+      _log(log), _task_plot(task_plot), _verbose(verbose) {
 
   set_number_of_threads(num_thread);
 
@@ -765,6 +766,8 @@ void TaskBasedIonizationSimulation::run(
     AtomicValue< uint_fast32_t > num_empty(num_empty_target);
     AtomicValue< uint_fast32_t > num_active_buffers(0);
     AtomicValue< uint_fast32_t > num_photon_done(0);
+    Timer verbose_timer;
+    verbose_timer.start();
     start_parallel_timing_block();
 #ifdef HAVE_OPENMP
 #pragma omp parallel default(shared)
@@ -1472,6 +1475,16 @@ void TaskBasedIonizationSimulation::run(
                      num_empty.value(), num_empty_target,
                      num_active_buffers.value(), num_photon_done.value());
 #endif
+        if (_verbose && _log != nullptr && thread_id == 0) {
+          if (verbose_timer.interval() > 60.) {
+            _log->write_info(
+                "num_empty: ", num_empty.value(), " (", num_empty_target,
+                "), num_active_buffers: ", num_active_buffers.value(),
+                ", num_photon_done: ", num_photon_done.value());
+            // reset the timer
+            verbose_timer.start();
+          }
+        }
         if (num_empty.value() == num_empty_target &&
             num_active_buffers.value() == 0 &&
             num_photon_done.value() == _number_of_photons) {
@@ -1490,6 +1503,10 @@ void TaskBasedIonizationSimulation::run(
     stop_parallel_timing_block();
     _time_log.end("update copies");
 
+    if (_log != nullptr) {
+      _log->write_info("Done shooting photons.");
+      _log->write_info("Starting temperature calculation...");
+    }
     _time_log.start("temperature calculation");
     {
       AtomicValue< size_t > igrid(0);
