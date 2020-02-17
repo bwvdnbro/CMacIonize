@@ -88,6 +88,8 @@
  *    the photon packets at the end of each iteration.
  *  - task-based (no abbreviation, optional, no argument): run the code using
  *    a task-based parallel algorithm.
+ *  - task-plot (no abbreviation, optional, no argument): output extra
+ *    information that can be used to generate a task plot?
  *  - task-based-rhd (no abbreviation, optional, no argument): run the RHD code
  *    using a task-based parallel algorithm.
  *
@@ -163,6 +165,12 @@ int main(int argc, char **argv) {
                     COMMANDLINEOPTION_NOARGUMENT, "false");
   parser.add_option("task-based", 0,
                     "Run a task-based photoionization simulation.",
+                    COMMANDLINEOPTION_NOARGUMENT, "false");
+  parser.add_option("task-plot", 0,
+                    "Output diagnostic information about the tasks? This "
+                    "information can be used to generate a task plot that "
+                    "shows load imbalances and bottleneck dependencies, but "
+                    "requires all tasks to be stored (requires more memory).",
                     COMMANDLINEOPTION_NOARGUMENT, "false");
   parser.add_option("task-based-rhd", 0, "Run a task-based RHD simulation.",
                     COMMANDLINEOPTION_NOARGUMENT, "false");
@@ -287,7 +295,8 @@ int main(int argc, char **argv) {
 
     TaskBasedIonizationSimulation simulation(
         parser.get_value< int_fast32_t >("threads"),
-        parser.get_value< std::string >("params"), log);
+        parser.get_value< std::string >("params"),
+        parser.get_value< bool >("task-plot"), log);
 
     if (parser.get_value< bool >("dry-run")) {
       if (log) {

@@ -222,11 +222,12 @@ TaskBasedIonizationSimulation::get_task(const int_fast8_t thread_id) {
  *
  * @param num_thread Number of shared memory parallel threads to use.
  * @param parameterfile_name Name of the parameter file to use.
+ * @param task_plot Output task plot information?
  * @param log Log to write logging info to.
  */
 TaskBasedIonizationSimulation::TaskBasedIonizationSimulation(
     const int_fast32_t num_thread, const std::string parameterfile_name,
-    Log *log)
+    const bool task_plot, Log *log)
     : _parameter_file(parameterfile_name),
       _number_of_iterations(_parameter_file.get_value< uint_fast32_t >(
           "TaskBasedIonizationSimulation:number of iterations", 10)),
@@ -235,7 +236,7 @@ TaskBasedIonizationSimulation::TaskBasedIonizationSimulation(
       _source_copy_level(_parameter_file.get_value< uint_fast32_t >(
           "TaskBasedIonizationSimulation:source copy level", 4)),
       _simulation_box(_parameter_file), _abundances(_parameter_file, nullptr),
-      _log(log) {
+      _log(log), _task_plot(task_plot) {
 
   set_number_of_threads(num_thread);
 
@@ -397,7 +398,7 @@ TaskBasedIonizationSimulation::~TaskBasedIonizationSimulation() {
                        Utilities::human_readable_time(_worktimer.value()), ".");
   }
 
-  {
+  if (_task_plot) {
     std::ofstream pfile("program_time.txt");
     pfile << "# rank\tstart\tstop\ttime\n";
     pfile << "0\t" << _program_start << "\t" << program_end << "\t"
@@ -1447,6 +1448,11 @@ void TaskBasedIonizationSimulation::run(
           }
           task.unlock_dependency();
 
+          // we are done with the task, clean up (if we don't output it)
+          if (!_task_plot) {
+            _tasks->free_element(current_index);
+          }
+
           for (uint_fast32_t itask = 0; itask < num_tasks_to_add; ++itask) {
             if (queues_to_add[itask] < 0) {
               // general queue
@@ -1524,6 +1530,11 @@ void TaskBasedIonizationSimulation::run(
           _temperature_calculator->calculate_temperature(
               iloop, _number_of_photons, *gridit);
           task.stop();
+
+          // clean up (if we don't need the task any more)
+          if (!_task_plot) {
+            _tasks->free_element(itask);
+          }
         }
       }
       stop_parallel_timing_block();
@@ -1544,12 +1555,14 @@ void TaskBasedIonizationSimulation::run(
     stop_parallel_timing_block();
     _time_log.end("copy update");
 
-    _time_log.start("task output");
-    cpucycle_tick(iteration_end);
-    _worktimer.stop();
-    output_tasks(iloop, *_tasks, iteration_start, iteration_end);
-    output_queues(iloop, _queues, *_shared_queue);
-    _time_log.end("task output");
+    if (_task_plot) {
+      _time_log.start("task output");
+      cpucycle_tick(iteration_end);
+      _worktimer.stop();
+      output_tasks(iloop, *_tasks, iteration_start, iteration_end);
+      output_queues(iloop, _queues, *_shared_queue);
+      _time_log.end("task output");
+    }
 
     _time_log.start("task reset");
     _tasks->clear();

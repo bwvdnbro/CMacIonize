@@ -166,11 +166,15 @@ private:
   /*! @brief Time log. */
   TimeLogger _time_log;
 
+  /*! @brief Output task plot information? */
+  const bool _task_plot;
+
   uint_fast32_t get_task(const int_fast8_t thread_id);
 
 public:
   TaskBasedIonizationSimulation(const int_fast32_t num_thread,
                                 const std::string parameterfile_name,
+                                const bool task_plot = false,
                                 Log *log = nullptr);
   ~TaskBasedIonizationSimulation();
 
