@@ -1512,6 +1512,13 @@ void TaskBasedIonizationSimulation::run(
                   _log->write_info("task[", itask,
                                    "]: ", current_tasks[itask]->get_type());
                 }
+                _log->write_info("Subgrid buffers:");
+                for (auto gridit = _grid_creator->begin();
+                     gridit != _grid_creator->all_end(); ++gridit) {
+                  DensitySubGrid &this_subgrid = *gridit;
+                  _log->write_info("subgrid[", gridit.get_index(), "]: ",
+                                   this_subgrid.get_largest_buffer_size());
+                }
               }
               verbose_last_num_empty = current_num_empty;
               verbose_last_num_active_buffers = current_num_active_buffers;
