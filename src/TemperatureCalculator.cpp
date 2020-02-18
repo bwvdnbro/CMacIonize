@@ -242,10 +242,12 @@ void TemperatureCalculator::compute_cooling_and_heating_balance(
   const double sqrtT = std::sqrt(T);
   const double logT = std::log(T);
 
+#ifndef HAVE_HYDROGEN_ONLY
 #ifdef VARIABLE_ABUNDANCES
   const Abundances &abundances = ionization_variables.get_abundances();
 #else
   const Abundances &abundances = input_abundances;
+#endif
 #endif
 
 #ifdef HAS_HELIUM

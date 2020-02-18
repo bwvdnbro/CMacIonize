@@ -198,6 +198,94 @@ TaskBasedIonizationSimulation::get_task(const int_fast8_t thread_id) {
 }
 
 /**
+ * @brief Output diagnostic information about the task execution (if activated).
+ *
+ * @param verbose Is verbose output activated?
+ * @param log Log to write logging info to.
+ * @param thread_id Thread ID (only thread 0 writes diagnostic info).
+ * @param verbose_timer Timer used to regulate diagnostic output (output is
+ * written every minute).
+ * @param num_empty Atomic counter for the number of inactive subgrid buffers.
+ * @param num_empty_target Target number of inactive subgrid buffers.
+ * @param num_active_buffers Number of active buffers not related to any
+ * subgrid.
+ * @param num_photon_done Total number of photon packets that has been
+ * processed.
+ * @param num_photon_target Target number of photon packets to process.
+ * @param verbose_last_num_empty Number of empty photon buffers last time
+ * around (to detect if we are stuck).
+ * @param verbose_last_num_active_buffers Number of active buffers last time
+ * around (to detect if we are stuck).
+ * @param verbose_last_num_photon_done Number of processed photon packets last
+ * time around (to detect if we are stuck).
+ * @param shared_queue Shared queue (to output its statistics).
+ * @param queues Thread queues (to output their statistics).
+ * @param tasks Tasks (to output the unfinished ones).
+ * @param grid_creator Subgrids (to access their photon buffers).
+ */
+inline void task_status(const bool verbose, Log *log,
+                        const int_fast32_t thread_id, Timer &verbose_timer,
+                        AtomicValue< uint_fast32_t > &num_empty,
+                        const uint_fast32_t num_empty_target,
+                        AtomicValue< uint_fast32_t > &num_active_buffers,
+                        AtomicValue< uint_fast32_t > &num_photon_done,
+                        const uint_fast32_t num_photon_target,
+                        uint_fast32_t &verbose_last_num_empty,
+                        uint_fast32_t &verbose_last_num_active_buffers,
+                        uint_fast32_t &verbose_last_num_photon_done,
+                        TaskQueue &shared_queue,
+                        std::vector< TaskQueue * > &queues,
+                        ThreadSafeVector< Task > &tasks,
+                        DensitySubGridCreator< DensitySubGrid > &grid_creator) {
+
+  if (verbose && log != nullptr && thread_id == 0) {
+    if (verbose_timer.interval() > 60.) {
+      const uint_fast32_t current_num_empty = num_empty.value();
+      const uint_fast32_t current_num_active_buffers =
+          num_active_buffers.value();
+      const uint_fast32_t current_num_photon_done = num_photon_done.value();
+      log->write_info("num_empty: ", current_num_empty, " (", num_empty_target,
+                      "), num_active_buffers: ", current_num_active_buffers,
+                      ", num_photon_done: ", current_num_photon_done, " (",
+                      num_photon_target, ")");
+      if (current_num_empty == verbose_last_num_empty &&
+          current_num_active_buffers == verbose_last_num_active_buffers &&
+          current_num_photon_done == verbose_last_num_photon_done) {
+        // This is curious. We might be deadlocked. Output additional
+        // information.
+        log->write_info("Shared queue size: ", shared_queue.size());
+        log->write_info("Thread queue sizes:");
+        for (uint_fast32_t ithread = 0; ithread < queues.size(); ++ithread) {
+          log->write_info("queue[", ithread, "]: ", queues[ithread]->size());
+        }
+        const size_t current_num_tasks = tasks.get_number_of_active_elements();
+        log->write_info("Number of unfinished tasks: ", current_num_tasks);
+        Task **current_tasks = new Task *[current_num_tasks];
+        const size_t number_of_tasks_retrieved =
+            tasks.get_active_elements(current_num_tasks, current_tasks);
+        for (size_t itask = 0; itask < number_of_tasks_retrieved; ++itask) {
+          log->write_info("task[", itask,
+                          "]: ", current_tasks[itask]->get_type());
+        }
+        delete[] current_tasks;
+        log->write_info("Subgrid buffers:");
+        for (auto gridit = grid_creator.begin();
+             gridit != grid_creator.all_end(); ++gridit) {
+          DensitySubGrid &this_subgrid = *gridit;
+          log->write_info("subgrid[", gridit.get_index(),
+                          "]: ", this_subgrid.get_largest_buffer_size());
+        }
+      }
+      verbose_last_num_empty = current_num_empty;
+      verbose_last_num_active_buffers = current_num_active_buffers;
+      verbose_last_num_photon_done = current_num_photon_done;
+      // reset the timer
+      verbose_timer.start();
+    }
+  }
+}
+
+/**
  * @brief Constructor.
  *
  * This method will read the following parameters from the parameter file:
@@ -1478,58 +1566,25 @@ void TaskBasedIonizationSimulation::run(
             }
           }
 
-          if (_verbose && _log != nullptr && thread_id == 0) {
-            if (verbose_timer.interval() > 60.) {
-              const uint_fast32_t current_num_empty = num_empty.value();
-              const uint_fast32_t current_num_active_buffers =
-                  num_active_buffers.value();
-              const uint_fast32_t current_num_photon_done =
-                  num_photon_done.value();
-              _log->write_info(
-                  "num_empty: ", current_num_empty, " (", num_empty_target,
-                  "), num_active_buffers: ", current_num_active_buffers,
-                  ", num_photon_done: ", current_num_photon_done);
-              if (current_num_empty == verbose_last_num_empty &&
-                  current_num_active_buffers ==
-                      verbose_last_num_active_buffers &&
-                  current_num_photon_done == verbose_last_num_photon_done) {
-                // This is curious. We might be deadlocked. Output additional
-                // information.
-                _log->write_info("Shared queue size: ", _shared_queue->size());
-                _log->write_info("Thread queue sizes:");
-                for (uint_fast32_t ithread = 0; ithread < _queues.size();
-                     ++ithread) {
-                  _log->write_info("queue[", ithread,
-                                   "]: ", _queues[ithread]->size());
-                }
-                const size_t current_num_tasks =
-                    _tasks->get_number_of_active_elements();
-                _log->write_info("Number of unfinished tasks: ",
-                                 current_num_tasks);
-                Task **current_tasks = new Task *[current_num_tasks];
-                _tasks->get_active_elements(current_num_tasks, current_tasks);
-                for (size_t itask = 0; itask < current_num_tasks; ++itask) {
-                  _log->write_info("task[", itask,
-                                   "]: ", current_tasks[itask]->get_type());
-                }
-                _log->write_info("Subgrid buffers:");
-                for (auto gridit = _grid_creator->begin();
-                     gridit != _grid_creator->all_end(); ++gridit) {
-                  DensitySubGrid &this_subgrid = *gridit;
-                  _log->write_info("subgrid[", gridit.get_index(), "]: ",
-                                   this_subgrid.get_largest_buffer_size());
-                }
-              }
-              verbose_last_num_empty = current_num_empty;
-              verbose_last_num_active_buffers = current_num_active_buffers;
-              verbose_last_num_photon_done = current_num_photon_done;
-              // reset the timer
-              verbose_timer.start();
-            }
-          }
+          // we need to call task_status twice: once inside the task loop
+          // (for when thread 0 is happily working) and once outside (for
+          // when thread 0 is idling)
+          task_status(_verbose, _log, thread_id, verbose_timer, num_empty,
+                      num_empty_target, num_active_buffers, num_photon_done,
+                      _number_of_photons, verbose_last_num_empty,
+                      verbose_last_num_active_buffers,
+                      verbose_last_num_photon_done, *_shared_queue, _queues,
+                      *_tasks, *_grid_creator);
 
           current_index = get_task(thread_id);
         }
+
+        task_status(_verbose, _log, thread_id, verbose_timer, num_empty,
+                    num_empty_target, num_active_buffers, num_photon_done,
+                    _number_of_photons, verbose_last_num_empty,
+                    verbose_last_num_active_buffers,
+                    verbose_last_num_photon_done, *_shared_queue, _queues,
+                    *_tasks, *_grid_creator);
 
 #ifdef OUTPUT_STOP_CONDITION
         cmac_warning("num_empty: %" PRIuFAST32 " (%" PRIuFAST32
