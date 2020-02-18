@@ -106,7 +106,7 @@ TemperatureCalculator::TemperatureCalculator(
  *  - minimum number of iterations: Minimum number of iterations of the
  *    photoionization algorithm to perform before computing the temperature
  *    (default: 3)
- *  - PAH heating factor: Strength of PAH heating (default: 1.)
+ *  - PAH heating factor: Strength of PAH heating (default: 0.)
  *  - cosmic ray heating factor: Strength of cosmic ray heating (default: 0.)
  *  - cosmic ray heating limit: Neutral fraction limit below which cosmic ray
  *    heating is applied (default: 0.75)
@@ -141,7 +141,7 @@ TemperatureCalculator::TemperatureCalculator(
           params.get_value< uint_fast32_t >(
               "TemperatureCalculator:maximum number of iterations", 100),
           params.get_value< double >("TemperatureCalculator:PAH heating factor",
-                                     1.),
+                                     0.),
           params.get_value< double >(
               "TemperatureCalculator:cosmic ray heating factor", 0.),
           params.get_value< double >(
