@@ -768,6 +768,9 @@ void TaskBasedIonizationSimulation::run(
     AtomicValue< uint_fast32_t > num_photon_done(0);
     Timer verbose_timer;
     verbose_timer.start();
+    uint_fast32_t verbose_last_num_empty = 0;
+    uint_fast32_t verbose_last_num_active_buffers = 0;
+    uint_fast32_t verbose_last_num_photon_done = 0;
     start_parallel_timing_block();
 #ifdef HAVE_OPENMP
 #pragma omp parallel default(shared)
@@ -1467,10 +1470,42 @@ void TaskBasedIonizationSimulation::run(
 
           if (_verbose && _log != nullptr && thread_id == 0) {
             if (verbose_timer.interval() > 60.) {
+              const uint_fast32_t current_num_empty = num_empty.value();
+              const uint_fast32_t current_num_active_buffers =
+                  num_active_buffers.value();
+              const uint_fast32_t current_num_photon_done =
+                  num_photon_done.value();
               _log->write_info(
-                  "num_empty: ", num_empty.value(), " (", num_empty_target,
-                  "), num_active_buffers: ", num_active_buffers.value(),
-                  ", num_photon_done: ", num_photon_done.value());
+                  "num_empty: ", current_num_empty, " (", num_empty_target,
+                  "), num_active_buffers: ", current_num_active_buffers,
+                  ", num_photon_done: ", current_num_photon_done);
+              if (current_num_empty == verbose_last_num_empty &&
+                  current_num_active_buffers ==
+                      verbose_last_num_active_buffers &&
+                  current_num_photon_done == verbose_last_num_photon_done) {
+                // This is curious. We might be deadlocked. Output additional
+                // information.
+                _log->write_info("Shared queue size: ", _shared_queue->size());
+                _log->write_info("Thread queue sizes:");
+                for (uint_fast32_t ithread = 0; ithread < _queues.size();
+                     ++ithread) {
+                  _log->write_info("queue[", ithread,
+                                   "]: ", _queues[ithread]->size());
+                }
+                const size_t current_num_tasks =
+                    _tasks->get_number_of_active_elements();
+                _log->write_info("Number of unfinished tasks: ",
+                                 current_num_tasks);
+                Task **current_tasks = new Task *[current_num_tasks];
+                _tasks->get_active_elements(current_num_tasks, current_tasks);
+                for (size_t itask = 0; itask < current_num_tasks; ++itask) {
+                  _log->write_info("task[", itask,
+                                   "]: ", current_tasks[itask]->get_type());
+                }
+              }
+              verbose_last_num_empty = current_num_empty;
+              verbose_last_num_active_buffers = current_num_active_buffers;
+              verbose_last_num_photon_done = current_num_photon_done;
               // reset the timer
               verbose_timer.start();
             }

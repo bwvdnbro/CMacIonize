@@ -225,6 +225,33 @@ public:
   }
 
   /**
+   * @brief Get pointers to all elements that are active.
+   *
+   * @param output_size Size of the (preallocated) output array. Should
+   * preferably be set to get_number_of_active_elements(), although there is
+   * no guarantee this number will still correspond to the actual number of
+   * active elements when this function is called. At most output_size elements
+   * will be output.
+   * @param output (Preallocated) output array. There is no guarantee that
+   * elements in this array will still be in use when this method returns.
+   * @return Actual number of elements stored in the output array.
+   */
+  inline size_t get_active_elements(const size_t output_size,
+                                    _datatype_ **output) const {
+    size_t output_index = 0;
+    for (size_t i = 0; i < _size; ++i) {
+      if (_locks[i].value()) {
+        output[output_index] = &_vector[i];
+        ++output_index;
+        if (output_index == output_size) {
+          return output_size;
+        }
+      }
+    }
+    return output_index;
+  }
+
+  /**
    * @brief Get the index of a free element in the vector, if available.
    *
    * This element will be locked and needs to be freed later by calling
@@ -269,7 +296,7 @@ public:
   /**
    * @brief Get the size of the vector.
    *
-   * Only makes sense if the vector is continuous, i.e. non of the elements has
+   * Only makes sense if the vector is continuous, i.e. none of the elements has
    * ever been removed.
    *
    * @return Number of used elements in the vector.
