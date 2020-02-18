@@ -2012,16 +2012,26 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
                   num_photon_done_now -= buffer.size();
                   num_photon_done.pre_add(num_photon_done_now);
 
-                  const size_t task_index = tasks->get_free_element();
-                  Task &new_task = (*tasks)[task_index];
-                  new_task.set_type(TASKTYPE_PHOTON_TRAVERSAL);
-                  new_task.set_subgrid(task.get_subgrid());
-                  new_task.set_buffer(current_buffer_index);
-                  new_task.set_dependency(subgrid.get_dependency());
+                  if (index > 0) {
+                    // create a new traversal task for the leftover photons
+                    const size_t task_index = tasks->get_free_element();
+                    Task &new_task = (*tasks)[task_index];
+                    new_task.set_type(TASKTYPE_PHOTON_TRAVERSAL);
+                    new_task.set_subgrid(task.get_subgrid());
+                    new_task.set_buffer(current_buffer_index);
+                    new_task.set_dependency(subgrid.get_dependency());
 
-                  queues_to_add[num_tasks_to_add] = subgrid.get_owning_thread();
-                  tasks_to_add[num_tasks_to_add] = task_index;
-                  ++num_tasks_to_add;
+                    queues_to_add[num_tasks_to_add] =
+                        subgrid.get_owning_thread();
+                    tasks_to_add[num_tasks_to_add] = task_index;
+                    ++num_tasks_to_add;
+                  } else {
+                    // delete the buffer, as we are done with it
+                    buffers->free_buffer(current_buffer_index);
+                    cmac_assert_message(num_active_buffers.value() > 0,
+                                        "Number of active buffers < 0!");
+                    num_active_buffers.pre_decrement();
+                  }
 
                   task.stop();
 
