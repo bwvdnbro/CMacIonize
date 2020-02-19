@@ -80,7 +80,7 @@ FLASHSnapshotDensityFunction::FLASHSnapshotDensityFunction(
   nblock[2] = integer_runtime_pars["nblockz"];
 
   // make the grid
-  _grid = AMRGrid< DensityValues >(box, nblock);
+  _grid = new AMRGrid< DensityValues >(box, nblock);
 
   // fill the grid with values
 
@@ -140,8 +140,8 @@ FLASHSnapshotDensityFunction::FLASHSnapshotDensityFunction(
             // each block contains level^3 cells, hence levels[i] + level
             // (but levels[i] is 1 larger than in our definition, Fortran counts
             // from 1)
-            amrkey_t key = _grid.get_key(levels[i] + level - 1, centre);
-            DensityValues &vals = _grid.create_cell(key);
+            amrkey_t key = _grid->get_key(levels[i] + level - 1, centre);
+            DensityValues &vals = _grid->create_cell(key);
             vals.set_number_density(rho * unit_density_in_SI);
             if (temperature <= 0.) {
               double temp = temperatures[irho];
@@ -205,8 +205,8 @@ FLASHSnapshotDensityFunction::FLASHSnapshotDensityFunction(
               // (but levels[i] is 1 larger than in our definition, Fortran
               // counts
               // from 1)
-              amrkey_t key = _grid.get_key(levels[i] + level - 1, centre);
-              DensityValues &vals = _grid[key].value();
+              amrkey_t key = _grid->get_key(levels[i] + level - 1, centre);
+              DensityValues &vals = (*_grid)[key].value();
               vals.set_magnetic_field(
                   CoordinateVector<>(magnetic_field_x[irho],
                                      magnetic_field_y[irho],
@@ -220,7 +220,7 @@ FLASHSnapshotDensityFunction::FLASHSnapshotDensityFunction(
       }
     }
     // make sure the neighbour information for the grid is set
-    _grid.set_ngbs(CoordinateVector< bool >(true, true, false));
+    _grid->set_ngbs(CoordinateVector< bool >(true, true, false));
   }
 
   HDF5Tools::close_file(file);
@@ -253,6 +253,11 @@ FLASHSnapshotDensityFunction::FLASHSnapshotDensityFunction(
           log) {}
 
 /**
+ * @brief Delete the snapshot content from memory.
+ */
+void FLASHSnapshotDensityFunction::free() { delete _grid; }
+
+/**
  * @brief Function that gives the density for a given cell.
  *
  * @param cell Geometrical information about the cell.
@@ -264,7 +269,7 @@ DensityValues FLASHSnapshotDensityFunction::operator()(const Cell &cell) const {
 
   const CoordinateVector<> position = cell.get_cell_midpoint();
 
-  const DensityValues &vals = _grid.get_cell(position);
+  const DensityValues &vals = _grid->get_cell(position);
   values.set_number_density(vals.get_number_density() / 1.6737236e-27);
   values.set_temperature(vals.get_temperature());
   values.set_ionic_fraction(ION_H_n, 1.e-6);
@@ -273,8 +278,8 @@ DensityValues FLASHSnapshotDensityFunction::operator()(const Cell &cell) const {
 #endif
 
   if (_read_cosmic_ray_heating) {
-    amrkey_t key = _grid.get_key(position);
-    AMRGridCell< DensityValues > &cell = _grid[key];
+    amrkey_t key = _grid->get_key(position);
+    AMRGridCell< DensityValues > &cell = (*_grid)[key];
     AMRGridCell< DensityValues > *cell_left = cell.get_ngb(AMRNGBPOSITION_LEFT);
     while (!cell_left->is_single_cell()) {
       cell_left = cell_left->get_child(position);

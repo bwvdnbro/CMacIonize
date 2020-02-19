@@ -43,9 +43,7 @@ class RandomGenerator;
 /**
  * @brief PhotonSourceSpectrum implementation for Pegase 3 stellar spectra.
  *
- * This spectrum corresponds to the spectrum shown in Figure 4 of
- * Flores-Farjardo et al. (2011)
- * (https://ui.adsabs.harvard.edu/abs/2011MNRAS.415.2182F/abstract) and was
+ * These spectra are taken from the galactic SED fitting code Pegase 3 and were
  * provided to us by Gabriel Duarte (private communication).
  *
  * We resample the spectra on a frequency grid of 1000 bins in the range
