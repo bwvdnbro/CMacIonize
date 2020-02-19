@@ -174,6 +174,9 @@ int main(int argc, char **argv) {
                     COMMANDLINEOPTION_NOARGUMENT, "false");
   parser.add_option("task-based-rhd", 0, "Run a task-based RHD simulation.",
                     COMMANDLINEOPTION_NOARGUMENT, "false");
+  parser.add_option("no-initial-output", 0,
+                    "Do not output a snapshot before the first iteration.",
+                    COMMANDLINEOPTION_NOARGUMENT, "false");
 
   // add simulation type specific parameters
   RadiationHydrodynamicsSimulation::add_command_line_parameters(parser);
@@ -297,7 +300,8 @@ int main(int argc, char **argv) {
         parser.get_value< int_fast32_t >("threads"),
         parser.get_value< std::string >("params"),
         parser.get_value< bool >("task-plot"),
-        parser.get_value< bool >("verbose"), log);
+        parser.get_value< bool >("verbose"),
+        !parser.get_value< bool >("no-initial-output"), log);
 
     if (parser.get_value< bool >("dry-run")) {
       if (log) {

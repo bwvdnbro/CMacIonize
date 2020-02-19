@@ -312,11 +312,14 @@ inline void task_status(const bool verbose, Log *log,
  * @param parameterfile_name Name of the parameter file to use.
  * @param task_plot Output task plot information?
  * @param verbose Output detailed diagnostic output to the standard output?
+ * @param output_initial_snapshot Output a snapshot before the initial
+ * iteration?
  * @param log Log to write logging info to.
  */
 TaskBasedIonizationSimulation::TaskBasedIonizationSimulation(
     const int_fast32_t num_thread, const std::string parameterfile_name,
-    const bool task_plot, const bool verbose, Log *log)
+    const bool task_plot, const bool verbose,
+    const bool output_initial_snapshot, Log *log)
     : _parameter_file(parameterfile_name),
       _number_of_iterations(_parameter_file.get_value< uint_fast32_t >(
           "TaskBasedIonizationSimulation:number of iterations", 10)),
@@ -325,7 +328,8 @@ TaskBasedIonizationSimulation::TaskBasedIonizationSimulation(
       _source_copy_level(_parameter_file.get_value< uint_fast32_t >(
           "TaskBasedIonizationSimulation:source copy level", 4)),
       _simulation_box(_parameter_file), _abundances(_parameter_file, nullptr),
-      _log(log), _task_plot(task_plot), _verbose(verbose) {
+      _log(log), _task_plot(task_plot), _verbose(verbose),
+      _output_initial_snapshot(output_initial_snapshot) {
 
   set_number_of_threads(num_thread);
 
@@ -585,7 +589,7 @@ void TaskBasedIonizationSimulation::run(
 
   // write the initial state of the grid to an output file (only do this if
   // we are not in library mode)
-  if (_density_grid_writer) {
+  if (_density_grid_writer && _output_initial_snapshot) {
     _time_log.start("snapshot");
     _density_grid_writer->write(*_grid_creator, 0, _parameter_file);
     _time_log.end("snapshot");

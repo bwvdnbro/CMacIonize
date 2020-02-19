@@ -172,13 +172,18 @@ private:
   /*! @brief Output detailed diagnostic output to the standard output? */
   const bool _verbose;
 
+  /*! @brief Output a snapshot before the initial iteration? */
+  const bool _output_initial_snapshot;
+
   uint_fast32_t get_task(const int_fast8_t thread_id);
 
 public:
   TaskBasedIonizationSimulation(const int_fast32_t num_thread,
                                 const std::string parameterfile_name,
                                 const bool task_plot = false,
-                                const bool verbose = false, Log *log = nullptr);
+                                const bool verbose = false,
+                                const bool output_initial_snapshot = false,
+                                Log *log = nullptr);
   ~TaskBasedIonizationSimulation();
 
   void initialize(DensityFunction *density_function = nullptr);
