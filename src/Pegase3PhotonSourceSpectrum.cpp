@@ -63,10 +63,13 @@ std::string Pegase3PhotonSourceSpectrum::get_filename(const double age_in_Myr) {
   }
   if (age_index == ages.size()) {
     cmac_warning("Invalid age chosen for Pegase 3 spectrum!");
-    cmac_warning("Valid ages (in Myr):");
-    for (uint_fast32_t i = 0; i < ages.size(); ++i) {
-      cmac_warning("%g", ages[i]);
+    std::stringstream age_string;
+    age_string << "[" << ages[0];
+    for (uint_fast32_t i = 1; i < ages.size(); ++i) {
+      age_string << ", " << ages[i];
     }
+    age_string << "]";
+    cmac_warning("Valid ages (in Myr): %s", age_string.str().c_str());
     cmac_error("Choose a valid age and try again!");
   }
 
