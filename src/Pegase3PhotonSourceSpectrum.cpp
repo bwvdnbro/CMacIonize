@@ -17,24 +17,65 @@
  ******************************************************************************/
 
 /**
- * @file HolmesPhotonSourceSpectrum.cpp
+ * @file Pegase3PhotonSourceSpectrum.cpp
  *
- * @brief HolmesPhotonSourceSpectrum implementation.
+ * @brief Pegase3PhotonSourceSpectrum implementation.
  *
  * @author Bert Vandenbroucke (bert.vandenbroucke@ugent.be)
  */
-#include "HolmesPhotonSourceSpectrum.hpp"
-#include "HolmesDataLocation.hpp"
+#include "Pegase3PhotonSourceSpectrum.hpp"
 #include "Log.hpp"
 #include "ParameterFile.hpp"
+#include "Pegase3DataLocation.hpp"
 #include "PhysicalConstants.hpp"
 #include "RandomGenerator.hpp"
 #include "UnitConverter.hpp"
 #include "Utilities.hpp"
+
 #include <cmath>
 #include <fstream>
+#include <iomanip>
 #include <sstream>
 #include <vector>
+
+/**
+ * @brief Get the file name of the file containing the spectrum for the star
+ * with the given age.
+ *
+ * @param age_in_Myr Age of the star (in Myr).
+ * @return Name of the corresponding spectrum file.
+ */
+std::string Pegase3PhotonSourceSpectrum::get_filename(const double age_in_Myr) {
+
+  std::ifstream agefile(PEGASE3DATALOCATION "ages.txt");
+  std::vector< double > ages;
+  std::string line;
+  while (getline(agefile, line)) {
+    std::istringstream linestream(line);
+    double this_age;
+    linestream >> this_age;
+    ages.push_back(this_age);
+  }
+
+  uint_fast32_t age_index = 0;
+  while (age_index < ages.size() && ages[age_index] != age_in_Myr) {
+    ++age_index;
+  }
+  if (age_index == ages.size()) {
+    cmac_warning("Invalid age chosen for Pegase 3 spectrum!");
+    cmac_warning("Valid ages (in Myr):");
+    for (uint_fast32_t i = 0; i < ages.size(); ++i) {
+      cmac_warning("%g", ages[i]);
+    }
+    cmac_error("Choose a valid age and try again!");
+  }
+
+  std::stringstream filename;
+  filename << PEGASE3DATALOCATION << "pegase3_Z02_chab_" << std::setfill('0')
+           << std::setw(3) << (age_index + 1) << ".spec";
+
+  return filename.str();
+}
 
 /**
  * @brief Constructor.
@@ -42,24 +83,24 @@
  * Reads in the correct model spectrum and resamples it on the 1000 bin internal
  * frequency grid.
  *
+ * @param age_in_Myr Age of the star (in Myr).
  * @param log Log to write logging info to.
  */
-HolmesPhotonSourceSpectrum::HolmesPhotonSourceSpectrum(Log *log) {
+Pegase3PhotonSourceSpectrum::Pegase3PhotonSourceSpectrum(
+    const double age_in_Myr, Log *log) {
 
-  std::ifstream file(HOLMESDATALOCATION);
+  const std::string filename = get_filename(age_in_Myr);
+  std::ifstream file(filename);
   if (!file) {
     cmac_error("Error while opening file '%s'. Spectrum does not exist!",
-               HOLMESDATALOCATION);
+               filename.c_str());
   }
 
   if (log) {
-    log->write_status("Reading spectrum from ", HOLMESDATALOCATION, "...");
+    log->write_status("Reading spectrum from ", filename, "...");
   }
   std::string line;
-  // skip the first five lines from the file, they contain comments
-  std::getline(file, line);
-  std::getline(file, line);
-  std::getline(file, line);
+  // skip the first two lines from the file, they contain comments
   std::getline(file, line);
   std::getline(file, line);
 
@@ -86,23 +127,23 @@ HolmesPhotonSourceSpectrum::HolmesPhotonSourceSpectrum(Log *log) {
   std::reverse(file_eddington_fluxes.begin(), file_eddington_fluxes.end());
 
   // allocate memory for the data tables
-  _frequencies.resize(HOLMESPHOTONSOURCESPECTRUM_NUMFREQ, 0.);
-  _cumulative_distribution.resize(HOLMESPHOTONSOURCESPECTRUM_NUMFREQ, 0.);
+  _frequencies.resize(PEGASE3PHOTONSOURCESPECTRUM_NUMFREQ, 0.);
+  _cumulative_distribution.resize(PEGASE3PHOTONSOURCESPECTRUM_NUMFREQ, 0.);
 
   // construct the frequency bins
   // 13.6 eV in Hz
   const double min_frequency = 3.289e15;
   const double max_frequency = 4. * min_frequency;
-  for (uint_fast32_t i = 0; i < HOLMESPHOTONSOURCESPECTRUM_NUMFREQ; ++i) {
+  for (uint_fast32_t i = 0; i < PEGASE3PHOTONSOURCESPECTRUM_NUMFREQ; ++i) {
     _frequencies[i] =
         min_frequency + i * (max_frequency - min_frequency) /
-                            (HOLMESPHOTONSOURCESPECTRUM_NUMFREQ - 1.);
+                            (PEGASE3PHOTONSOURCESPECTRUM_NUMFREQ - 1.);
   }
 
   // create the spectrum in the bin range of interest
   _cumulative_distribution[0] = 0.;
   const size_t num_frequency = file_frequencies.size();
-  for (uint_fast32_t i = 1; i < HOLMESPHOTONSOURCESPECTRUM_NUMFREQ; ++i) {
+  for (uint_fast32_t i = 1; i < PEGASE3PHOTONSOURCESPECTRUM_NUMFREQ; ++i) {
     double y1 = _frequencies[i - 1];
     uint_fast32_t i1 =
         Utilities::locate(y1, &file_frequencies[0], num_frequency);
@@ -123,7 +164,7 @@ HolmesPhotonSourceSpectrum::HolmesPhotonSourceSpectrum(Log *log) {
   // _cumulative_distribution now contains the actual ionizing spectrum
   // make it cumulative (and at the same time get the total ionizing
   // luminosity)
-  for (uint_fast32_t i = 1; i < HOLMESPHOTONSOURCESPECTRUM_NUMFREQ; ++i) {
+  for (uint_fast32_t i = 1; i < PEGASE3PHOTONSOURCESPECTRUM_NUMFREQ; ++i) {
     _cumulative_distribution[i] += _cumulative_distribution[i - 1];
   }
 
@@ -133,21 +174,22 @@ HolmesPhotonSourceSpectrum::HolmesPhotonSourceSpectrum(Log *log) {
   // we convert to s^-1 cm^-2 sr^-1 by dividing by Planck's constant
   // (in J s = J Hz^-1) and multiplying with 10^-7
   _total_flux =
-      1.e-7 * _cumulative_distribution[HOLMESPHOTONSOURCESPECTRUM_NUMFREQ - 1] /
+      1.e-7 *
+      _cumulative_distribution[PEGASE3PHOTONSOURCESPECTRUM_NUMFREQ - 1] /
       PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_PLANCK);
   // we integrate out over all solid angles
   _total_flux *= 4. * M_PI;
   // and convert from cm^-2 to m^-2
   _total_flux *= 1.e4;
   // normalize the spectrum
-  for (uint_fast32_t i = 0; i < HOLMESPHOTONSOURCESPECTRUM_NUMFREQ; ++i) {
+  for (uint_fast32_t i = 0; i < PEGASE3PHOTONSOURCESPECTRUM_NUMFREQ; ++i) {
     _cumulative_distribution[i] /=
-        _cumulative_distribution[HOLMESPHOTONSOURCESPECTRUM_NUMFREQ - 1];
+        _cumulative_distribution[PEGASE3PHOTONSOURCESPECTRUM_NUMFREQ - 1];
   }
 
   if (log) {
     log->write_status(
-        "Constructed HolmesPhotonSourceSpectrum with total ionizing flux ",
+        "Constructed Pegase3PhotonSourceSpectrum with total ionizing flux ",
         _total_flux, " m^-2 s^-1.");
   }
 }
@@ -155,17 +197,19 @@ HolmesPhotonSourceSpectrum::HolmesPhotonSourceSpectrum(Log *log) {
 /**
  * @brief ParameterFile constructor.
  *
- * No parameters are read from the parameter file.
+ * The following parameters are read from the parameter file:
+ *  - age in Myr: Age of the star (in Myr, default: 10).
  *
  * @param role Role the spectrum will fulfil in the simulation. Parameters are
  * read from the corresponding block in the parameter file.
  * @param params ParameterFile to read from.
  * @param log Log to write logging info to.
  */
-HolmesPhotonSourceSpectrum::HolmesPhotonSourceSpectrum(std::string role,
-                                                       ParameterFile &params,
-                                                       Log *log)
-    : HolmesPhotonSourceSpectrum(log) {}
+Pegase3PhotonSourceSpectrum::Pegase3PhotonSourceSpectrum(std::string role,
+                                                         ParameterFile &params,
+                                                         Log *log)
+    : Pegase3PhotonSourceSpectrum(
+          params.get_value< double >(role + ":age in Myr", 10.), log) {}
 
 /**
  * @brief Get a random frequency from a stellar model spectrum.
@@ -178,12 +222,12 @@ HolmesPhotonSourceSpectrum::HolmesPhotonSourceSpectrum(std::string role,
  * @param temperature Not used for this spectrum.
  * @return Random frequency (in Hz).
  */
-double HolmesPhotonSourceSpectrum::get_random_frequency(
+double Pegase3PhotonSourceSpectrum::get_random_frequency(
     RandomGenerator &random_generator, double temperature) const {
 
   const double x = random_generator.get_uniform_random_double();
   const uint_fast32_t inu = Utilities::locate(
-      x, _cumulative_distribution.data(), HOLMESPHOTONSOURCESPECTRUM_NUMFREQ);
+      x, _cumulative_distribution.data(), PEGASE3PHOTONSOURCESPECTRUM_NUMFREQ);
   const double frequency =
       _frequencies[inu] +
       (_frequencies[inu + 1] - _frequencies[inu]) *
@@ -200,7 +244,7 @@ double HolmesPhotonSourceSpectrum::get_random_frequency(
  *
  * @return Total ionizing flux (in m^-2 s^-1).
  */
-double HolmesPhotonSourceSpectrum::get_total_flux() const {
+double Pegase3PhotonSourceSpectrum::get_total_flux() const {
   cmac_error("Should not be used!");
   return _total_flux;
 }

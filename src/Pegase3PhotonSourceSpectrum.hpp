@@ -17,15 +17,14 @@
  ******************************************************************************/
 
 /**
- * @file HolmesPhotonSourceSpectrum.hpp
+ * @file Pegase3PhotonSourceSpectrum.hpp
  *
- * @brief PhotonSourceSpectrum implementation for a HOt Low-Mass Evolved
- * Star (HOLMES) spectrum.
+ * @brief PhotonSourceSpectrum implementation for Pegase 3 stellar spectra.
  *
  * @author Bert Vandenbroucke (bert.vandenbroucke@ugent.be)
  */
-#ifndef HOLMESPHOTONSOURCESPECTRUM_HPP
-#define HOLMESPHOTONSOURCESPECTRUM_HPP
+#ifndef PEGASE3PHOTONSOURCESPECTRUM_HPP
+#define PEGASE3PHOTONSOURCESPECTRUM_HPP
 
 #include "PhotonSourceSpectrum.hpp"
 
@@ -39,11 +38,10 @@ class RandomGenerator;
 /**
  * @brief Number of frequency bins used in the internal table.
  */
-#define HOLMESPHOTONSOURCESPECTRUM_NUMFREQ 1000
+#define PEGASE3PHOTONSOURCESPECTRUM_NUMFREQ 1000
 
 /**
- * @brief PhotonSourceSpectrum implementation for a HOt Low-Mass Evolved
- * Star (HOLMES) spectrum.
+ * @brief PhotonSourceSpectrum implementation for Pegase 3 stellar spectra.
  *
  * This spectrum corresponds to the spectrum shown in Figure 4 of
  * Flores-Farjardo et al. (2011)
@@ -53,7 +51,7 @@ class RandomGenerator;
  * We resample the spectra on a frequency grid of 1000 bins in the range
  * [13.6 eV, 54.4 eV]..
  */
-class HolmesPhotonSourceSpectrum : public PhotonSourceSpectrum {
+class Pegase3PhotonSourceSpectrum : public PhotonSourceSpectrum {
 private:
   /*! @brief Frequency bins. */
   std::vector< double > _frequencies;
@@ -65,15 +63,17 @@ private:
   double _total_flux;
 
 public:
-  HolmesPhotonSourceSpectrum(Log *log = nullptr);
+  static std::string get_filename(const double age_in_Myr);
 
-  HolmesPhotonSourceSpectrum(std::string role, ParameterFile &params,
-                             Log *log = nullptr);
+  Pegase3PhotonSourceSpectrum(const double age_in_Myr, Log *log = nullptr);
+
+  Pegase3PhotonSourceSpectrum(std::string role, ParameterFile &params,
+                              Log *log = nullptr);
 
   /**
    * @brief Virtual destructor.
    */
-  virtual ~HolmesPhotonSourceSpectrum() {}
+  virtual ~Pegase3PhotonSourceSpectrum() {}
 
   virtual double get_random_frequency(RandomGenerator &random_generator,
                                       double temperature = 0.) const;
@@ -81,4 +81,4 @@ public:
   virtual double get_total_flux() const;
 };
 
-#endif // HOLMESPHOTONSOURCESPECTRUM_HPP
+#endif // PEGASE3PHOTONSOURCESPECTRUM_HPP

@@ -17,15 +17,15 @@
  ******************************************************************************/
 
 /**
- * @file testHolmesPhotonSourceSpectrum.cpp
+ * @file testPegase3PhotonSourceSpectrum.cpp
  *
- * @brief Unit test for the WMBasicPhotonSourceSpectrum class.
+ * @brief Unit test for the Pegase3PhotonSourceSpectrum class.
  *
  * @author Bert Vandenbroucke (bert.vandenbroucke@ugent.be)
  */
 #include "Assert.hpp"
-#include "HolmesDataLocation.hpp"
-#include "HolmesPhotonSourceSpectrum.hpp"
+#include "Pegase3DataLocation.hpp"
+#include "Pegase3PhotonSourceSpectrum.hpp"
 #include "PhysicalConstants.hpp"
 #include "RandomGenerator.hpp"
 #include "UnitConverter.hpp"
@@ -34,14 +34,14 @@
 #include <sstream>
 
 /**
- * @brief Interpolate on the given Holmes reference spectrum.
+ * @brief Interpolate on the given Pegase 3 reference spectrum.
  *
  * @param nuarr Frequencies (in Ryd).
  * @param earr Energies (in erg s^-1 cm^-2 Hz^-1 sr^-1).
  * @param nu Frequency for which we want the value (in Ryd).
  * @return Energy at that frequency (in erg s^-1 cm^-2 Hz^-1 sr^-1).
  */
-double Holmesspectrum(double *nuarr, double *earr, double nu) {
+double Pegase3spectrum(double *nuarr, double *earr, double nu) {
 
   uint_fast32_t inu = 0;
   while (nu > nuarr[inu]) {
@@ -53,7 +53,7 @@ double Holmesspectrum(double *nuarr, double *earr, double nu) {
 }
 
 /**
- * @brief Unit test for the HolmesPhotonSourceSpectrum class.
+ * @brief Unit test for the Pegase3PhotonSourceSpectrum class.
  *
  * @param argc Number of command line arguments.
  * @param argv Command line arguments.
@@ -61,17 +61,21 @@ double Holmesspectrum(double *nuarr, double *earr, double nu) {
  */
 int main(int argc, char **argv) {
 
+  /// test the age function
+  {
+    const std::string agefile = Pegase3PhotonSourceSpectrum::get_filename(10.);
+    assert_condition(agefile == PEGASE3DATALOCATION
+                     "pegase3_Z02_chab_011.spec");
+  }
+
   /// test the actual spectrum
   {
     RandomGenerator random_generator;
 
     // read in the test spectrum
-    std::ifstream ifile(HOLMESDATALOCATION);
+    std::ifstream ifile(PEGASE3DATALOCATION "pegase3_Z02_chab_059.spec");
     std::string line;
-    // skip five lines
-    getline(ifile, line);
-    getline(ifile, line);
-    getline(ifile, line);
+    // skip two lines
     getline(ifile, line);
     getline(ifile, line);
     double nuarr[2381], earr[2381];
@@ -83,11 +87,10 @@ int main(int argc, char **argv) {
       nuarr[2380 - i] = PhysicalConstants::get_physical_constant(
                             PHYSICALCONSTANT_LIGHTSPEED) *
                         1.e10 / nuarr[2380 - i] / 3.288465385e15;
-      cmac_warning("%g %g", nuarr[2380 - i], earr[2380 - i]);
     }
 
-    std::ofstream file("holmes.txt");
-    HolmesPhotonSourceSpectrum spectrum;
+    std::ofstream file("Pegase3.txt");
+    Pegase3PhotonSourceSpectrum spectrum(1.e4);
 
     uint_fast32_t counts[1001];
     for (uint_fast32_t i = 0; i < 1001; ++i) {
@@ -109,12 +112,12 @@ int main(int argc, char **argv) {
     double enorm = 0.;
     for (uint_fast32_t i = 0; i < 1000; ++i) {
       double nu = 1. + (i + 0.5) * 0.003;
-      enorm += Holmesspectrum(nuarr, earr, nu);
+      enorm += Pegase3spectrum(nuarr, earr, nu);
     }
     enorm = enorm / numsample;
     for (uint_fast32_t i = 0; i < 1000; ++i) {
       double nu = 1. + (i + 0.5) * 0.003;
-      double tval = Holmesspectrum(nuarr, earr, nu);
+      double tval = Pegase3spectrum(nuarr, earr, nu);
       double bval = counts[i] * enorm;
       // we do not compute a tolerance in this case, as the spectrum is really
       // noisy

@@ -17,19 +17,19 @@
  ******************************************************************************/
 
 /**
- * @file HolmesDataLocation.hpp
+ * @file Pegase3DataLocation.hpp
  *
- * @brief CMake configured file storing the location of the Holmes stellar
- * spectrum file on the local system.
+ * @brief CMake configured file storing the location of the Pegase 3 stellar
+ * spectrum files on the local system.
  *
  * This file should never be edited directly. Instead, edit
- * HolmesDataLocation.hpp.in.
+ * Pegase3DataLocation.hpp.in.
  *
  * @author Bert Vandenbroucke (bert.vandenbroucke@ugent.be)
  */
-#ifndef HOLMESDATALOCATION_HPP
-#define HOLMESDATALOCATION_HPP
+#ifndef PEGASE3DATALOCATION_HPP
+#define PEGASE3DATALOCATION_HPP
 
-#define HOLMESDATALOCATION "@HOLMESDATALOCATION@"
+#define PEGASE3DATALOCATION "@PEGASE3DATALOCATION@"
 
-#endif // HOLMESDATALOCATION_HPP
+#endif // PEGASE3DATALOCATION_HPP
