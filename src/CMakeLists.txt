@@ -93,8 +93,8 @@ configure_file(${PROJECT_SOURCE_DIR}/src/WMBasicDataLocation.hpp.in
 
 # Pegase3DataLocation.hpp
 file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/data/Pegase3)
-set(PEGASE3_DATA ${PROJECT_BINARY_DIR}/data/Pegase3/pegase3_Z02_chab.tar.gz)
-configure_file(${PROJECT_SOURCE_DIR}/data/pegase3_Z02_chab.tar.gz
+set(PEGASE3_DATA ${PROJECT_BINARY_DIR}/data/Pegase3/pegase3_chab.tar.gz)
+configure_file(${PROJECT_SOURCE_DIR}/data/pegase3_chab.tar.gz
                ${PEGASE3_DATA} COPYONLY)
 execute_process(COMMAND ${CMAKE_COMMAND} -E tar xzf ${PEGASE3_DATA}
                 WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/data/Pegase3)

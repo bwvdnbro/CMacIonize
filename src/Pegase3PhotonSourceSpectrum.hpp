@@ -61,9 +61,11 @@ private:
   double _total_flux;
 
 public:
-  static std::string get_filename(const double age_in_Myr);
+  static std::string get_filename(const double age_in_yr,
+                                  const double metallicity);
 
-  Pegase3PhotonSourceSpectrum(const double age_in_Myr, Log *log = nullptr);
+  Pegase3PhotonSourceSpectrum(const double age_in_yr, const double metallicity,
+                              Log *log = nullptr);
 
   Pegase3PhotonSourceSpectrum(std::string role, ParameterFile &params,
                               Log *log = nullptr);

@@ -42,40 +42,84 @@
  * @brief Get the file name of the file containing the spectrum for the star
  * with the given age.
  *
- * @param age_in_Myr Age of the star (in Myr).
+ * @param age_in_yr Age of the star (in yr).
+ * @param metallicity Metallicity of the star.
  * @return Name of the corresponding spectrum file.
  */
-std::string Pegase3PhotonSourceSpectrum::get_filename(const double age_in_Myr) {
+std::string
+Pegase3PhotonSourceSpectrum::get_filename(const double age_in_yr,
+                                          const double metallicity) {
 
-  std::ifstream agefile(PEGASE3DATALOCATION "ages.txt");
+  std::ifstream agefile(PEGASE3DATALOCATION "pegase_chab.all");
+  std::vector< std::string > names;
   std::vector< double > ages;
+  std::vector< double > metallicities;
   std::string line;
+  bool found_age = false;
+  bool found_metallicity = false;
+  uint_fast32_t number_of_unique_ages = 0;
+  uint_fast32_t number_of_unique_metallicities = 0;
   while (getline(agefile, line)) {
     std::istringstream linestream(line);
-    double this_age;
-    linestream >> this_age;
+    std::string this_name;
+    double this_age, this_metallicity;
+    linestream >> this_name >> this_age >> this_metallicity;
+    names.push_back(this_name);
+    if (std::count(ages.begin(), ages.end(), this_age) == 0) {
+      ++number_of_unique_ages;
+    }
     ages.push_back(this_age);
+    if (std::count(metallicities.begin(), metallicities.end(),
+                   this_metallicity) == 0) {
+      ++number_of_unique_metallicities;
+    }
+    metallicities.push_back(this_metallicity);
+    if (this_age == age_in_yr) {
+      found_age = true;
+    }
+    if (this_metallicity == metallicity) {
+      found_metallicity = true;
+    }
   }
 
-  uint_fast32_t age_index = 0;
-  while (age_index < ages.size() && ages[age_index] != age_in_Myr) {
-    ++age_index;
-  }
-  if (age_index == ages.size()) {
+  if (!found_age) {
     cmac_warning("Invalid age chosen for Pegase 3 spectrum!");
     std::stringstream age_string;
     age_string << "[" << ages[0];
-    for (uint_fast32_t i = 1; i < ages.size(); ++i) {
+    for (uint_fast32_t i = 1; i < number_of_unique_ages; ++i) {
       age_string << ", " << ages[i];
     }
     age_string << "]";
     cmac_warning("Valid ages (in Myr): %s", age_string.str().c_str());
     cmac_error("Choose a valid age and try again!");
   }
+  if (!found_metallicity) {
+    cmac_warning("Invalid metallicity chosen for Pegase 3 spectrum!");
+    std::stringstream metallicity_string;
+    metallicity_string << "[" << metallicities[0];
+    for (uint_fast32_t i = 1; i < metallicities.size(); ++i) {
+      if (metallicities[i] == metallicities[i - 1]) {
+        continue;
+      }
+      metallicity_string << ", " << metallicities[i];
+    }
+    metallicity_string << "]";
+    cmac_warning("Valid metallicities: %s", metallicity_string.str().c_str());
+    cmac_error("Choose a valid metallicity and try again!");
+  }
+
+  uint_fast32_t file_index = 0;
+  while (file_index < names.size() &&
+         (ages[file_index] != age_in_yr ||
+          metallicities[file_index] != metallicity)) {
+    ++file_index;
+  }
+  if (file_index == names.size()) {
+    cmac_error("File for given age-metallicity combination not found!");
+  }
 
   std::stringstream filename;
-  filename << PEGASE3DATALOCATION << "pegase3_Z02_chab_" << std::setfill('0')
-           << std::setw(3) << (age_index + 1) << ".spec";
+  filename << PEGASE3DATALOCATION << names[file_index];
 
   return filename.str();
 }
@@ -86,13 +130,14 @@ std::string Pegase3PhotonSourceSpectrum::get_filename(const double age_in_Myr) {
  * Reads in the correct model spectrum and resamples it on the 1000 bin internal
  * frequency grid.
  *
- * @param age_in_Myr Age of the star (in Myr).
+ * @param age_in_yr Age of the star (in Myr).
+ * @param metallicity Metallicity of the star.
  * @param log Log to write logging info to.
  */
 Pegase3PhotonSourceSpectrum::Pegase3PhotonSourceSpectrum(
-    const double age_in_Myr, Log *log) {
+    const double age_in_yr, const double metallicity, Log *log) {
 
-  const std::string filename = get_filename(age_in_Myr);
+  const std::string filename = get_filename(age_in_yr, metallicity);
   std::ifstream file(filename);
   if (!file) {
     cmac_error("Error while opening file '%s'. Spectrum does not exist!",
@@ -201,7 +246,8 @@ Pegase3PhotonSourceSpectrum::Pegase3PhotonSourceSpectrum(
  * @brief ParameterFile constructor.
  *
  * The following parameters are read from the parameter file:
- *  - age in Myr: Age of the star (in Myr, default: 10).
+ *  - age in yr: Age of the star in yr (default: 1.e7).
+ *  - metallicity: Metallicity of the star (default: 0.02).
  *
  * @param role Role the spectrum will fulfil in the simulation. Parameters are
  * read from the corresponding block in the parameter file.
@@ -212,7 +258,8 @@ Pegase3PhotonSourceSpectrum::Pegase3PhotonSourceSpectrum(std::string role,
                                                          ParameterFile &params,
                                                          Log *log)
     : Pegase3PhotonSourceSpectrum(
-          params.get_value< double >(role + ":age in Myr", 10.), log) {}
+          params.get_value< double >(role + ":age in yr", 1.e7),
+          params.get_value< double >(role + ":metallicity", 0.02), log) {}
 
 /**
  * @brief Get a random frequency from a stellar model spectrum.
