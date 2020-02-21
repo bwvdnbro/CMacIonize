@@ -27,6 +27,7 @@
 #define VORONOIDENSITYGRID_HPP
 
 #include "DensityGrid.hpp"
+#include "ParameterFile.hpp"
 
 class SimulationBox;
 class VoronoiGeneratorDistribution;

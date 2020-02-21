@@ -23,16 +23,6 @@ DensityFunction:
   # value for the constant initial temperature
   temperature: 8000. K
 
-# assumed abundances for the ISM (relative w.r.t. the abundance of hydrogen)
-Abundances:
-  # set all abundances to zero
-  helium: 0.
-  carbon: 0.
-  nitrogen: 0.
-  oxygen: 0.
-  neon: 0.
-  sulphur: 0.
-
 # disable temperature calculation
 TemperatureCalculator:
   do temperature calculation: false

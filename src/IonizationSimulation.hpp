@@ -26,6 +26,7 @@
 #ifndef IONIZATIONSIMULATION_HPP
 #define IONIZATIONSIMULATION_HPP
 
+#include "AbundanceModel.hpp"
 #include "Abundances.hpp"
 #include "ChargeTransferRates.hpp"
 #include "IonizationPhotonShootJobMarket.hpp"
@@ -115,13 +116,11 @@ private:
   /// these have to be declared and initialized after the parameter file has
   /// been read
 
-  /// non pointer objects owned by the simulation
-
-  /*! @brief Abundances. */
-  const Abundances _abundances;
-
   /// pointer objects owned by the simulation. These have to be deleted in the
   /// destructor.
+
+  /*! @brief Abundance model. */
+  const AbundanceModel *_abundance_model;
 
   /*! @brief Cross sections for photoionization. */
   CrossSections *_cross_sections;
@@ -167,6 +166,11 @@ private:
 
   /*! @brief Optional spectrum tracker manager. */
   TrackerManager *_trackers;
+
+  /// non pointer objects owned by the simulation
+
+  /*! @brief Abundances. */
+  const Abundances _abundances;
 
   /// internal timers
 

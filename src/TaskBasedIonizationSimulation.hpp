@@ -27,6 +27,7 @@
 #ifndef TASKBASEDIONIZATIONSIMULATION_HPP
 #define TASKBASEDIONIZATIONSIMULATION_HPP
 
+#include "AbundanceModel.hpp"
 #include "Abundances.hpp"
 #include "ChargeTransferRates.hpp"
 #include "LineCoolingData.hpp"
@@ -126,6 +127,9 @@ private:
 
   /*! @brief Charge transfer rates. */
   const ChargeTransferRates _charge_transfer_rates;
+
+  /*! @brief Abundance model. */
+  const AbundanceModel *_abundance_model;
 
   /*! @brief Abundances. */
   const Abundances _abundances;

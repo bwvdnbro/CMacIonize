@@ -25,6 +25,7 @@
  */
 
 #include "TaskBasedIonizationSimulation.hpp"
+#include "AbundanceModelFactory.hpp"
 #include "ContinuousPhotonSourceFactory.hpp"
 #include "CrossSectionsFactory.hpp"
 #include "DensityFunctionFactory.hpp"
@@ -327,8 +328,10 @@ TaskBasedIonizationSimulation::TaskBasedIonizationSimulation(
           "TaskBasedIonizationSimulation:number of photons", 1e6)),
       _source_copy_level(_parameter_file.get_value< uint_fast32_t >(
           "TaskBasedIonizationSimulation:source copy level", 4)),
-      _simulation_box(_parameter_file), _abundances(_parameter_file, nullptr),
-      _log(log), _task_plot(task_plot), _verbose(verbose),
+      _simulation_box(_parameter_file),
+      _abundance_model(AbundanceModelFactory::generate(_parameter_file, log)),
+      _abundances(_abundance_model->get_abundances()), _log(log),
+      _task_plot(task_plot), _verbose(verbose),
       _output_initial_snapshot(output_initial_snapshot) {
 
   set_number_of_threads(num_thread);
@@ -528,6 +531,7 @@ TaskBasedIonizationSimulation::~TaskBasedIonizationSimulation() {
   delete _recombination_rates;
   delete _reemission_handler;
   delete _trackers;
+  delete _abundance_model;
 }
 
 /**

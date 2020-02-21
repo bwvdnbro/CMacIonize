@@ -32,6 +32,7 @@
 #include "HeliumLymanContinuumSpectrum.hpp"
 #include "HeliumTwoPhotonContinuumSpectrum.hpp"
 #include "HydrogenLymanContinuumSpectrum.hpp"
+#include "ParameterFile.hpp"
 #include "Photon.hpp"
 #include "RandomGenerator.hpp"
 #include "Utilities.hpp"

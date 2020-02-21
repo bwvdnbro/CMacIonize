@@ -23,6 +23,7 @@
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
+
 #include "VoronoiDensityGrid.hpp"
 #include "SimulationBox.hpp"
 #include "VoronoiGeneratorDistribution.hpp"

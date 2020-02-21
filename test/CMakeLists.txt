@@ -1717,6 +1717,18 @@ set(TESTPEGASE3PHOTONSOURCESPECTRUM_SOURCES
 add_unit_test(NAME testPegase3PhotonSourceSpectrum
              SOURCES ${TESTPEGASE3PHOTONSOURCESPECTRUM_SOURCES})
 
+## AbundanceModel test
+set(TESTABUNDANCEMODEL_SOURCES
+    testAbundanceModel.cpp
+
+    ../src/AbundanceModel.hpp
+    ../src/FixedValueAbundanceModel.hpp
+    ../src/ParameterFile.cpp
+    ../src/SolarMetallicityAbundanceModel.hpp
+)
+add_unit_test(NAME testAbundanceModel
+              SOURCES ${TESTABUNDANCEMODEL_SOURCES})
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)

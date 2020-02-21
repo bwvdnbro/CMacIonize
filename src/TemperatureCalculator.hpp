@@ -29,6 +29,7 @@
 
 #include "DensityGrid.hpp"
 #include "IonizationStateCalculator.hpp"
+#include "ParameterFile.hpp"
 
 class Abundances;
 class ChargeTransferRates;

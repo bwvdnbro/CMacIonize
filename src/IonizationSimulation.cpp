@@ -25,6 +25,7 @@
  */
 
 #include "IonizationSimulation.hpp"
+#include "AbundanceModelFactory.hpp"
 #include "ChargeTransferRates.hpp"
 #include "ContinuousPhotonSourceFactory.hpp"
 #include "CrossSectionsFactory.hpp"
@@ -116,7 +117,8 @@ IonizationSimulation::IonizationSimulation(const bool write_output,
       _number_of_photons_init(_parameter_file.get_value< uint_fast64_t >(
           "IonizationSimulation:number of photons first loop",
           _number_of_photons)),
-      _abundances(_parameter_file, _log) {
+      _abundance_model(AbundanceModelFactory::generate(_parameter_file, log)),
+      _abundances(_abundance_model->get_abundances()) {
 
   function_start_timers();
 
@@ -730,4 +732,6 @@ IonizationSimulation::~IonizationSimulation() {
   delete _recombination_rates;
 
   delete _trackers;
+
+  delete _abundance_model;
 }
