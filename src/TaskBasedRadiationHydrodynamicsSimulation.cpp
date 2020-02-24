@@ -611,7 +611,7 @@ steal_task(const int_fast32_t thread_id, const int_fast32_t num_threads,
   for (uint_fast32_t i = 0; i < queues.size(); ++i) {
     queue_sizes[i] = queues[i]->size();
   }
-  std::vector< size_t > sorti = Utilities::argsort(queue_sizes);
+  std::vector< uint_fast32_t > sorti = Utilities::argsort(queue_sizes);
 
   // now try to steal from the largest queue first
   uint_fast32_t current_index = NO_TASK;
