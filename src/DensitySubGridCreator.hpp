@@ -31,6 +31,7 @@
 #include "DensityFunction.hpp"
 #include "DensitySubGrid.hpp"
 #include "Error.hpp"
+#include "OpenMP.hpp"
 #include "ParameterFile.hpp"
 
 #include <cinttypes>
@@ -402,12 +403,14 @@ public:
    */
   inline void initialize(DensityFunction &density_function) {
     AtomicValue< size_t > igrid(0);
+#ifdef HAVE_OPENMP
 #pragma omp parallel default(shared)
+#endif
     while (igrid.value() < _subgrids.size()) {
       const size_t this_igrid = igrid.post_increment();
       if (this_igrid < _subgrids.size()) {
         _subgrids[this_igrid] = create_subgrid(this_igrid);
-        _subgrids[this_igrid]->set_owning_thread(omp_get_thread_num());
+        _subgrids[this_igrid]->set_owning_thread(get_thread_index());
         for (auto it = _subgrids[this_igrid]->begin();
              it != _subgrids[this_igrid]->end(); ++it) {
           DensityValues values = density_function(it);
@@ -552,7 +555,9 @@ public:
    */
   inline void update_original_counters() {
     AtomicValue< size_t > ioriginal(0);
+#ifdef HAVE_OPENMP
 #pragma omp parallel default(shared)
+#endif
     while (ioriginal.value() < _copies.size()) {
       const size_t this_ioriginal = ioriginal.post_increment();
       if (this_ioriginal < _copies.size() &&
@@ -574,7 +579,9 @@ public:
    */
   inline void update_copy_properties() {
     AtomicValue< size_t > ioriginal(0);
+#ifdef HAVE_OPENMP
 #pragma omp parallel default(shared)
+#endif
     while (ioriginal.value() < _copies.size()) {
       const size_t this_ioriginal = ioriginal.post_increment();
       if (this_ioriginal < _copies.size() &&

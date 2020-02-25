@@ -221,7 +221,9 @@ int EmissivityCalculationSimulation::do_simulation(CommandLineParser &parser,
       }
     }
 
+#ifdef HAVE_OPENMP
 #pragma omp parallel for default(shared)
+#endif
     for (size_t i = 0; i < size; ++i) {
       IonizationVariables ionization_variables;
       ionization_variables.set_number_density(number_density[i] *

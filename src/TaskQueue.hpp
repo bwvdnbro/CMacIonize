@@ -121,7 +121,9 @@ public:
                         _size, _label.c_str());
 
     _queue_lock.lock();
+#ifdef HAVE_OPENMP
 #pragma omp parallel for
+#endif
     for (size_t itask = 0; itask < (task_end - task_start); ++itask) {
       _queue[_current_queue_size + itask] = task_start + itask;
     }
