@@ -72,19 +72,37 @@ public:
    * @param cross_section_S_p3 Photoionization cross section of triple ionized
    * sulphur (in m^2).
    */
-  FixedValueCrossSections(double cross_section_H_n, double cross_section_He_n,
-                          double cross_section_C_p1, double cross_section_C_p2,
-                          double cross_section_N_n, double cross_section_N_p1,
-                          double cross_section_N_p2, double cross_section_O_n,
-                          double cross_section_O_p1, double cross_section_Ne_n,
-                          double cross_section_Ne_p1, double cross_section_S_p1,
-                          double cross_section_S_p2, double cross_section_S_p3)
-      : _cross_sections{
-            cross_section_H_n,  cross_section_He_n,  cross_section_C_p1,
-            cross_section_C_p2, cross_section_N_n,   cross_section_N_p1,
-            cross_section_N_p2, cross_section_O_n,   cross_section_O_p1,
-            cross_section_Ne_n, cross_section_Ne_p1, cross_section_S_p1,
-            cross_section_S_p2, cross_section_S_p3} {}
+  FixedValueCrossSections(
+      const double cross_section_H_n, const double cross_section_He_n,
+      const double cross_section_C_p1, const double cross_section_C_p2,
+      const double cross_section_N_n, const double cross_section_N_p1,
+      const double cross_section_N_p2, const double cross_section_O_n,
+      const double cross_section_O_p1, const double cross_section_Ne_n,
+      const double cross_section_Ne_p1, const double cross_section_S_p1,
+      const double cross_section_S_p2, const double cross_section_S_p3)
+      : _cross_sections{cross_section_H_n,
+#ifdef HAS_HELIUM
+                        cross_section_He_n,
+#endif
+#ifdef HAS_CARBON
+                        cross_section_C_p1, cross_section_C_p2,
+#endif
+#ifdef HAS_NITROGEN
+                        cross_section_N_n,  cross_section_N_p1,
+                        cross_section_N_p2,
+#endif
+#ifdef HAS_OXYGEN
+                        cross_section_O_n,  cross_section_O_p1,
+#endif
+#ifdef HAS_NEON
+                        cross_section_Ne_n, cross_section_Ne_p1,
+#endif
+#ifdef HAS_SULPHUR
+                        cross_section_S_p1, cross_section_S_p2,
+                        cross_section_S_p3
+#endif
+        } {
+  }
 
   /**
    * @brief ParameterFile constructor.
@@ -130,7 +148,8 @@ public:
    * @param energy Photon frequency (in Hz).
    * @return Photoionization cross section (in m^2).
    */
-  virtual double get_cross_section(IonName ion, double energy) const {
+  virtual double get_cross_section(const int_fast32_t ion,
+                                   const double energy) const {
     return _cross_sections[ion];
   }
 };

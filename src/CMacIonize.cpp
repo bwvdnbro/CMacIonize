@@ -28,10 +28,13 @@
 #include "CompilerInfo.hpp"
 #include "ConfigurationInfo.hpp"
 #include "DustSimulation.hpp"
+#include "EmissivityCalculationSimulation.hpp"
 #include "FileLog.hpp"
 #include "IonizationSimulation.hpp"
 #include "MPICommunicator.hpp"
 #include "RadiationHydrodynamicsSimulation.hpp"
+#include "TaskBasedIonizationSimulation.hpp"
+#include "TaskBasedRadiationHydrodynamicsSimulation.hpp"
 #include "TerminalLog.hpp"
 #include "Timer.hpp"
 
@@ -52,6 +55,41 @@
  *    we perform a full radiation hydrodynamics (RHD) simulation.
  *  - default mode: used if no other mode is chosen. In this mode, the
  *    photoionization code is run to post-process an existing density field.
+ *
+ * The program accepts the following general command line arguments (more are
+ * added in RadiationHydrodynamicsSimulation::add_command_line_parameters):
+ *  - params ('p', required, string argument): name of the parameter file that
+ *    contains all parameters for the run.
+ *  - verbose ('v', optional, no argument): set the log level to the lowest
+ *    possible value, which means a maximal ammount of information written to
+ *    the Log.
+ *  - logfile ('l', optional, string argument): if present, write logging info
+ *    to a file with the given name, rather than to the terminal window
+ *    (default file name: CMacIonize_run.log).
+ *  - dirty ('d', optional, no argument): allow the code to run even when
+ *    uncommitted changes are detected by git describe (meaning that the run is
+ *    potentially irreproducible).
+ *  - thread ('t', optional, integer argument): number of shared memory parallel
+ *    threads to use while running the code (default: 1). If the given number is
+ *    higher than the available number of threads, the maximum available number
+ *    is used instead.
+ *  - dry-run ('n', optional, no argument): exit the simulation before the main
+ *    simulation loop starts, but after all parameters have been parsed and all
+ *    objects have been created. Useful to test the parameter file and memory
+ *    requirements without actually running the simulation.
+ *  - use-version ('u', optional, string argument): enforce the given git
+ *    version tag (no default value). If the version tag returned by git
+ *    describe does not match this value, the simulation will abort.
+ *  - dusty-radiative-transfer (no abbreviation, optional, no argument): run the
+ *    code in dusty radiative transfer mode rather than photoionization mode.
+ *  - rhd (no abbreviation, optional, no argument): run the code in RHD mode
+ *    rather than photoionization mode.
+ *  - output-statistics ('s', optional, no argument): output statistics about
+ *    the photon packets at the end of each iteration.
+ *  - task-based (no abbreviation, optional, no argument): run the code using
+ *    a task-based parallel algorithm.
+ *  - task-based-rhd (no abbreviation, optional, no argument): run the RHD code
+ *    using a task-based parallel algorithm.
  *
  * @param argc Number of command line arguments.
  * @param argv Command line arguments.
@@ -74,13 +112,15 @@ int main(int argc, char **argv) {
   parser.add_required_option< std::string >(
       "params", 'p',
       "Name of the parameter file containing the simulation parameters.");
-  parser.add_option("verbose", 'v', "Set the logging level to the lowest "
-                                    "possible value to allow more output to be "
-                                    "written to the log.",
+  parser.add_option("verbose", 'v',
+                    "Set the logging level to the lowest "
+                    "possible value to allow more output to be "
+                    "written to the log.",
                     COMMANDLINEOPTION_NOARGUMENT, "false");
-  parser.add_option("logfile", 'l', "Output program logs to a file with the "
-                                    "given name, instead of to the standard "
-                                    "output.",
+  parser.add_option("logfile", 'l',
+                    "Output program logs to a file with the "
+                    "given name, instead of to the standard "
+                    "output.",
                     COMMANDLINEOPTION_STRINGARGUMENT, "CMacIonize_run.log");
   parser.add_option("dirty", 'd',
                     "Allow running a dirty code version. This is disabled by "
@@ -112,12 +152,27 @@ int main(int argc, char **argv) {
                     "Run a dusty radiative transfer simulation instead of an "
                     "ionization simulation.",
                     COMMANDLINEOPTION_NOARGUMENT, "false");
-  parser.add_option("rhd", 0, "Run a radiation hydrodynamics simulation "
-                              "instead of an ionization simulation.",
+  parser.add_option("rhd", 0,
+                    "Run a radiation hydrodynamics simulation "
+                    "instead of an ionization simulation.",
                     COMMANDLINEOPTION_NOARGUMENT, "false");
-  parser.add_option("output_statistics", 's',
+  parser.add_option("output-statistics", 's',
                     "Output statistical information about the photons.",
                     COMMANDLINEOPTION_NOARGUMENT, "false");
+  parser.add_option("emission", 0, "Compute emission for the given snapshot.",
+                    COMMANDLINEOPTION_NOARGUMENT, "false");
+  parser.add_option("task-based", 0,
+                    "Run a task-based photoionization simulation.",
+                    COMMANDLINEOPTION_NOARGUMENT, "false");
+  parser.add_option("task-based-rhd", 0, "Run a task-based RHD simulation.",
+                    COMMANDLINEOPTION_NOARGUMENT, "false");
+
+  // add simulation type specific parameters
+  RadiationHydrodynamicsSimulation::add_command_line_parameters(parser);
+  EmissivityCalculationSimulation::add_command_line_parameters(parser);
+  TaskBasedRadiationHydrodynamicsSimulation::add_command_line_parameters(
+      parser);
+
   parser.parse_arguments(argc, argv);
 
   LogLevel loglevel = LOGLEVEL_STATUS;
@@ -217,11 +272,58 @@ int main(int argc, char **argv) {
     }
     return RadiationHydrodynamicsSimulation::do_simulation(parser, write_output,
                                                            programtimer, log);
+  } else if (parser.get_value< bool >("emission")) {
+
+    if (comm.get_size() > 1) {
+      cmac_error("MPI emission calculation is not supported!");
+    }
+    return EmissivityCalculationSimulation::do_simulation(parser, write_output,
+                                                          programtimer, log);
+  } else if (parser.get_value< bool >("task-based")) {
+
+    if (comm.get_size() > 1) {
+      cmac_error("MPI task based algorithm does not exist yet.");
+    }
+
+    TaskBasedIonizationSimulation simulation(
+        parser.get_value< int_fast32_t >("threads"),
+        parser.get_value< std::string >("params"), log);
+
+    if (parser.get_value< bool >("dry-run")) {
+      if (log) {
+        log->write_warning("Dry run requested. Program will now halt.");
+      }
+      return 0;
+    }
+
+    simulation.initialize();
+    simulation.run();
+
+    programtimer.stop();
+
+    size_t memory_usage = OperatingSystem::get_peak_memory_usage();
+    comm.reduce< MPI_SUM_OF_ALL_PROCESSES >(memory_usage);
+    if (log) {
+      log->write_status("Total program time: ",
+                        Utilities::human_readable_time(programtimer.value()),
+                        ".");
+      log->write_status("Peak memory usage: ",
+                        Utilities::human_readable_bytes(memory_usage), ".");
+    }
+    return 0;
+
+  } else if (parser.get_value< bool >("task-based-rhd")) {
+
+    if (comm.get_size() > 1) {
+      cmac_error("MPI RHD is not (yet) supported!");
+    }
+    return TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
+        parser, write_output, programtimer, log);
   } else {
 
     IonizationSimulation simulation(
         write_output, parser.get_value< bool >("every-iteration-output"),
-        parser.get_value< bool >("output_statistics"),
+        parser.get_value< bool >("output-statistics"),
         parser.get_value< int_fast32_t >("threads"),
         parser.get_value< std::string >("params"), &comm, log);
 
@@ -254,15 +356,12 @@ int main(int argc, char **argv) {
  * @mainpage
  *
  * @author Bert Vandenbroucke \n
- *         School of Physics and Astronomy \n
- *         University of St Andrews \n
- *         North Haugh \n
- *         St Andrews \n
- *         Fife \n
- *         KY16 9SS \n
- *         Scotland \n
- *         United Kingdom \n
- *         bv7@st-andrews.ac.uk
+ *         Sterrenkundig Observatorium \n
+ *         Universiteit Gent \n
+ *         Krijgslaan 281, S9 \n
+ *         B-9000 Gent \n
+ *         Belgium \n
+ *         bert.vandenbroucke@ugent.be
  *
  * @section purpose Purpose of the program.
  *
@@ -302,5 +401,6 @@ int main(int argc, char **argv) {
  * all files, functions, classes... in the source code are fully documented
  * (the Doxygen configuration enforces this), so most of it should be easy to
  * understand. The main program entry point can be found in the file
- * CMacIonize.cpp.
+ * CMacIonize.cpp. Tutorials about program usage can be found on
+ * https://bwvdnbro.github.io/CMacIonize/tutorials/.
  */

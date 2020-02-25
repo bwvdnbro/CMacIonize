@@ -113,9 +113,8 @@ VernerRecombinationRates::VernerRecombinationRates() {
  * @param T Temperature (in K).
  * @return Recombination rate (in cm^3s^-1).
  */
-double VernerRecombinationRates::get_recombination_rate_verner(uint_fast8_t iz,
-                                                               uint_fast8_t in,
-                                                               double T) const {
+double VernerRecombinationRates::get_recombination_rate_verner(
+    const uint_fast8_t iz, const uint_fast8_t in, const double T) const {
 
   double r = 0.;
 
@@ -155,9 +154,8 @@ double VernerRecombinationRates::get_recombination_rate_verner(uint_fast8_t iz,
  * @param temperature Temperature (in K).
  * @return Recombination rate (in m^3s^-1).
  */
-double
-VernerRecombinationRates::get_recombination_rate(IonName ion,
-                                                 double temperature) const {
+double VernerRecombinationRates::get_recombination_rate(
+    const int_fast32_t ion, const double temperature) const {
 
   double rate = 0.;
 
@@ -172,6 +170,7 @@ VernerRecombinationRates::get_recombination_rate(IonName ion,
     break;
   }
 
+#ifdef HAS_HELIUM
   case ION_He_n: {
     // Verner & Ferland (1996) formula (4) with values from Table 1 (HeIa).
     // Note that we use the first version, which is only valid in the range
@@ -182,7 +181,9 @@ VernerRecombinationRates::get_recombination_rate(IonName ion,
                         std::pow(1. + std::sqrt(T2), 1.691));
     break;
   }
+#endif
 
+#ifdef HAS_CARBON
   case ION_C_p1: {
     // Nussbaumer & Storey (1983) formula (19) with values from Table 1 (C2+).
     // valid in the range [1,000 K; 60,000 K]
@@ -205,7 +206,9 @@ VernerRecombinationRates::get_recombination_rate(IonName ion,
                std::pow(T4, -1.5) * std::exp(-0.4101 * T4_inv);
     break;
   }
+#endif
 
+#ifdef HAS_NITROGEN
   case ION_N_n: {
     // Nussbaumer & Storey (1983) formula (19) with values from Table 1 (N+).
     // valid in the range [1,000 K; 60,000 K]
@@ -237,7 +240,9 @@ VernerRecombinationRates::get_recombination_rate(IonName ion,
                std::pow(T4, -1.5) * std::exp(-0.6127 * T4_inv);
     break;
   }
+#endif
 
+#ifdef HAS_OXYGEN
   case ION_O_n: {
     // Nussbaumer & Storey (1983) formula (19) with values from Table 1 (O+).
     // version 2, valid in the range [1,000 K; 20,000 K]
@@ -260,7 +265,9 @@ VernerRecombinationRates::get_recombination_rate(IonName ion,
                std::pow(T4, -1.5) * std::exp(-0.2769 * T4_inv);
     break;
   }
+#endif
 
+#ifdef HAS_NEON
   case ION_Ne_n:
     // According to Nussbaumer & Storey (1987), dielectronic recombination is
     // negligible for this ion
@@ -279,7 +286,9 @@ VernerRecombinationRates::get_recombination_rate(IonName ion,
                std::pow(T4, -1.5) * std::exp(-0.4156 * T4_inv);
     break;
   }
+#endif
 
+#ifdef HAS_SULPHUR
   case ION_S_p1: {
     // Mazzotta et al. (1998), equation 7, validity range not specified
     const double T_in_eV = temperature / 1.16045221e4;
@@ -310,9 +319,10 @@ VernerRecombinationRates::get_recombination_rate(IonName ion,
                std::pow(temperature, -1.5);
     break;
   }
+#endif
 
   default:
-    cmac_error("Unknown ion: %i", ion);
+    cmac_error("Unknown ion: %" PRIiFAST32, ion);
   }
   // convert cm^3s^-1 to m^3s^-1
   rate *= 1.e-6;

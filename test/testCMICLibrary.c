@@ -27,6 +27,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+/*! @brief Number of particles in a single coordinate direction (change as you
+ *  wish). */
+#define TEST_CMICLIBRARY_NPART1D 10
+
+/*! @brief Number of particles in a plane of the particle grid. */
+#define TEST_CMICLIBRARY_NPART2D                                               \
+  (TEST_CMICLIBRARY_NPART1D * TEST_CMICLIBRARY_NPART1D)
+
+/*! @brief Total number of particles. */
+#define TEST_CMICLIBRARY_NPART3D                                               \
+  (TEST_CMICLIBRARY_NPART1D * TEST_CMICLIBRARY_NPART2D)
+
+/*! @brief Grid spacing. */
+#define TEST_CMICLIBRARY_DX (1. / TEST_CMICLIBRARY_NPART1D)
+
 /**
  * @brief Unit test for the CMI C library.
  *
@@ -45,12 +60,12 @@ int main(int argc, char **argv) {
   const double pc = 3.086e16;
 
   /* allocate buffers */
-  x = (double *)calloc(1000, sizeof(double));
-  y = (double *)calloc(1000, sizeof(double));
-  z = (double *)calloc(1000, sizeof(double));
-  h = (double *)calloc(1000, sizeof(double));
-  m = (double *)calloc(1000, sizeof(double));
-  nH = (double *)calloc(1000, sizeof(double));
+  x = (double *)calloc(TEST_CMICLIBRARY_NPART3D, sizeof(double));
+  y = (double *)calloc(TEST_CMICLIBRARY_NPART3D, sizeof(double));
+  z = (double *)calloc(TEST_CMICLIBRARY_NPART3D, sizeof(double));
+  h = (double *)calloc(TEST_CMICLIBRARY_NPART3D, sizeof(double));
+  m = (double *)calloc(TEST_CMICLIBRARY_NPART3D, sizeof(double));
+  nH = (double *)calloc(TEST_CMICLIBRARY_NPART3D, sizeof(double));
 
   /* set the box dimensions to the same dimensions as the ionization simulation
    * box in test_CMI_library.param */
@@ -61,30 +76,30 @@ int main(int argc, char **argv) {
   box_sides[1] = 10. * pc;
   box_sides[2] = 10. * pc;
   /* set up the SPH particles on a regular Cartesian 10x10x10 grid */
-  for (ix = 0; ix < 10; ++ix) {
-    for (iy = 0; iy < 10; ++iy) {
-      for (iz = 0; iz < 10; ++iz) {
-        i = ix * 100 + iy * 10 + iz;
-        x[i] = box_anchor[0] + 0.1 * (ix + 0.5) * box_sides[0];
-        y[i] = box_anchor[1] + 0.1 * (iy + 0.5) * box_sides[1];
-        z[i] = box_anchor[2] + 0.1 * (iz + 0.5) * box_sides[2];
-        h[i] = 0.2 * box_sides[0];
+  for (ix = 0; ix < TEST_CMICLIBRARY_NPART1D; ++ix) {
+    for (iy = 0; iy < TEST_CMICLIBRARY_NPART1D; ++iy) {
+      for (iz = 0; iz < TEST_CMICLIBRARY_NPART1D; ++iz) {
+        i = ix * TEST_CMICLIBRARY_NPART2D + iy * TEST_CMICLIBRARY_NPART1D + iz;
+        x[i] = box_anchor[0] + TEST_CMICLIBRARY_DX * (ix + 0.5) * box_sides[0];
+        y[i] = box_anchor[1] + TEST_CMICLIBRARY_DX * (iy + 0.5) * box_sides[1];
+        z[i] = box_anchor[2] + TEST_CMICLIBRARY_DX * (iz + 0.5) * box_sides[2];
+        h[i] = 2. * TEST_CMICLIBRARY_DX * box_sides[0];
         /* 100. cm^-3 * (10.pc)^3 * 1.67*10^{-27} kg / 1000 */
-        m[i] = 4.9e30;
+        m[i] = 4.9e33 / TEST_CMICLIBRARY_NPART3D;
       }
     }
   }
 
   /* initialize the library */
   cmi_init_periodic_dp("test_CMI_library.param", 1, 1., 1., box_anchor,
-                       box_sides);
+                       box_sides, "Petkova", 0);
 
   /* run the simulation */
-  cmi_compute_neutral_fraction_dp(x, y, z, h, m, nH, 1000);
+  cmi_compute_neutral_fraction_dp(x, y, z, h, m, nH, TEST_CMICLIBRARY_NPART3D);
 
   /* write an output file for visual checking */
   file = fopen("test_CMI_C_library.txt", "w");
-  for (i = 0; i < 1000; ++i) {
+  for (i = 0; i < TEST_CMICLIBRARY_NPART3D; ++i) {
     fprintf(file, "%g %g %g %g\n", x[i], y[i], z[i], nH[i]);
   }
   fclose(file);

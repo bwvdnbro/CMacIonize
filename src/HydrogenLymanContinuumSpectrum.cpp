@@ -61,9 +61,9 @@ HydrogenLymanContinuumSpectrum::HydrogenLymanContinuumSpectrum(
 
   // set up the frequency bins
   for (uint_fast32_t i = 0; i < HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ; ++i) {
-    _frequency[i] = min_frequency +
-                    i * (max_frequency - min_frequency) /
-                        (HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ - 1.);
+    _frequency[i] =
+        min_frequency + i * (max_frequency - min_frequency) /
+                            (HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ - 1.);
   }
 
   // set up the temperature bins and precompute the spectrum
@@ -145,10 +145,10 @@ double HydrogenLymanContinuumSpectrum::get_random_frequency(
   const uint_fast32_t inu2 =
       Utilities::locate(x, _cumulative_distribution[iT + 1].data(),
                         HYDROGENLYMANCONTINUUMSPECTRUM_NUMFREQ);
-  const double frequency = _frequency[inu1] +
-                           (temperature - _temperature[iT]) *
-                               (_frequency[inu2] - _frequency[inu1]) /
-                               (_temperature[iT + 1] - _temperature[iT]);
+  const double frequency =
+      _frequency[inu1] + (temperature - _temperature[iT]) *
+                             (_frequency[inu2] - _frequency[inu1]) /
+                             (_temperature[iT + 1] - _temperature[iT]);
   return frequency;
 }
 

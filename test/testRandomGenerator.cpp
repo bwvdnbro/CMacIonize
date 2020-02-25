@@ -58,5 +58,30 @@ int main(int argc, char **argv) {
                      generator_B.get_uniform_random_double());
   }
 
+  /// restart test
+  {
+    RandomGenerator generator_A(42);
+
+    double sum = 0.;
+    for (uint_fast32_t i = 0; i < 1e6; ++i) {
+      sum += generator_A.get_uniform_random_double();
+    }
+
+    {
+      RestartWriter restart_writer("randomgenerator.dump");
+      generator_A.write_restart_file(restart_writer);
+    }
+
+    {
+      RestartReader restart_reader("randomgenerator.dump");
+      RandomGenerator generator_B(restart_reader);
+
+      for (uint_fast32_t i = 0; i < 1e3; ++i) {
+        assert_condition(generator_A.get_uniform_random_double() ==
+                         generator_B.get_uniform_random_double());
+      }
+    }
+  }
+
   return 0;
 }

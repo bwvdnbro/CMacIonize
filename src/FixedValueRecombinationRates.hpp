@@ -72,22 +72,43 @@ public:
    * @param recombination_rate_S_p4 Radiative recombination rate of quadruple
    * ionized sulphur (in m^3 s^-1).
    */
-  FixedValueRecombinationRates(
-      double recombination_rate_H_p, double recombination_rate_He_p,
-      double recombination_rate_C_p2, double recombination_rate_C_p3,
-      double recombination_rate_N_p1, double recombination_rate_N_p2,
-      double recombination_rate_N_p3, double recombination_rate_O_p1,
-      double recombination_rate_O_p2, double recombination_rate_Ne_p1,
-      double recombination_rate_Ne_p2, double recombination_rate_S_p2,
-      double recombination_rate_S_p3, double recombination_rate_S_p4)
-      : _recombination_rates{
-            recombination_rate_H_p,   recombination_rate_He_p,
-            recombination_rate_C_p2,  recombination_rate_C_p3,
-            recombination_rate_N_p1,  recombination_rate_N_p2,
-            recombination_rate_N_p3,  recombination_rate_O_p1,
-            recombination_rate_O_p2,  recombination_rate_Ne_p1,
-            recombination_rate_Ne_p2, recombination_rate_S_p2,
-            recombination_rate_S_p3,  recombination_rate_S_p4} {}
+  FixedValueRecombinationRates(const double recombination_rate_H_p,
+                               const double recombination_rate_He_p,
+                               const double recombination_rate_C_p2,
+                               const double recombination_rate_C_p3,
+                               const double recombination_rate_N_p1,
+                               const double recombination_rate_N_p2,
+                               const double recombination_rate_N_p3,
+                               const double recombination_rate_O_p1,
+                               const double recombination_rate_O_p2,
+                               const double recombination_rate_Ne_p1,
+                               const double recombination_rate_Ne_p2,
+                               const double recombination_rate_S_p2,
+                               const double recombination_rate_S_p3,
+                               const double recombination_rate_S_p4)
+      : _recombination_rates{recombination_rate_H_p,
+#ifdef HAS_HELIUM
+                             recombination_rate_He_p,
+#endif
+#ifdef HAS_CARBON
+                             recombination_rate_C_p2,  recombination_rate_C_p3,
+#endif
+#ifdef HAS_NITROGEN
+                             recombination_rate_N_p1,  recombination_rate_N_p2,
+                             recombination_rate_N_p3,
+#endif
+#ifdef HAS_OXYGEN
+                             recombination_rate_O_p1,  recombination_rate_O_p2,
+#endif
+#ifdef HAS_NEON
+                             recombination_rate_Ne_p1, recombination_rate_Ne_p2,
+#endif
+#ifdef HAS_SULPHUR
+                             recombination_rate_S_p2,  recombination_rate_S_p3,
+                             recombination_rate_S_p4
+#endif
+        } {
+  }
 
   /**
    * @brief ParameterFile constructor.
@@ -133,7 +154,8 @@ public:
    * @param temperature Temperature (in K).
    * @return Recombination rate (in m^3s^-1).
    */
-  virtual double get_recombination_rate(IonName ion, double temperature) const {
+  virtual double get_recombination_rate(const int_fast32_t ion,
+                                        const double temperature) const {
     return _recombination_rates[ion];
   }
 };

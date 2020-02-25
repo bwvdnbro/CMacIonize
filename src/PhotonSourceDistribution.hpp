@@ -27,6 +27,8 @@
 #define PHOTONSOURCEDISTRIBUTION_HPP
 
 #include "CoordinateVector.hpp"
+#include "DensityGrid.hpp"
+#include "HydroDensitySubGrid.hpp"
 
 /*! @brief Size of a variable that stores the number of photon sources. */
 typedef uint_fast32_t photonsourcenumber_t;
@@ -76,6 +78,63 @@ public:
    * @return Total luminosity (in s^-1).
    */
   virtual double get_total_luminosity() const = 0;
+
+  /**
+   * @brief Update the distribution after the system moved to the given time.
+   *
+   * @param simulation_time Current simulation time (in s).
+   * @return True if the distribution changed, false otherwise.
+   */
+  virtual bool update(const double simulation_time) { return false; }
+
+  /**
+   * @brief Add stellar feedback to the given grid at the given time.
+   *
+   * Not all source distributions support stellar feedback.
+   *
+   * @param grid DensityGrid to operate on.
+   * @param current_time Current simulation time (in s).
+   */
+  virtual void add_stellar_feedback(DensityGrid &grid,
+                                    const double current_time) {}
+
+  /**
+   * @brief Will the distribution do stellar feedback at the given time?
+   *
+   * Not all source distributions support stellar feedback.
+   *
+   * @param current_time Current simulation time (in s).
+   * @return False, unless the implementation decides otherwise.
+   */
+  virtual bool do_stellar_feedback(const double current_time) const {
+    return false;
+  }
+
+  /**
+   * @brief Add stellar feedback to the given subgrid.
+   *
+   * Should only be called if add_stellar_feedback is called first.
+   *
+   * Not all source distributions support stellar feedback.
+   *
+   * @param subgrid DensitySubGrid to operate on.
+   */
+  virtual void add_stellar_feedback(HydroDensitySubGrid &subgrid) {}
+
+  /**
+   * @brief Finalise adding stellar feedback to a distributed grid.
+   */
+  virtual void done_stellar_feedback() {}
+
+  /**
+   * @brief Write the distribution to the given restart file.
+   *
+   * @param restart_writer RestartWriter to use.
+   */
+  virtual void write_restart_file(RestartWriter &restart_writer) const {
+    cmac_error(
+        "Restarting is not supported for this PhotonSourceDistribution!");
+  }
 };
 
 #endif // PHOTONSOURCEDISTRIBUTION_HPP

@@ -43,7 +43,7 @@
 class IsotropicContinuousPhotonSource : public ContinuousPhotonSource {
 private:
   /*! @brief Box in which the radiation enters. */
-  const Box<> &_box;
+  const Box<> _box;
 
 public:
   /**
@@ -52,7 +52,7 @@ public:
    * @param simulation_box Simulation box (in m).
    * @param log Log to write logging info to.
    */
-  IsotropicContinuousPhotonSource(const Box<> &simulation_box,
+  IsotropicContinuousPhotonSource(const Box<> simulation_box,
                                   Log *log = nullptr)
       : _box(simulation_box) {
 
@@ -169,9 +169,9 @@ public:
       // epsilon is the difference between 1.0 and the next floating point value
       // larger than 1.0 that can be represented as a 64-bit floating point.
       position[i] =
-          std::min(position[i], anchor_top[i] -
-                                    std::numeric_limits< double >::epsilon() *
-                                        _box.get_sides()[i]);
+          std::min(position[i],
+                   anchor_top[i] - std::numeric_limits< double >::epsilon() *
+                                       _box.get_sides()[i]);
       position[i] = std::max(position[i], anchor_bottom[i]);
     }
 

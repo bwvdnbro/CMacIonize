@@ -49,6 +49,9 @@ private:
   /*! @brief Temperature inside the block (in K). */
   double _temperature;
 
+  /*! @brief Hydrogen neutral fraction inside the block. */
+  double _neutral_fraction_H;
+
   /*! @brief Fluid velocity inside the block (in m s^-1). */
   CoordinateVector<> _velocity;
 
@@ -56,7 +59,8 @@ public:
   /**
    * @brief Empty constructor.
    */
-  inline BlockSyntaxBlock() : _number_density(0.), _temperature(0.) {}
+  inline BlockSyntaxBlock()
+      : _number_density(0.), _temperature(0.), _neutral_fraction_H(1.) {}
 
   /**
    * @brief Constructor.
@@ -66,14 +70,17 @@ public:
    * @param exponent Exponent of the block.
    * @param number_density Number density inside the block (in m^-3).
    * @param temperature Temperature inside the block (in K).
+   * @param neutral_fraction_H Neutral fraction of hydrogen inside the block.
    * @param velocity Fluid velocity inside the block (in m s^-1).
    */
-  inline BlockSyntaxBlock(CoordinateVector<> origin, CoordinateVector<> sides,
-                          double exponent, double number_density,
-                          double temperature, CoordinateVector<> velocity)
+  inline BlockSyntaxBlock(const CoordinateVector<> origin,
+                          const CoordinateVector<> sides, const double exponent,
+                          const double number_density, const double temperature,
+                          const double neutral_fraction_H,
+                          const CoordinateVector<> velocity)
       : _origin(origin), _sides(sides), _exponent(exponent),
         _number_density(number_density), _temperature(temperature),
-        _velocity(velocity) {}
+        _neutral_fraction_H(neutral_fraction_H), _velocity(velocity) {}
 
   /**
    * @brief Check if the given position lies inside this block.
@@ -81,10 +88,10 @@ public:
    * @param position CoordinateVector specifying a position (in m).
    * @return True if the position lies inside this block.
    */
-  inline bool is_inside(CoordinateVector<> position) const {
+  inline bool is_inside(const CoordinateVector<> position) const {
     double r = 0.;
     for (uint_fast8_t i = 0; i < 3; ++i) {
-      double x = 2. * std::abs(position[i] - _origin[i]) / _sides[i];
+      const double x = 2. * std::abs(position[i] - _origin[i]) / _sides[i];
       if (_exponent < 10.) {
         r += std::pow(x, _exponent);
       } else {
@@ -110,6 +117,13 @@ public:
    * @return Temperature inside this block (in K).
    */
   inline double get_temperature() const { return _temperature; }
+
+  /**
+   * @brief Get the hydrogen neutral fraction inside this block.
+   *
+   * @return Hydrogen neutral fraction inside this block.
+   */
+  inline double get_neutral_fraction_H() const { return _neutral_fraction_H; }
 
   /**
    * @brief Get the fluid velocity inside this block.

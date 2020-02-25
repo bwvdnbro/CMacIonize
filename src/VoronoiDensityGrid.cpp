@@ -86,17 +86,18 @@
  * been constructed for the first time.
  * @param periodic Periodicity flags.
  * @param hydro Flag signaling if hydro is active or not.
+ * @param comoving Use a co-moving Voronoi grid?
  * @param log Log to write logging info to.
  */
 VoronoiDensityGrid::VoronoiDensityGrid(
     VoronoiGeneratorDistribution *position_generator,
     const Box<> &simulation_box, std::string grid_type, uint_fast8_t num_lloyd,
-    CoordinateVector< bool > periodic, bool hydro, Log *log)
+    CoordinateVector< bool > periodic, bool hydro, bool comoving, Log *log)
     : DensityGrid(simulation_box, periodic, hydro, log),
       _position_generator(position_generator), _voronoi_grid(nullptr),
       _periodicity_flags(periodic), _num_lloyd(num_lloyd),
       _epsilon(1.e-12 * simulation_box.get_sides().norm()),
-      _voronoi_grid_type(grid_type) {
+      _voronoi_grid_type(grid_type), _comoving(comoving) {
 
   const generatornumber_t totnumcell =
       _position_generator->get_number_of_positions();
@@ -126,6 +127,7 @@ VoronoiDensityGrid::VoronoiDensityGrid(
  *    initial grid to make it more regular (default: 0)
  *  - VoronoiGeneratorDistribution: type of VoronoiGeneratorDistribution to use
  *    (default: UniformRandom)
+ *  - comoving: Use a co-moving Voronoi grid (hydro only, default: true)?
  *
  * @param simulation_box SimulationBox.
  * @param params ParameterFile to read from.
@@ -142,7 +144,8 @@ VoronoiDensityGrid::VoronoiDensityGrid(const SimulationBox &simulation_box,
           params.get_value< std::string >("DensityGrid:grid type", "Old"),
           params.get_value< uint_fast8_t >(
               "DensityGrid:number of Lloyd iterations", 0),
-          simulation_box.get_periodicity(), hydro, log) {}
+          simulation_box.get_periodicity(), hydro,
+          params.get_value< bool >("DensityGrid:comoving", true), log) {}
 
 /**
  * @brief Destructor.
@@ -159,10 +162,19 @@ VoronoiDensityGrid::~VoronoiDensityGrid() {
  *
  * @param block Block that should be initialized by this MPI process.
  * @param density_function DensityFunction to use.
+ * @param time_log TimeLogger.
  */
 void VoronoiDensityGrid::initialize(std::pair< cellsize_t, cellsize_t > &block,
-                                    DensityFunction &density_function) {
+                                    DensityFunction &density_function,
+                                    TimeLogger *time_log) {
 
+  if (time_log) {
+    time_log->start("VoronoiDensityGrid::initialize()");
+  }
+
+  if (time_log) {
+    time_log->start("Grid initialization");
+  }
   // set up the cells
   if (_log) {
     _log->write_status("Initializing Voronoi grid...");
@@ -184,7 +196,13 @@ void VoronoiDensityGrid::initialize(std::pair< cellsize_t, cellsize_t > &block,
   if (_log) {
     _log->write_status("Done initializing Voronoi grid.");
   }
+  if (time_log) {
+    time_log->end("Grid initialization");
+  }
 
+  if (time_log) {
+    time_log->start("Lloyd iterations");
+  }
   if (_num_lloyd > 0) {
     if (_log) {
       _log->write_status("Applying ", _num_lloyd, " Lloyd iterations...");
@@ -204,9 +222,23 @@ void VoronoiDensityGrid::initialize(std::pair< cellsize_t, cellsize_t > &block,
       _log->write_status("Done.");
     }
   }
+  if (time_log) {
+    time_log->end("Lloyd iterations");
+  }
 
   DensityGrid::initialize(block, density_function);
+
+  if (time_log) {
+    time_log->start("Forward density mapping");
+  }
   DensityGrid::set_densities(block, density_function);
+  if (time_log) {
+    time_log->end("Forward density mapping");
+  }
+
+  if (time_log) {
+    time_log->end("VoronoiDensityGrid::initialize()");
+  }
 }
 
 /**
@@ -216,7 +248,7 @@ void VoronoiDensityGrid::initialize(std::pair< cellsize_t, cellsize_t > &block,
  */
 void VoronoiDensityGrid::evolve(double timestep) {
 
-  if (_has_hydro) {
+  if (_has_hydro && _comoving) {
     // move the cell generators and update the velocities to the new fluid
     // velocities
     if (_log) {
@@ -228,6 +260,8 @@ void VoronoiDensityGrid::evolve(double timestep) {
 
       const CoordinateVector<> vgrid = _hydro_generator_velocity[index];
       _generator_positions[index] += timestep * vgrid;
+
+      cmac_assert(_box.inside(_generator_positions[index]));
     }
 
     voronoidensitygrid_print_generators();
@@ -247,10 +281,12 @@ void VoronoiDensityGrid::evolve(double timestep) {
  * @brief Set the velocities of the grid generators.
  *
  * @param gamma Polytropic index of the gas.
+ * @param velocity_unit_in_SI Conversion factor from internal velocity unit to
+ * SI units (in m s^-1).
  */
-void VoronoiDensityGrid::set_grid_velocity(double gamma) {
-
-  if (_has_hydro) {
+void VoronoiDensityGrid::set_grid_velocity(
+    const double gamma, const double velocity_unit_in_SI = 1.) {
+  if (_has_hydro && _comoving) {
     for (auto it = begin(); it != end(); ++it) {
       const uint_fast32_t index = it.get_index();
 
@@ -274,6 +310,8 @@ void VoronoiDensityGrid::set_grid_velocity(double gamma) {
         }
       }
       _hydro_generator_velocity[index] += vcorr;
+
+      _hydro_generator_velocity[index] *= velocity_unit_in_SI;
     }
   }
 }
@@ -366,8 +404,17 @@ VoronoiDensityGrid::get_neighbours(cellsize_t index) {
     CoordinateVector<> normal;
     if (_voronoi_grid->is_real_neighbour(ngb)) {
       // normal neighbour
-      const CoordinateVector<> rel_pos =
+      CoordinateVector<> rel_pos =
           _generator_positions[ngb] - _generator_positions[index];
+      // the code below should never be called, as we do not support periodic
+      // Voronoi grids yet
+      for (uint_fast8_t i = 0; i < 3; ++i) {
+        if (rel_pos[i] > 0.5 * _box.get_sides()[i]) {
+          rel_pos[i] -= _box.get_sides()[i];
+        } else if (rel_pos[i] <= -0.5 * _box.get_sides()[i]) {
+          rel_pos[i] += _box.get_sides()[i];
+        }
+      }
       normal = rel_pos / rel_pos.norm();
       ngbs.push_back(std::make_tuple(DensityGrid::iterator(ngb, *this),
                                      midpoint, normal, area, rel_pos));
@@ -375,6 +422,15 @@ VoronoiDensityGrid::get_neighbours(cellsize_t index) {
       // wall neighbour
       normal = _voronoi_grid->get_wall_normal(ngb);
       CoordinateVector<> rel_pos;
+      for (uint_fast8_t i = 0; i < 3; ++i) {
+        if (normal[i] > 0.) {
+          rel_pos[i] = 2. * (_box.get_anchor()[i] + _box.get_sides()[i] -
+                             _generator_positions[index][i]);
+        } else if (normal[i] < 0.) {
+          rel_pos[i] =
+              2. * (_box.get_anchor()[i] - _generator_positions[index][i]);
+        }
+      }
       ngbs.push_back(std::make_tuple(end(), midpoint, normal, area, rel_pos));
     }
   }

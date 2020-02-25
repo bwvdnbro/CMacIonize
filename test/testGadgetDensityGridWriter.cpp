@@ -58,9 +58,28 @@ int main(int argc, char **argv) {
         std::make_pair(0, grid.get_number_of_cells());
     grid.initialize(block, density_function);
 
+    uint_fast32_t fields[DENSITYGRIDFIELD_NUMBER];
+    // disable all fields by default
+    for (int_fast32_t property = 0; property < DENSITYGRIDFIELD_NUMBER;
+         ++property) {
+      fields[property] = 0;
+    }
+    // now activate the fields we test below
+    fields[DENSITYGRIDFIELD_COORDINATES] = true;
+    fields[DENSITYGRIDFIELD_NUMBER_DENSITY] = true;
+    fields[DENSITYGRIDFIELD_TEMPERATURE] = true;
+#ifdef HAS_HELIUM
+    // output both the H and He neutral fractions
+    fields[DENSITYGRIDFIELD_NEUTRAL_FRACTION] = 3;
+#else
+    // output the H neutral fractions
+    fields[DENSITYGRIDFIELD_NEUTRAL_FRACTION] = 1;
+#endif
+
     ParameterFile params("test.param");
     TerminalLog log(LOGLEVEL_INFO);
-    GadgetDensityGridWriter writer("testgrid", ".", &log);
+    GadgetDensityGridWriter writer("testgrid", ".", false,
+                                   DensityGridWriterFields(fields), &log);
     writer.write(grid, 0, params);
   }
 
@@ -161,8 +180,10 @@ int main(int argc, char **argv) {
         HDF5Tools::read_dataset< CoordinateVector<> >(group, "Coordinates");
     std::vector< double > nfracH =
         HDF5Tools::read_dataset< double >(group, "NeutralFractionH");
+#ifdef HAS_HELIUM
     std::vector< double > nfracHe =
         HDF5Tools::read_dataset< double >(group, "NeutralFractionHe");
+#endif
     std::vector< double > ntot =
         HDF5Tools::read_dataset< double >(group, "NumberDensity");
     std::vector< double > temperature =
@@ -177,7 +198,9 @@ int main(int argc, char **argv) {
           assert_condition(coords[index].y() == (j + 0.5) * 0.125);
           assert_condition(coords[index].z() == (k + 0.5) * 0.125);
           assert_condition(nfracH[index] == 1.e-6);
+#ifdef HAS_HELIUM
           assert_condition(nfracHe[index] == 1.e-6);
+#endif
           assert_condition(ntot[index] == 1.);
           assert_condition(temperature[index] == 8000.);
           ++index;

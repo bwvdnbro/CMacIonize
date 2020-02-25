@@ -23,6 +23,7 @@
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
+
 #include "IonizationSimulation.hpp"
 #include "MPICommunicator.hpp"
 #include "TerminalLog.hpp"

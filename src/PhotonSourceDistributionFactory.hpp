@@ -22,6 +22,7 @@
  * @brief Factory class for PhotonSourceDistribution instances.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
+ * @author Maya Petkova (map32@st-andrews.ac.uk)
  */
 #ifndef PHOTONSOURCEDISTRIBUTIONFACTORY_HPP
 #define PHOTONSOURCEDISTRIBUTIONFACTORY_HPP
@@ -32,8 +33,15 @@
 #include "ParameterFile.hpp"
 
 // non library dependent implementations
+#include "AsciiFilePhotonSourceDistribution.hpp"
+#include "AsciiFileTablePhotonSourceDistribution.hpp"
+#include "CaproniPhotonSourceDistribution.hpp"
+#include "DiscPatchPhotonSourceDistribution.hpp"
+#include "DwarfGalaxyPhotonSourceDistribution.hpp"
 #include "SILCCPhotonSourceDistribution.hpp"
 #include "SingleStarPhotonSourceDistribution.hpp"
+#include "SingleSupernovaPhotonSourceDistribution.hpp"
+#include "UniformRandomPhotonSourceDistribution.hpp"
 
 // library dependent implementations
 #ifdef HAVE_HDF5
@@ -41,6 +49,7 @@
 #endif
 
 #include <string>
+#include <typeinfo>
 
 /**
  * @brief Factory class for PhotonSourceDistribution instances.
@@ -96,10 +105,24 @@ public:
 #endif
     if (type == "None") {
       return nullptr;
+    } else if (type == "AsciiFile") {
+      return new AsciiFilePhotonSourceDistribution(params, log);
+    } else if (type == "AsciiFileTable") {
+      return new AsciiFileTablePhotonSourceDistribution(params, log);
+    } else if (type == "Caproni") {
+      return new CaproniPhotonSourceDistribution(params, log);
+    } else if (type == "DiscPatch") {
+      return new DiscPatchPhotonSourceDistribution(params, log);
+    } else if (type == "DwarfGalaxy") {
+      return new DwarfGalaxyPhotonSourceDistribution(params, log);
     } else if (type == "SILCC") {
       return new SILCCPhotonSourceDistribution(params, log);
     } else if (type == "SingleStar") {
       return new SingleStarPhotonSourceDistribution(params, log);
+    } else if (type == "SingleSupernova") {
+      return new SingleSupernovaPhotonSourceDistribution(params, log);
+    } else if (type == "UniformRandom") {
+      return new UniformRandomPhotonSourceDistribution(params, log);
 #ifdef HAVE_HDF5
     } else if (type == "GadgetSnapshot") {
       return new GadgetSnapshotPhotonSourceDistribution(params, log);
@@ -107,6 +130,52 @@ public:
     } else {
       cmac_error("Unknown PhotonSourceDistribution type: \"%s\".",
                  type.c_str());
+      return nullptr;
+    }
+  }
+
+  /**
+   * @brief Write the given distribution to the given restart file.
+   *
+   * @param restart_writer RestartWriter to use.
+   * @param distribution PhotonSourceDistribution to write.
+   */
+  inline static void
+  write_restart_file(RestartWriter &restart_writer,
+                     PhotonSourceDistribution &distribution) {
+
+    const std::string tag = typeid(distribution).name();
+    restart_writer.write(tag);
+    distribution.write_restart_file(restart_writer);
+  }
+
+  /**
+   * @brief Restart the distribution from the given restart file.
+   *
+   * @param restart_reader Restart file to read from.
+   * @param log Log to write logging info to.
+   * @return Pointer to a newly created PhotonSourceDistribution implementation.
+   * Memory management for the pointer needs to be done by the calling routine.
+   */
+  inline static PhotonSourceDistribution *restart(RestartReader &restart_reader,
+                                                  Log *log = nullptr) {
+
+    const std::string tag = restart_reader.read< std::string >();
+    if (tag == typeid(AsciiFilePhotonSourceDistribution).name()) {
+      return new AsciiFilePhotonSourceDistribution(restart_reader);
+    } else if (tag == typeid(CaproniPhotonSourceDistribution).name()) {
+      return new CaproniPhotonSourceDistribution(restart_reader);
+    } else if (tag == typeid(DiscPatchPhotonSourceDistribution).name()) {
+      return new DiscPatchPhotonSourceDistribution(restart_reader);
+    } else if (tag == typeid(SingleStarPhotonSourceDistribution).name()) {
+      return new SingleStarPhotonSourceDistribution(restart_reader);
+    } else if (tag == typeid(SingleSupernovaPhotonSourceDistribution).name()) {
+      return new SingleSupernovaPhotonSourceDistribution(restart_reader);
+    } else if (tag == typeid(UniformRandomPhotonSourceDistribution).name()) {
+      return new UniformRandomPhotonSourceDistribution(restart_reader);
+    } else {
+      cmac_error("Restarting is not supported for distribution type: \"%s\".",
+                 tag.c_str());
       return nullptr;
     }
   }

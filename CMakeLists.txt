@@ -198,6 +198,9 @@ add_compiler_flag("-Wall -Werror" OPTIONAL)
 #  before running the code)
 if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
   add_compiler_flag("-fsanitize=address -fno-omit-frame-pointer" OPTIONAL)
+  add_configuration_option(DEBUG_BUILD True)
+else(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+  add_configuration_option(DEBUG_BUILD False)
 endif(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
 
 # Add a Profile CMAKE_BUILD_TYPE
@@ -284,8 +287,8 @@ else(MPI_CXX_FOUND)
           "MPI not found. Distributed memory parallelization will not work.")
 endif(MPI_CXX_FOUND)
 
-# Find Boost, Boost Python, Python, and NumPy
-find_package(Boost COMPONENTS "python")
+# Find Boost, Boost Python, Boost NumPy, Python, and NumPy
+find_package(Boost 1.63.0 COMPONENTS "numpy")
 if(Boost_FOUND)
   find_package(PythonLibs 2.7)
   find_package(PythonInterp 2.7)
@@ -299,7 +302,7 @@ if(Boost_FOUND)
       message(STATUS
              "Python, NumPy and Boost Python found. Will build Python modules.")
       include_directories(${Boost_INCLUDE_DIRS})
-      include_directories(${PYTHON_INCLUDE_PATH})
+      include_directories(${PYTHON_INCLUDE_DIRS})
       include_directories(${NUMPY_OUTPUT})
       set(BOOST_PYTHON_LIBRARIES ${Boost_LIBRARIES})
       add_configuration_option(HAVE_PYTHON True)
@@ -328,6 +331,11 @@ else(Boost_FOUND)
           "Boost multiprecision not found. Exact arithmetics will not work!")
   add_configuration_option(HAVE_MULTIPRECISION False)
 endif(Boost_FOUND)
+
+# Check if we need to enable architecture specific CPU instructions
+if(ACTIVATE_ARCH_NATIVE)
+  add_compiler_flag("-march=native" OPTIONAL)
+endif(ACTIVATE_ARCH_NATIVE)
 
 # Check if we need to activate fast math
 if(ACTIVATE_FAST_MATH)
@@ -365,15 +373,33 @@ else(ACTIVATE_OUTPUT_CYCLES)
   add_configuration_option(HAVE_OUTPUT_CYCLES False)
 endif(ACTIVATE_OUTPUT_CYCLES)
 
-# Try to enable Fortran
-enable_language(Fortran OPTIONAL)
-if(CMAKE_Fortran_COMPILER_WORKS)
-  add_configuration_option(HAVE_FORTRAN True)
-  message(STATUS "Fortran compiler found!")
-else(CMAKE_Fortran_COMPILER_WORKS)
-  add_configuration_option(HAVE_FORTRAN False)
-  message(STATUS "Fortran compiler not found!")
-endif(CMAKE_Fortran_COMPILER_WORKS)
+if(ACTIVATE_FORTRAN_BINDING)
+  # Try to enable Fortran
+  enable_language(Fortran OPTIONAL)
+  if(CMAKE_Fortran_COMPILER_WORKS)
+    add_configuration_option(HAVE_FORTRAN True)
+    message(STATUS "Fortran compiler found!")
+  else(CMAKE_Fortran_COMPILER_WORKS)
+    add_configuration_option(HAVE_FORTRAN False)
+    message(STATUS "Fortran compiler not found!")
+  endif(CMAKE_Fortran_COMPILER_WORKS)
+endif(ACTIVATE_FORTRAN_BINDING)
+
+if(ACTIVATE_PRECISE_INTEL_FLOATS)
+  message(STATUS "Setting precise floating point model...")
+  add_compiler_flag("-fp-model precise" OPTIONAL)
+  add_configuration_option(HAVE_PRECISE_INTEL_FLOATS True)
+else(ACTIVATE_PRECISE_INTEL_FLOATS)
+  add_configuration_option(HAVE_PRECISE_INTEL_FLOATS False)
+endif(ACTIVATE_PRECISE_INTEL_FLOATS)
+
+if(HYDROGEN_ONLY)
+  message(STATUS "Compiling in hydrogen only mode.")
+  add_configuration_option(HAVE_HYDROGEN_ONLY True)
+else(HYDROGEN_ONLY)
+  message(STATUS "Compiling full code.")
+  add_configuration_option(HAVE_HYDROGEN_ONLY False)
+endif(HYDROGEN_ONLY)
 
 ## Code configuration ##########################################################
 

@@ -44,7 +44,25 @@ public:
                              Log *log = nullptr);
 
   virtual void write(DensityGrid &grid, uint_fast32_t iteration,
-                     ParameterFile &params, double time = 0.);
+                     ParameterFile &params, double time = 0.,
+                     const InternalHydroUnits *hydro_units = nullptr);
+
+  virtual void write(DensitySubGridCreator< DensitySubGrid > &grid_creator,
+                     const uint_fast32_t counter, ParameterFile &params,
+                     double time = 0.);
+
+  /**
+   * @brief Write a snapshot for a split grid with hydro.
+   *
+   * @param grid_creator Grid.
+   * @param counter Counter value to add to the snapshot file name.
+   * @param params ParameterFile containing the run parameters that should be
+   * written to the file.
+   * @param time Simulation time (in s).
+   */
+  virtual void write(DensitySubGridCreator< HydroDensitySubGrid > &grid_creator,
+                     const uint_fast32_t counter, ParameterFile &params,
+                     double time = 0.) {}
 };
 
 #endif // ASCIIFILEDENSITYGRIDWRITER_HPP

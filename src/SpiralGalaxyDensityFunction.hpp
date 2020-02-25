@@ -124,7 +124,9 @@ public:
     DensityValues values;
     values.set_number_density(n);
     values.set_ionic_fraction(ION_H_n, 1.);
+#ifdef HAS_HELIUM
     values.set_ionic_fraction(ION_He_n, 0.);
+#endif
     values.set_temperature(0.);
     return values;
   }

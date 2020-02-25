@@ -90,6 +90,10 @@ public:
 
   void calculate_emissivities(DensityGrid &grid) const;
   std::vector< EmissivityValues > get_emissivities(DensityGrid &grid) const;
+
+  void calculate_emissivities(const IonizationVariables &ionization_variables,
+                              const bool do_line[NUMBER_OF_EMISSIONLINES],
+                              double output[NUMBER_OF_EMISSIONLINES]) const;
 };
 
 #endif // EMISSIVITYCALCULATOR_HPP

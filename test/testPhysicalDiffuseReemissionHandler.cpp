@@ -17,20 +17,21 @@
  ******************************************************************************/
 
 /**
- * @file testDiffuseReemissionHandler.cpp
+ * @file testPhysicalDiffuseReemissionHandler.cpp
  *
- * @brief Unit test for the DiffuseReemissionHandler class.
+ * @brief Unit test for the PhysicalDiffuseReemissionHandler class.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "Assert.hpp"
-#include "DiffuseReemissionHandler.hpp"
+#include "PhysicalDiffuseReemissionHandler.hpp"
+#include "VernerCrossSections.hpp"
 #include <fstream>
 #include <sstream>
 #include <string>
 
 /**
- * @brief Unit test for the DiffuseReemissionHandler class.
+ * @brief Unit test for the PhysicalDiffuseReemissionHandler class.
  *
  * @param argc Number of command line arguments.
  * @param argv Command line arguments.
@@ -43,6 +44,8 @@ int main(int argc, char **argv) {
   const double tolerance = 1.e-15;
   std::ifstream ifile("probset_testdata.txt");
   std::string line;
+  VernerCrossSections cross_sections;
+  PhysicalDiffuseReemissionHandler reemission_handler(cross_sections);
   while (std::getline(ifile, line)) {
     std::stringstream sstream(line);
 
@@ -50,8 +53,7 @@ int main(int argc, char **argv) {
     sstream >> T >> pH >> pHe[0] >> pHe[1] >> pHe[2] >> pHe[3];
 
     ionization_variables.set_temperature(T);
-    DiffuseReemissionHandler::set_reemission_probabilities(
-        ionization_variables);
+    reemission_handler.set_reemission_probabilities(ionization_variables);
 
     assert_values_equal_rel(ionization_variables.get_reemission_probability(
                                 REEMISSIONPROBABILITY_HYDROGEN),

@@ -224,10 +224,6 @@ int main(int argc, char **argv) {
               Utilities::human_readable_time(time_serial).c_str(),
               Utilities::human_readable_time(time_parallel).c_str());
   cmac_status("Used %" PRIiFAST32 " threads.", worksize);
-  if (worksize > 1) {
-    // check that using more threads speeds things up
-    assert_condition(time_serial > time_parallel);
-  }
 
   delete[] A_serial;
   delete[] A_parallel;

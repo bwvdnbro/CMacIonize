@@ -27,6 +27,9 @@
 #define TIMELINE_HPP
 
 #include "Error.hpp"
+#include "Log.hpp"
+#include "RestartReader.hpp"
+#include "RestartWriter.hpp"
 
 #include <algorithm>
 #include <cstdint>
@@ -93,9 +96,10 @@ public:
    * @param end_time End time of the time line (in s).
    * @param minimum_timestep Minimum size of the time step (in s).
    * @param maximum_timestep Maximum size of the time step (in s).
+   * @param log Log to write logging info to.
    */
   inline TimeLine(double start_time, double end_time, double minimum_timestep,
-                  double maximum_timestep) {
+                  double maximum_timestep, Log *log = nullptr) {
 
     // compute the total physical time interval covered by the time line
     const double timeline_interval = end_time - start_time;
@@ -110,8 +114,8 @@ public:
 
     // convert 'minimum_timestep' to its integer counterpart. Round down to the
     // closest power of two
-    _minimum_timestep = TIMELINE_MAX_INTEGER_TIMELINE_SIZE;
     if (minimum_timestep > 0) {
+      _minimum_timestep = TIMELINE_MAX_INTEGER_TIMELINE_SIZE;
       while (to_physical_time_interval(_minimum_timestep) > minimum_timestep) {
         _minimum_timestep >>= 1;
       }
@@ -137,6 +141,16 @@ public:
     }
 
     _current_time = 0;
+
+    if (log) {
+      log->write_status("Set up TimeLine with start time ", start_time,
+                        " s, end time ", end_time, " s, minimum time step ",
+                        to_physical_time_interval(_minimum_timestep), " s (",
+                        _minimum_timestep,
+                        " on the integer time line) and maximum time step ",
+                        to_physical_time_interval(_maximum_timestep), " s (",
+                        _maximum_timestep, " on the integer time line).");
+    }
   }
 
   /**
@@ -162,6 +176,16 @@ public:
     while (to_physical_time_interval(integer_timestep) > requested_timestep) {
       integer_timestep >>= 1;
     }
+
+    if (integer_timestep == 0) {
+      cmac_warning("Time step smaller than absolute limit: %g (limit: %g)! "
+                   "Prematurely stopping simulation...",
+                   requested_timestep, to_physical_time_interval(1));
+      actual_timestep = to_physical_time_interval(integer_timestep);
+      current_time = to_physical_time(_current_time);
+      return false;
+    }
+
     const uint64_t time_left =
         TIMELINE_MAX_INTEGER_TIMELINE_SIZE - _current_time;
     while (time_left % integer_timestep > 0) {
@@ -169,10 +193,14 @@ public:
     }
 
     if (integer_timestep < _minimum_timestep) {
-      cmac_error("Time step wants to be smaller than minimum time step: %g "
-                 "(minimum: %g)!",
-                 to_physical_time_interval(integer_timestep),
-                 to_physical_time_interval(_minimum_timestep));
+      cmac_warning(
+          "Time step wants to be smaller than minimum time step: %g "
+          "(rounded from: %g, minimum: %g)! Prematurely stopping simulation...",
+          to_physical_time_interval(integer_timestep), requested_timestep,
+          to_physical_time_interval(_minimum_timestep));
+      actual_timestep = to_physical_time_interval(integer_timestep);
+      current_time = to_physical_time(_current_time);
+      return false;
     }
 
     // advance '_current_time'
@@ -184,6 +212,32 @@ public:
 
     return _current_time < TIMELINE_MAX_INTEGER_TIMELINE_SIZE;
   }
+
+  /**
+   * @brief Dump the time line to the given restart file.
+   *
+   * @param restart_writer RestartWriter to use.
+   */
+  inline void write_restart_file(RestartWriter &restart_writer) const {
+
+    restart_writer.write(_minimum_timestep);
+    restart_writer.write(_maximum_timestep);
+    restart_writer.write(_conversion_factors[0]);
+    restart_writer.write(_conversion_factors[1]);
+    restart_writer.write(_current_time);
+  }
+
+  /**
+   * @brief Restart constructor.
+   *
+   * @param restart_reader Restart file to read from.
+   */
+  inline TimeLine(RestartReader &restart_reader)
+      : _minimum_timestep(restart_reader.read< uint64_t >()),
+        _maximum_timestep(restart_reader.read< uint64_t >()),
+        _conversion_factors{restart_reader.read< double >(),
+                            restart_reader.read< double >()},
+        _current_time(restart_reader.read< uint64_t >()) {}
 };
 
 #endif // TIMELINE_HPP

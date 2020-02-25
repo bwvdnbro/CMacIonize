@@ -62,59 +62,78 @@ int main(int argc, char **argv) {
       double tolerance = 1.e-9;
 
       assert_values_equal_rel(
-          xsecH, UnitConverter::to_unit< QUANTITY_SURFACE_AREA >(
-                     cross_sections.get_cross_section(ION_H_n, e), "cm^2") *
-                     1.e18,
+          xsecH,
+          UnitConverter::to_unit< QUANTITY_SURFACE_AREA >(
+              cross_sections.get_cross_section(ION_H_n, e), "cm^2") *
+              1.e18,
           tolerance);
 
+#ifdef HAS_HELIUM
       assert_values_equal_rel(
-          xsecHe, UnitConverter::to_unit< QUANTITY_SURFACE_AREA >(
-                      cross_sections.get_cross_section(ION_He_n, e), "cm^2") *
-                      1.e18,
+          xsecHe,
+          UnitConverter::to_unit< QUANTITY_SURFACE_AREA >(
+              cross_sections.get_cross_section(ION_He_n, e), "cm^2") *
+              1.e18,
           tolerance);
+#endif
 
+#ifdef HAS_CARBON
       assert_values_equal_rel(
-          xsecCp1, UnitConverter::to_unit< QUANTITY_SURFACE_AREA >(
-                       cross_sections.get_cross_section(ION_C_p1, e), "cm^2") *
-                       1.e18,
+          xsecCp1,
+          UnitConverter::to_unit< QUANTITY_SURFACE_AREA >(
+              cross_sections.get_cross_section(ION_C_p1, e), "cm^2") *
+              1.e18,
           tolerance);
       assert_values_equal_rel(
-          xsecCp2, UnitConverter::to_unit< QUANTITY_SURFACE_AREA >(
-                       cross_sections.get_cross_section(ION_C_p2, e), "cm^2") *
-                       1.e18,
+          xsecCp2,
+          UnitConverter::to_unit< QUANTITY_SURFACE_AREA >(
+              cross_sections.get_cross_section(ION_C_p2, e), "cm^2") *
+              1.e18,
           tolerance);
+#endif
 
+#ifdef HAS_NITROGEN
       assert_values_equal_rel(
-          xsecN, UnitConverter::to_unit< QUANTITY_SURFACE_AREA >(
-                     cross_sections.get_cross_section(ION_N_n, e), "cm^2") *
-                     1.e18,
+          xsecN,
+          UnitConverter::to_unit< QUANTITY_SURFACE_AREA >(
+              cross_sections.get_cross_section(ION_N_n, e), "cm^2") *
+              1.e18,
           tolerance);
       assert_values_equal_rel(
-          xsecNp1, UnitConverter::to_unit< QUANTITY_SURFACE_AREA >(
-                       cross_sections.get_cross_section(ION_N_p1, e), "cm^2") *
-                       1.e18,
+          xsecNp1,
+          UnitConverter::to_unit< QUANTITY_SURFACE_AREA >(
+              cross_sections.get_cross_section(ION_N_p1, e), "cm^2") *
+              1.e18,
           tolerance);
       assert_values_equal_rel(
-          xsecNp2, UnitConverter::to_unit< QUANTITY_SURFACE_AREA >(
-                       cross_sections.get_cross_section(ION_N_p2, e), "cm^2") *
-                       1.e18,
+          xsecNp2,
+          UnitConverter::to_unit< QUANTITY_SURFACE_AREA >(
+              cross_sections.get_cross_section(ION_N_p2, e), "cm^2") *
+              1.e18,
           tolerance);
+#endif
 
+#ifdef HAS_OXYGEN
       assert_values_equal_rel(
-          xsecO, UnitConverter::to_unit< QUANTITY_SURFACE_AREA >(
-                     cross_sections.get_cross_section(ION_O_n, e), "cm^2") *
-                     1.e18,
+          xsecO,
+          UnitConverter::to_unit< QUANTITY_SURFACE_AREA >(
+              cross_sections.get_cross_section(ION_O_n, e), "cm^2") *
+              1.e18,
           tolerance);
       assert_values_equal_rel(
-          xsecOp1, UnitConverter::to_unit< QUANTITY_SURFACE_AREA >(
-                       cross_sections.get_cross_section(ION_O_p1, e), "cm^2") *
-                       1.e18,
+          xsecOp1,
+          UnitConverter::to_unit< QUANTITY_SURFACE_AREA >(
+              cross_sections.get_cross_section(ION_O_p1, e), "cm^2") *
+              1.e18,
           tolerance);
+#endif
 
+#ifdef HAS_NEON
       assert_values_equal_rel(
-          xsecNe, UnitConverter::to_unit< QUANTITY_SURFACE_AREA >(
-                      cross_sections.get_cross_section(ION_Ne_n, e), "cm^2") *
-                      1.e18,
+          xsecNe,
+          UnitConverter::to_unit< QUANTITY_SURFACE_AREA >(
+              cross_sections.get_cross_section(ION_Ne_n, e), "cm^2") *
+              1.e18,
           tolerance);
       assert_values_equal_rel(
           xsecNep1,
@@ -122,22 +141,28 @@ int main(int argc, char **argv) {
               cross_sections.get_cross_section(ION_Ne_p1, e), "cm^2") *
               1.e18,
           tolerance);
+#endif
 
+#ifdef HAS_SULPHUR
       assert_values_equal_rel(
-          xsecSp1, UnitConverter::to_unit< QUANTITY_SURFACE_AREA >(
-                       cross_sections.get_cross_section(ION_S_p1, e), "cm^2") *
-                       1.e18,
+          xsecSp1,
+          UnitConverter::to_unit< QUANTITY_SURFACE_AREA >(
+              cross_sections.get_cross_section(ION_S_p1, e), "cm^2") *
+              1.e18,
           tolerance);
       assert_values_equal_rel(
-          xsecSp2, UnitConverter::to_unit< QUANTITY_SURFACE_AREA >(
-                       cross_sections.get_cross_section(ION_S_p2, e), "cm^2") *
-                       1.e18,
+          xsecSp2,
+          UnitConverter::to_unit< QUANTITY_SURFACE_AREA >(
+              cross_sections.get_cross_section(ION_S_p2, e), "cm^2") *
+              1.e18,
           tolerance);
       assert_values_equal_rel(
-          xsecSp3, UnitConverter::to_unit< QUANTITY_SURFACE_AREA >(
-                       cross_sections.get_cross_section(ION_S_p3, e), "cm^2") *
-                       1.e18,
+          xsecSp3,
+          UnitConverter::to_unit< QUANTITY_SURFACE_AREA >(
+              cross_sections.get_cross_section(ION_S_p3, e), "cm^2") *
+              1.e18,
           tolerance);
+#endif
     }
   }
 

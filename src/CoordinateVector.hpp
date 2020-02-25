@@ -26,6 +26,9 @@
 #ifndef COORDINATEVECTOR_HPP
 #define COORDINATEVECTOR_HPP
 
+#include "RestartReader.hpp"
+#include "RestartWriter.hpp"
+
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
@@ -35,11 +38,15 @@
  */
 template < typename _datatype_ = double > class CoordinateVector {
 private:
+  /*! @brief Anonymous union that makes it possible to both index the vector
+   *  elements and to refer to individual components with sensible names. */
   union {
     /*! @brief Array that is used together with the union and anonymous struct
      *  to allow indexing the components. */
     _datatype_ _c[3];
 
+    /*! @brief Anonymous struct containing the individual coordinate
+     *  components. */
     struct {
       /*! @brief x coordinate. */
       _datatype_ _x;
@@ -297,6 +304,27 @@ public:
     crossvec._z = a._x * b._y - a._y * b._x;
     return crossvec;
   }
+
+  /**
+   * @brief Write the coordinate vector to the given restart file.
+   *
+   * @param restart_writer RestartWriter to use.
+   */
+  inline void write_restart_file(RestartWriter &restart_writer) const {
+    restart_writer.write(_x);
+    restart_writer.write(_y);
+    restart_writer.write(_z);
+  }
+
+  /**
+   * @brief Restart constructor.
+   *
+   * @param restart_reader Restart file to read from.
+   */
+  inline CoordinateVector(RestartReader &restart_reader)
+      : _x(restart_reader.read< _datatype_ >()),
+        _y(restart_reader.read< _datatype_ >()),
+        _z(restart_reader.read< _datatype_ >()) {}
 };
 
 /**
@@ -366,6 +394,20 @@ template < typename _datatype_, typename _scalartype_ >
 inline CoordinateVector< _datatype_ >
 operator/(CoordinateVector< _datatype_ > v, _scalartype_ s) {
   return v /= s;
+}
+
+/**
+ * @brief Free operator that divides a scaler by a CoordinateVector and
+ * returns a CoordinateVector.
+ *
+ * @param s Scalar that should be divided.
+ * @param v CoordinateVector to divide by.
+ * @return Resulting CoordinateVector.
+ */
+template < typename _scalartype_, typename _datatype_ >
+inline CoordinateVector< _datatype_ >
+operator/(_scalartype_ s, CoordinateVector< _datatype_ > v) {
+  return CoordinateVector< _datatype_ >(s / v.x(), s / v.y(), s / v.z());
 }
 
 #endif // COORDINATEVECTOR_HPP

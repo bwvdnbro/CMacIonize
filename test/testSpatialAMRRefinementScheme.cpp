@@ -50,9 +50,9 @@ int main(int argc, char **argv) {
       std::make_pair(0, grid.get_number_of_cells());
   grid.initialize(block, density_function);
 
-  assert_condition(grid.get_number_of_cells() ==
-                   8 * 8 * 8 - 4 * 4 * 4 + 8 * 8 * 8 - 6 * 6 * 6 +
-                       12 * 12 * 12);
+  assert_condition(grid.get_number_of_cells() == 8 * 8 * 8 - 4 * 4 * 4 +
+                                                     8 * 8 * 8 - 6 * 6 * 6 +
+                                                     12 * 12 * 12);
 
   return 0;
 }

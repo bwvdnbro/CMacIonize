@@ -87,22 +87,18 @@ void EmissivityCalculator::get_balmer_jump_emission(
   i = std::max(i, int_fast32_t(0));
   i = std::min(i, int_fast32_t(6));
 
-  emission_hydrogen_high = _loghplt[i] +
-                           (logt - _logttab[i]) *
-                               (_loghplt[i + 1] - _loghplt[i]) /
-                               (_logttab[i + 1] - _logttab[i]);
-  emission_hydrogen_low = _loghmit[i] +
-                          (logt - _logttab[i]) *
-                              (_loghmit[i + 1] - _loghmit[i]) /
-                              (_logttab[i + 1] - _logttab[i]);
-  emission_helium_high = _logheplt[i] +
-                         (logt - _logttab[i]) *
-                             (_logheplt[i + 1] - _logheplt[i]) /
-                             (_logttab[i + 1] - _logttab[i]);
-  emission_helium_low = _loghemit[i] +
-                        (logt - _logttab[i]) *
-                            (_loghemit[i + 1] - _loghemit[i]) /
-                            (_logttab[i + 1] - _logttab[i]);
+  emission_hydrogen_high = _loghplt[i] + (logt - _logttab[i]) *
+                                             (_loghplt[i + 1] - _loghplt[i]) /
+                                             (_logttab[i + 1] - _logttab[i]);
+  emission_hydrogen_low = _loghmit[i] + (logt - _logttab[i]) *
+                                            (_loghmit[i + 1] - _loghmit[i]) /
+                                            (_logttab[i + 1] - _logttab[i]);
+  emission_helium_high = _logheplt[i] + (logt - _logttab[i]) *
+                                            (_logheplt[i + 1] - _logheplt[i]) /
+                                            (_logttab[i + 1] - _logttab[i]);
+  emission_helium_low = _loghemit[i] + (logt - _logttab[i]) *
+                                           (_loghemit[i + 1] - _loghemit[i]) /
+                                           (_logttab[i + 1] - _logttab[i]);
 
   emission_hydrogen_high = std::exp(emission_hydrogen_high);
   emission_hydrogen_low = std::exp(emission_hydrogen_low);
@@ -141,14 +137,19 @@ EmissivityValues EmissivityCalculator::calculate_emissivities(
     const double ntot = ionization_variables.get_number_density();
     const double nhp =
         ntot * (1. - ionization_variables.get_ionic_fraction(ION_H_n));
+#ifdef HAS_HELIUM
     const double nhep =
         ntot * (1. - ionization_variables.get_ionic_fraction(ION_He_n)) *
         abundances.get_abundance(ELEMENT_He);
+#else
+    const double nhep = 0.;
+#endif
     const double ne = nhp + nhep;
 
     // get the abundances of the ions used by the line cooling computation
     double abund[LINECOOLINGDATA_NUMELEMENTS];
 
+#ifdef HAS_CARBON
     // carbon
     // we assume that all carbon is either C+, C++, or C+++
     // we only use C+ and C++
@@ -159,7 +160,9 @@ EmissivityValues EmissivityCalculator::calculate_emissivities(
                   ionization_variables.get_ionic_fraction(ION_C_p2));
     abund[CIII] = abundances.get_abundance(ELEMENT_C) *
                   ionization_variables.get_ionic_fraction(ION_C_p1);
+#endif
 
+#ifdef HAS_NITROGEN
     // nitrogen
     // we assume all nitrogen is either N0, N+, N++ or N+++
     // we only use N0, N+ and N++
@@ -171,7 +174,9 @@ EmissivityValues EmissivityCalculator::calculate_emissivities(
                  ionization_variables.get_ionic_fraction(ION_N_n);
     abund[NIII] = abundances.get_abundance(ELEMENT_N) *
                   ionization_variables.get_ionic_fraction(ION_N_p1);
+#endif
 
+#ifdef HAS_OXYGEN
     // oxygen
     // we assume all oxygen is either O0, O+ or O++
     // we use all of them
@@ -182,7 +187,9 @@ EmissivityValues EmissivityCalculator::calculate_emissivities(
                  ionization_variables.get_ionic_fraction(ION_O_n);
     abund[OIII] = abundances.get_abundance(ELEMENT_O) *
                   ionization_variables.get_ionic_fraction(ION_O_p1);
+#endif
 
+#ifdef HAS_NEON
     // neon
     // we make no assumptions on the relative abundances of different neon ions
     // we only use Ne+ and Ne++
@@ -190,7 +197,9 @@ EmissivityValues EmissivityCalculator::calculate_emissivities(
                   ionization_variables.get_ionic_fraction(ION_Ne_n);
     abund[NeIII] = abundances.get_abundance(ELEMENT_Ne) *
                    ionization_variables.get_ionic_fraction(ION_Ne_p1);
+#endif
 
+#ifdef HAS_SULPHUR
     // sulphur
     // we assume all sulphur is either S+, S++, S+++ or S++++
     // we only use S+, S++ and S+++
@@ -202,6 +211,7 @@ EmissivityValues EmissivityCalculator::calculate_emissivities(
                   ionization_variables.get_ionic_fraction(ION_S_p1);
     abund[SIV] = abundances.get_abundance(ELEMENT_S) *
                  ionization_variables.get_ionic_fraction(ION_S_p2);
+#endif
 
     std::vector< std::vector< double > > line_strengths =
         line_cooling_data.get_line_strengths(
@@ -330,6 +340,9 @@ EmissivityValues EmissivityCalculator::calculate_emissivities(
     // Osterbrock & Ferland (2006), table 3.9
     // ground state: 2P1/2
     // excited states: 2P3/2, 4P1/2, 4P3/2, 4P5/2
+    // this is the 0 to 1 transition
+    eval.set_emissivity(EMISSIONLINE_CII_158mu,
+                        ntot * (line_strengths[CII][TRANSITION_0_to_1]));
     // this should be the sum of all 4P to 2P transitions
     // note that Kenny's code wrongly includes some 4P to 4P transitions...
     eval.set_emissivity(EMISSIONLINE_CII_2325,
@@ -372,10 +385,12 @@ EmissivityValues EmissivityCalculator::calculate_emissivities(
     // density weighted average temperature of ionized particles
     eval.set_emissivity(EMISSIONLINE_avg_T, ne * nhp * T);
     eval.set_emissivity(EMISSIONLINE_avg_T_count, ne * nhp);
+#ifdef HAS_HELIUM
     // average ionized hydrogen and helium density product
     eval.set_emissivity(
         EMISSIONLINE_avg_nH_nHe,
         ne * (1. - ionization_variables.get_ionic_fraction(ION_He_n)));
+#endif
     eval.set_emissivity(
         EMISSIONLINE_avg_nH_nHe_count,
         ne * (1. - ionization_variables.get_ionic_fraction(ION_H_n)));
@@ -384,11 +399,57 @@ EmissivityValues EmissivityCalculator::calculate_emissivities(
     eval.set_emissivity(EMISSIONLINE_HeI_5876,
                         ne * nhep * 1.69e-38 * std::pow(T4, -1.065));
     // Verner & Ferland (1996), table 1
-    eval.set_emissivity(EMISSIONLINE_Hrec_s,
-                        ne * nhp * 7.982e-23 /
-                            (std::sqrt(T / 3.148) *
-                             std::pow(1. + std::sqrt(T / 3.148), 0.252) *
-                             std::pow(1. + std::sqrt(T / 7.036e5), 1.748)));
+    eval.set_emissivity(
+        EMISSIONLINE_Hrec_s,
+        ne * nhp * 7.982e-23 /
+            (std::sqrt(T / 3.148) * std::pow(1. + std::sqrt(T / 3.148), 0.252) *
+             std::pow(1. + std::sqrt(T / 7.036e5), 1.748)));
+
+    // HST WFC2 filters
+    // wavelength ranges were based on data found on
+    // http://www.stsci.edu/hst/wfpc2/documents/handbook/IHB_17.html
+    // F439W: effective wavelength: 4283 A, width: 464.4 A
+    //        range: [4051 A, 4515 A]
+    // lines that contribute: OIII: 4 --> 3
+    //                        SIII: 4 --> 0, 3 --> 0
+    eval.set_emissivity(EMISSIONLINE_WFC2_F439W,
+                        ntot * (line_strengths[OIII][TRANSITION_3_to_4] +
+                                line_strengths[SIII][TRANSITION_0_to_3] +
+                                line_strengths[SIII][TRANSITION_0_to_4]));
+    // F555W: effective wavelength: 5202 A, width: 1222.6 A
+    //        range: [4591 A, 5813 A]
+    // lines that contribute: NI: 2 --> 0, 1 --> 0
+    //                        NII: 4 --> 3
+    //                        OI: 4 --> 3
+    //                        OIII: 3 --> 2, 3 --> 1, 3 --> 0
+    //                        HBeta
+    eval.set_emissivity(EMISSIONLINE_WFC2_F555W,
+                        eval.get_emissivity(EMISSIONLINE_HBeta) +
+                            ntot * (line_strengths[NI][TRANSITION_0_to_1] +
+                                    line_strengths[NI][TRANSITION_0_to_2] +
+                                    line_strengths[NII][TRANSITION_3_to_4] +
+                                    line_strengths[OI][TRANSITION_3_to_4] +
+                                    line_strengths[OIII][TRANSITION_0_to_3] +
+                                    line_strengths[OIII][TRANSITION_1_to_3] +
+                                    line_strengths[OIII][TRANSITION_2_to_3]));
+    // F675W: effective wavelength: 6714 A, width: 889.5 A
+    //        range: [6269 A, 7159 A]
+    // lines that contribute: NII: 3 --> 2, 3 --> 1, 3 --> 0
+    //                        OI: 3 --> 2, 3 --> 1, 3 --> 0
+    //                        SII: 2 --> 0, 1 --> 0
+    //                        SIII: 4 --> 3
+    //                        HAlpha
+    eval.set_emissivity(EMISSIONLINE_WFC2_F675W,
+                        eval.get_emissivity(EMISSIONLINE_HAlpha) +
+                            ntot * (line_strengths[NII][TRANSITION_0_to_3] +
+                                    line_strengths[NII][TRANSITION_1_to_3] +
+                                    line_strengths[NII][TRANSITION_2_to_3] +
+                                    line_strengths[OI][TRANSITION_0_to_3] +
+                                    line_strengths[OI][TRANSITION_1_to_3] +
+                                    line_strengths[OI][TRANSITION_2_to_3] +
+                                    line_strengths[SII][TRANSITION_0_to_1] +
+                                    line_strengths[SII][TRANSITION_0_to_2] +
+                                    line_strengths[SIII][TRANSITION_3_to_4]));
   }
 
   return eval;
@@ -427,4 +488,25 @@ EmissivityCalculator::get_emissivities(DensityGrid &grid) const {
     ++index;
   }
   return result;
+}
+
+/**
+ * @brief Get the emissivities for the given cell.
+ *
+ * @param ionization_variables Cell variables.
+ * @param do_line Array telling which lines to output.
+ * @param output Array to store the output in.
+ */
+void EmissivityCalculator::calculate_emissivities(
+    const IonizationVariables &ionization_variables,
+    const bool do_line[NUMBER_OF_EMISSIONLINES],
+    double output[NUMBER_OF_EMISSIONLINES]) const {
+
+  EmissivityValues values =
+      calculate_emissivities(ionization_variables, _abundances, _lines);
+  for (int_fast32_t line = 0; line < NUMBER_OF_EMISSIONLINES; ++line) {
+    if (do_line[line]) {
+      output[line] = values.get_emissivity(line);
+    }
+  }
 }

@@ -237,6 +237,46 @@ int main(int argc, char **argv) {
     check_quantity< QUANTITY_FREQUENCY_PER_MASS >(unitnames, unitlogic);
   }
 
+  /// INVERSE LENGTH
+  {
+    std::vector< std::string > unitnames;
+    std::vector< int_fast32_t > unitlogic;
+
+    unitnames.push_back("m^-1");
+    unitlogic.push_back(0);
+
+    unitnames.push_back("cm^-1");
+    unitlogic.push_back(1);
+
+    unitnames.push_back("pc^-1");
+    unitlogic.push_back(-1);
+
+    unitnames.push_back("kpc^-1");
+    unitlogic.push_back(-1);
+
+    unitnames.push_back("angstrom^-1");
+    unitlogic.push_back(1);
+
+    unitnames.push_back("au^-1");
+    unitlogic.push_back(-1);
+
+    check_quantity< QUANTITY_INVERSE_LENGTH >(unitnames, unitlogic);
+  }
+
+  /// INVERSE SURFACE AREA
+  {
+    std::vector< std::string > unitnames;
+    std::vector< int_fast32_t > unitlogic;
+
+    unitnames.push_back("m^-2");
+    unitlogic.push_back(0);
+
+    unitnames.push_back("cm^-2");
+    unitlogic.push_back(1);
+
+    check_quantity< QUANTITY_INVERSE_SURFACE_AREA >(unitnames, unitlogic);
+  }
+
   /// LENGTH
   {
     std::vector< std::string > unitnames;
@@ -255,6 +295,9 @@ int main(int argc, char **argv) {
     unitnames.push_back("angstrom");
     // an angstrom is orders of magnitude smaller than a metre
     unitlogic.push_back(-1);
+    unitnames.push_back("au");
+    // an astronomical unit is larger than a metre
+    unitlogic.push_back(1);
 
     check_quantity< QUANTITY_LENGTH >(unitnames, unitlogic);
   }
@@ -289,6 +332,16 @@ int main(int argc, char **argv) {
     check_quantity< QUANTITY_MASS_RATE >(unitnames, unitlogic);
   }
 
+  /// MOMENTUM
+  {
+    std::vector< std::string > unitnames;
+    std::vector< int_fast32_t > unitlogic;
+    unitnames.push_back("kg m s^-1");
+    unitlogic.push_back(0);
+
+    check_quantity< QUANTITY_MOMENTUM >(unitnames, unitlogic);
+  }
+
   /// NUMBER DENSITY
   {
     std::vector< std::string > unitnames;
@@ -311,6 +364,19 @@ int main(int argc, char **argv) {
     unitlogic.push_back(0);
 
     check_quantity< QUANTITY_OPACITY >(unitnames, unitlogic);
+  }
+
+  /// PRESSURE
+  {
+    std::vector< std::string > unitnames;
+    std::vector< int_fast32_t > unitlogic;
+    unitnames.push_back("kg m^-1 s^-2");
+    unitlogic.push_back(0);
+    unitnames.push_back("bar");
+    // 1 bar is more than 1 Pa
+    unitlogic.push_back(1);
+
+    check_quantity< QUANTITY_PRESSURE >(unitnames, unitlogic);
   }
 
   /// REACTION RATE
@@ -361,6 +427,9 @@ int main(int argc, char **argv) {
     unitnames.push_back("yr");
     // a year takes longer than a second
     unitlogic.push_back(1);
+    unitnames.push_back("h");
+    // an hour takes longer than a second
+    unitlogic.push_back(1);
 
     check_quantity< QUANTITY_TIME >(unitnames, unitlogic);
   }
@@ -376,6 +445,16 @@ int main(int argc, char **argv) {
     unitlogic.push_back(1);
 
     check_quantity< QUANTITY_VELOCITY >(unitnames, unitlogic);
+  }
+
+  /// VOLUME
+  {
+    std::vector< std::string > unitnames;
+    std::vector< int_fast32_t > unitlogic;
+    unitnames.push_back("m^3");
+    unitlogic.push_back(0);
+
+    check_quantity< QUANTITY_VOLUME >(unitnames, unitlogic);
   }
 
   return 0;

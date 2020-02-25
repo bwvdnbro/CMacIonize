@@ -67,19 +67,19 @@ private:
   Octree *_octree;
 
   /*! @brief Initial temperature of the gas (in K). */
-  double _initial_temperature;
+  const double _initial_temperature;
 
   /*! @brief Number of bins to use when writing particle statistics. */
-  uint_fast32_t _stats_numbin;
+  const uint_fast32_t _stats_numbin;
 
   /*! @brief Minimum distance to use for particle statistics. */
-  double _stats_mindist;
+  const double _stats_mindist;
 
   /*! @brief Maximum distance to use for particle statistics. */
-  double _stats_maxdist;
+  const double _stats_maxdist;
 
   /*! @brief Name of the file with particle statistics. */
-  std::string _stats_filename;
+  const std::string _stats_filename;
 
   /*! @brief Log to write logging info to. */
   Log *_log;
@@ -239,12 +239,13 @@ private:
   }
 
 public:
-  SPHNGSnapshotDensityFunction(std::string filename, double initial_temperature,
-                               bool write_stats, uint_fast32_t stats_numbin,
-                               double stats_mindist, double stats_maxdist,
-                               std::string stats_filename,
-                               bool use_new_algorithm = false,
-                               Log *log = nullptr);
+  SPHNGSnapshotDensityFunction(
+      const std::string filename, const double initial_temperature,
+      const bool write_stats, const uint_fast32_t stats_numbin,
+      const double stats_mindist, const double stats_maxdist,
+      const std::string stats_filename, const bool use_new_algorithm = false,
+      const bool binary_dump = false, const std::string binary_dump_name = "",
+      Log *log = nullptr);
 
   SPHNGSnapshotDensityFunction(ParameterFile &params, Log *log = nullptr);
 
@@ -326,6 +327,23 @@ inline void SPHNGSnapshotDensityFunction::read_value< std::vector< int8_t > >(
  * @brief Fill the given referenced parameter by reading from the given
  * Fortran unformatted binary file.
  *
+ * Template specialization for a std::vector of single precision floating point
+ * values.
+ *
+ * @param ifile Reference to an open Fortran unformatted binary file.
+ * @param value Next (and last) value to read from the file.
+ */
+template <>
+inline void SPHNGSnapshotDensityFunction::read_value< std::vector< float > >(
+    std::ifstream &ifile, std::vector< float > &value) {
+  ifile.read(reinterpret_cast< char * >(&value[0]),
+             value.size() * sizeof(float));
+}
+
+/**
+ * @brief Fill the given referenced parameter by reading from the given
+ * Fortran unformatted binary file.
+ *
  * Template specialization for a std::vector of double precision floating point
  * values.
  *
@@ -398,6 +416,22 @@ inline uint_fast32_t
 SPHNGSnapshotDensityFunction::get_size< std::vector< int8_t > >(
     std::vector< int8_t > &value) {
   return value.size() * sizeof(int8_t);
+}
+
+/**
+ * @brief Get the size of the given template datatype.
+ *
+ * Template specialization for a std::vector containing single precision
+ * floating point values.
+ *
+ * @param value Reference to a value of the template datatype.
+ * @return Size of the template datatype.
+ */
+template <>
+inline uint_fast32_t
+SPHNGSnapshotDensityFunction::get_size< std::vector< float > >(
+    std::vector< float > &value) {
+  return value.size() * sizeof(float);
 }
 
 /**

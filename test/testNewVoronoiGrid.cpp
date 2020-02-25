@@ -575,41 +575,37 @@ int main(int argc, char **argv) {
     const CoordinateVector<> full_centroid =
         full_volume_tetrahedron.get_centroid(full_volume_positions);
     const double full_area_023 =
-        0.5 *
-        CoordinateVector<>::cross_product(
-            full_volume_positions[2] - full_volume_positions[0],
-            full_volume_positions[3] - full_volume_positions[0])
-            .norm();
+        0.5 * CoordinateVector<>::cross_product(
+                  full_volume_positions[2] - full_volume_positions[0],
+                  full_volume_positions[3] - full_volume_positions[0])
+                  .norm();
     const CoordinateVector<> full_midpoint_023 =
         (full_volume_positions[0] + full_volume_positions[2] +
          full_volume_positions[3]) /
         3.;
     const double full_area_123 =
-        0.5 *
-        CoordinateVector<>::cross_product(
-            full_volume_positions[2] - full_volume_positions[1],
-            full_volume_positions[3] - full_volume_positions[1])
-            .norm();
+        0.5 * CoordinateVector<>::cross_product(
+                  full_volume_positions[2] - full_volume_positions[1],
+                  full_volume_positions[3] - full_volume_positions[1])
+                  .norm();
     const CoordinateVector<> full_midpoint_123 =
         (full_volume_positions[1] + full_volume_positions[2] +
          full_volume_positions[3]) /
         3.;
     const double full_area_013 =
-        0.5 *
-        CoordinateVector<>::cross_product(
-            full_volume_positions[1] - full_volume_positions[0],
-            full_volume_positions[3] - full_volume_positions[0])
-            .norm();
+        0.5 * CoordinateVector<>::cross_product(
+                  full_volume_positions[1] - full_volume_positions[0],
+                  full_volume_positions[3] - full_volume_positions[0])
+                  .norm();
     const CoordinateVector<> full_midpoint_013 =
         (full_volume_positions[0] + full_volume_positions[1] +
          full_volume_positions[3]) /
         3.;
     const double full_area_012 =
-        0.5 *
-        CoordinateVector<>::cross_product(
-            full_volume_positions[1] - full_volume_positions[0],
-            full_volume_positions[2] - full_volume_positions[0])
-            .norm();
+        0.5 * CoordinateVector<>::cross_product(
+                  full_volume_positions[1] - full_volume_positions[0],
+                  full_volume_positions[2] - full_volume_positions[0])
+                  .norm();
     const CoordinateVector<> full_midpoint_012 =
         (full_volume_positions[0] + full_volume_positions[1] +
          full_volume_positions[2]) /
@@ -1126,16 +1122,24 @@ int main(int argc, char **argv) {
 
     assert_values_equal_rel(faces[3].get_surface_area(), 1., tolerance);
     CoordinateVector<> midpoint = faces[3].get_midpoint();
-    assert_values_equal_rel(midpoint.x(), 0., tolerance);
+    assert_values_equal_tol(midpoint.x(), 0., tolerance);
     assert_values_equal_rel(midpoint.y(), 0.5, tolerance);
     assert_values_equal_rel(midpoint.z(), 0.5, tolerance);
     assert_condition(faces[3].get_neighbour() == NEWVORONOICELL_BOX_LEFT);
     std::vector< CoordinateVector<> > vertices = faces[3].get_vertices();
     assert_condition(vertices.size() == 4);
-    assert_condition(vertices[0] == CoordinateVector<>(0., 0., 1.));
-    assert_condition(vertices[1] == CoordinateVector<>(0., 0., 0.));
-    assert_condition(vertices[2] == CoordinateVector<>(0., 1., 0.));
-    assert_condition(vertices[3] == CoordinateVector<>(0., 1., 1.));
+    assert_values_equal_tol(vertices[0].x(), 0., tolerance);
+    assert_values_equal_tol(vertices[0].y(), 0., tolerance);
+    assert_values_equal_rel(vertices[0].z(), 1., tolerance);
+    assert_values_equal_tol(vertices[1].x(), 0., tolerance);
+    assert_values_equal_tol(vertices[1].y(), 0., tolerance);
+    assert_values_equal_tol(vertices[1].z(), 0., tolerance);
+    assert_values_equal_tol(vertices[2].x(), 0., tolerance);
+    assert_values_equal_rel(vertices[2].y(), 1., tolerance);
+    assert_values_equal_tol(vertices[2].z(), 0., tolerance);
+    assert_values_equal_tol(vertices[3].x(), 0., tolerance);
+    assert_values_equal_rel(vertices[3].y(), 1., tolerance);
+    assert_values_equal_rel(vertices[3].z(), 1., tolerance);
 
     assert_values_equal_rel(faces[0].get_surface_area(), 1., tolerance);
     midpoint = faces[0].get_midpoint();
@@ -1145,23 +1149,39 @@ int main(int argc, char **argv) {
     assert_condition(faces[0].get_neighbour() == NEWVORONOICELL_BOX_RIGHT);
     vertices = faces[0].get_vertices();
     assert_condition(vertices.size() == 4);
-    assert_condition(vertices[0] == CoordinateVector<>(1., 0., 1.));
-    assert_condition(vertices[1] == CoordinateVector<>(1., 0., 0.));
-    assert_condition(vertices[2] == CoordinateVector<>(1., 1., 0.));
-    assert_condition(vertices[3] == CoordinateVector<>(1., 1., 1.));
+    assert_values_equal_rel(vertices[0].x(), 1., tolerance);
+    assert_values_equal_tol(vertices[0].y(), 0., tolerance);
+    assert_values_equal_rel(vertices[0].z(), 1., tolerance);
+    assert_values_equal_rel(vertices[1].x(), 1., tolerance);
+    assert_values_equal_tol(vertices[1].y(), 0., tolerance);
+    assert_values_equal_tol(vertices[1].z(), 0., tolerance);
+    assert_values_equal_rel(vertices[2].x(), 1., tolerance);
+    assert_values_equal_rel(vertices[2].y(), 1., tolerance);
+    assert_values_equal_tol(vertices[2].z(), 0., tolerance);
+    assert_values_equal_rel(vertices[3].x(), 1., tolerance);
+    assert_values_equal_rel(vertices[3].y(), 1., tolerance);
+    assert_values_equal_rel(vertices[3].z(), 1., tolerance);
 
     assert_values_equal_rel(faces[2].get_surface_area(), 1., tolerance);
     midpoint = faces[2].get_midpoint();
     assert_values_equal_rel(midpoint.x(), 0.5, tolerance);
-    assert_values_equal_rel(midpoint.y(), 0., tolerance);
+    assert_values_equal_tol(midpoint.y(), 0., tolerance);
     assert_values_equal_rel(midpoint.z(), 0.5, tolerance);
     assert_condition(faces[2].get_neighbour() == NEWVORONOICELL_BOX_FRONT);
     vertices = faces[2].get_vertices();
     assert_condition(vertices.size() == 4);
-    assert_condition(vertices[0] == CoordinateVector<>(1., 0., 1.));
-    assert_condition(vertices[1] == CoordinateVector<>(0., 0., 1.));
-    assert_condition(vertices[2] == CoordinateVector<>(0., 0., 0.));
-    assert_condition(vertices[3] == CoordinateVector<>(1., 0., 0.));
+    assert_values_equal_rel(vertices[0].x(), 1., tolerance);
+    assert_values_equal_tol(vertices[0].y(), 0., tolerance);
+    assert_values_equal_rel(vertices[0].z(), 1., tolerance);
+    assert_values_equal_tol(vertices[1].x(), 0., tolerance);
+    assert_values_equal_tol(vertices[1].y(), 0., tolerance);
+    assert_values_equal_rel(vertices[1].z(), 1., tolerance);
+    assert_values_equal_tol(vertices[2].x(), 0., tolerance);
+    assert_values_equal_tol(vertices[2].y(), 0., tolerance);
+    assert_values_equal_tol(vertices[2].z(), 0., tolerance);
+    assert_values_equal_rel(vertices[3].x(), 1., tolerance);
+    assert_values_equal_tol(vertices[3].y(), 0., tolerance);
+    assert_values_equal_tol(vertices[3].z(), 0., tolerance);
 
     assert_values_equal_rel(faces[5].get_surface_area(), 1., tolerance);
     midpoint = faces[5].get_midpoint();
@@ -1171,23 +1191,39 @@ int main(int argc, char **argv) {
     assert_condition(faces[5].get_neighbour() == NEWVORONOICELL_BOX_BACK);
     vertices = faces[5].get_vertices();
     assert_condition(vertices.size() == 4);
-    assert_condition(vertices[0] == CoordinateVector<>(1., 1., 1.));
-    assert_condition(vertices[1] == CoordinateVector<>(1., 1., 0.));
-    assert_condition(vertices[2] == CoordinateVector<>(0., 1., 0.));
-    assert_condition(vertices[3] == CoordinateVector<>(0., 1., 1.));
+    assert_values_equal_rel(vertices[0].x(), 1., tolerance);
+    assert_values_equal_rel(vertices[0].y(), 1., tolerance);
+    assert_values_equal_rel(vertices[0].z(), 1., tolerance);
+    assert_values_equal_rel(vertices[1].x(), 1., tolerance);
+    assert_values_equal_rel(vertices[1].y(), 1., tolerance);
+    assert_values_equal_tol(vertices[1].z(), 0., tolerance);
+    assert_values_equal_tol(vertices[2].x(), 0., tolerance);
+    assert_values_equal_rel(vertices[2].y(), 1., tolerance);
+    assert_values_equal_tol(vertices[2].z(), 0., tolerance);
+    assert_values_equal_tol(vertices[3].x(), 0., tolerance);
+    assert_values_equal_rel(vertices[3].y(), 1., tolerance);
+    assert_values_equal_rel(vertices[3].z(), 1., tolerance);
 
     assert_values_equal_rel(faces[4].get_surface_area(), 1., tolerance);
     midpoint = faces[4].get_midpoint();
     assert_values_equal_rel(midpoint.x(), 0.5, tolerance);
     assert_values_equal_rel(midpoint.y(), 0.5, tolerance);
-    assert_values_equal_rel(midpoint.z(), 0., tolerance);
+    assert_values_equal_tol(midpoint.z(), 0., tolerance);
     assert_condition(faces[4].get_neighbour() == NEWVORONOICELL_BOX_BOTTOM);
     vertices = faces[4].get_vertices();
     assert_condition(vertices.size() == 4);
-    assert_condition(vertices[0] == CoordinateVector<>(0., 0., 0.));
-    assert_condition(vertices[1] == CoordinateVector<>(1., 0., 0.));
-    assert_condition(vertices[2] == CoordinateVector<>(1., 1., 0.));
-    assert_condition(vertices[3] == CoordinateVector<>(0., 1., 0.));
+    assert_values_equal_tol(vertices[0].x(), 0., tolerance);
+    assert_values_equal_tol(vertices[0].y(), 0., tolerance);
+    assert_values_equal_tol(vertices[0].z(), 0., tolerance);
+    assert_values_equal_rel(vertices[1].x(), 1., tolerance);
+    assert_values_equal_tol(vertices[1].y(), 0., tolerance);
+    assert_values_equal_tol(vertices[1].z(), 0., tolerance);
+    assert_values_equal_rel(vertices[2].x(), 1., tolerance);
+    assert_values_equal_rel(vertices[2].y(), 1., tolerance);
+    assert_values_equal_tol(vertices[2].z(), 0., tolerance);
+    assert_values_equal_tol(vertices[3].x(), 0., tolerance);
+    assert_values_equal_rel(vertices[3].y(), 1., tolerance);
+    assert_values_equal_tol(vertices[3].z(), 0., tolerance);
 
     assert_values_equal_rel(faces[1].get_surface_area(), 1., tolerance);
     midpoint = faces[1].get_midpoint();
@@ -1197,10 +1233,18 @@ int main(int argc, char **argv) {
     assert_condition(faces[1].get_neighbour() == NEWVORONOICELL_BOX_TOP);
     vertices = faces[1].get_vertices();
     assert_condition(vertices.size() == 4);
-    assert_condition(vertices[0] == CoordinateVector<>(1., 0., 1.));
-    assert_condition(vertices[1] == CoordinateVector<>(1., 1., 1.));
-    assert_condition(vertices[2] == CoordinateVector<>(0., 1., 1.));
-    assert_condition(vertices[3] == CoordinateVector<>(0., 0., 1.));
+    assert_values_equal_rel(vertices[0].x(), 1., tolerance);
+    assert_values_equal_tol(vertices[0].y(), 0., tolerance);
+    assert_values_equal_rel(vertices[0].z(), 1., tolerance);
+    assert_values_equal_rel(vertices[1].x(), 1., tolerance);
+    assert_values_equal_rel(vertices[1].y(), 1., tolerance);
+    assert_values_equal_rel(vertices[1].z(), 1., tolerance);
+    assert_values_equal_tol(vertices[2].x(), 0., tolerance);
+    assert_values_equal_rel(vertices[2].y(), 1., tolerance);
+    assert_values_equal_rel(vertices[2].z(), 1., tolerance);
+    assert_values_equal_tol(vertices[3].x(), 0., tolerance);
+    assert_values_equal_tol(vertices[3].y(), 0., tolerance);
+    assert_values_equal_rel(vertices[3].z(), 1., tolerance);
 
     cmac_status("Geometry, part 2: Cell face computation works!");
   }

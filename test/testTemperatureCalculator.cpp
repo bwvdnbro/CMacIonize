@@ -70,6 +70,9 @@ public:
  */
 int main(int argc, char **argv) {
 
+#if defined(HAS_HELIUM) && defined(HAS_CARBON) && defined(HAS_NITROGEN) &&     \
+    defined(HAS_OXYGEN) && defined(HAS_NEON) && defined(HAS_SULPHUR)
+
   /// test without CR feedback
   {
     LineCoolingData data;
@@ -126,7 +129,8 @@ int main(int argc, char **argv) {
 
         double gain, loss, h0, he0;
         TemperatureCalculator::compute_cooling_and_heating_balance(
-            h0, he0, gain, loss, T, cell, j, abundances, h, 1., 0., 0.75, data,
+            h0, he0, gain, loss, T, ionization_variables,
+            cell.get_cell_midpoint(), j, abundances, h, 1., 0., 0.75, data,
             rates, ctr);
 
         double Cp1, Cp2, N, Np1, Np2, O, Op1, Ne, Nep1, Sp1, Sp2, Sp3;
@@ -148,7 +152,7 @@ int main(int argc, char **argv) {
         // single
         // precision. We always use double precision and prefer to stick to SI
         // units where possible.
-        double tolerance = 1.e-9;
+        double tolerance = 1.e-6;
         assert_values_equal_rel(h0, h0f, tolerance);
         assert_values_equal_rel(he0, he0f, tolerance);
         assert_values_equal_rel(gain, gainf * 1.e-20, tolerance);
@@ -256,7 +260,8 @@ int main(int argc, char **argv) {
         ionization_variables.set_temperature(T);
 
         // calculate the ionization state of the cell
-        calculator.calculate_temperature(1., 1., cell);
+        calculator.calculate_temperature(ionization_variables, 1., 1.,
+                                         cell.get_cell_midpoint());
 
         h0 = ionization_variables.get_ionic_fraction(ION_H_n);
 
@@ -378,6 +383,7 @@ int main(int argc, char **argv) {
       ionization_variables.set_mean_intensity(
           ION_Ne_p1, std::pow(10., -1.990e-58 * z3 + (8.613e-39) * z2 +
                                        (-1.742e-19) * z + (-1.267e+01)));
+
       ionization_variables.set_mean_intensity(
           ION_S_p1, std::pow(10., -3.066e-59 * z3 + (2.701e-39) * z2 +
                                       (-1.091e-19) * z + (-1.099e+01)));
@@ -396,7 +402,8 @@ int main(int argc, char **argv) {
           HEATINGTERM_He, std::pow(10., -8.280e-59 * z3 + (2.779e-39) * z2 +
                                             (-1.078e-19) * z + (-2.954e+01)));
 
-      calculator.calculate_temperature(1., 1., it);
+      calculator.calculate_temperature(ionization_variables, 1., 1.,
+                                       it.get_cell_midpoint());
 
       ofile << z << "\t" << ionization_variables.get_number_density() << "\t"
             << ionization_variables.get_temperature() << "\n";
@@ -407,6 +414,8 @@ int main(int argc, char **argv) {
     }
     ofile.close();
   }
+
+#endif
 
   return 0;
 }

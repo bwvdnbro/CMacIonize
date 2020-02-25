@@ -23,19 +23,15 @@
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
-#include "EmissivityCalculator.hpp"
 #include "DensityGrid.hpp"
+#include "EmissivityCalculator.hpp"
 #include "LineCoolingData.hpp"
 #include <boost/python/class.hpp>
 #include <boost/python/dict.hpp>
 #include <boost/python/extract.hpp>
 #include <boost/python/make_constructor.hpp>
 #include <boost/python/module.hpp>
-#include <boost/python/numeric.hpp>
-
-/*! @brief Tell numpy to use the non deprecated API. */
-#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
-#include <numpy/ndarrayobject.h>
+#include <boost/python/numpy.hpp>
 
 /**
  * @brief Python constructor for an EmissivityCalculator.
@@ -58,14 +54,15 @@ initEmissivityCalculator(Abundances &abundances) {
  */
 static boost::python::dict get_emissivities(EmissivityCalculator &calculator,
                                             DensityGrid &grid) {
-  npy_intp size = grid.get_number_of_cells();
-  PyObject *narr = PyArray_SimpleNew(1, &size, NPY_DOUBLE);
-  boost::python::handle<> handle(narr);
-  boost::python::numeric::array arr(handle);
+
+  boost::python::tuple shape =
+      boost::python::make_tuple(grid.get_number_of_cells(), 1);
+  boost::python::numpy::dtype dtype =
+      boost::python::numpy::dtype::get_builtin< double >();
+  boost::python::numpy::ndarray arr = boost::python::numpy::zeros(shape, dtype);
 
   boost::python::dict result;
-  for (int_fast32_t i = 0; i < NUMBER_OF_EMISSIONLINES; ++i) {
-    EmissionLine line = static_cast< EmissionLine >(i);
+  for (int_fast32_t line = 0; line < NUMBER_OF_EMISSIONLINES; ++line) {
     result[EmissivityValues::get_name(line)] = arr.copy();
   }
 
@@ -73,8 +70,7 @@ static boost::python::dict get_emissivities(EmissivityCalculator &calculator,
       calculator.get_emissivities(grid);
 
   for (size_t i = 0; i < emissivities.size(); ++i) {
-    for (int_fast32_t j = 0; j < NUMBER_OF_EMISSIONLINES; ++j) {
-      EmissionLine line = static_cast< EmissionLine >(j);
+    for (int_fast32_t line = 0; line < NUMBER_OF_EMISSIONLINES; ++line) {
       result[EmissivityValues::get_name(line)][i] =
           emissivities[i].get_emissivity(line);
     }
@@ -154,11 +150,13 @@ static boost::python::dict make_emission_map(EmissivityCalculator &calculator,
   // make sure the grid has emissivity values
   calculator.calculate_emissivities(grid);
 
-  npy_intp size[2] = {boost::python::extract< unsigned int >(shape[0]),
-                      boost::python::extract< unsigned int >(shape[1])};
-  PyObject *narr = PyArray_SimpleNew(2, size, NPY_DOUBLE);
-  boost::python::handle<> handle(narr);
-  boost::python::numeric::array arr(handle);
+  const unsigned int size[2] = {
+      boost::python::extract< unsigned int >(shape[0]),
+      boost::python::extract< unsigned int >(shape[1])};
+
+  boost::python::numpy::dtype dtype =
+      boost::python::numpy::dtype::get_builtin< double >();
+  boost::python::numpy::ndarray arr = boost::python::numpy::zeros(shape, dtype);
 
   Box<> box = grid.get_box();
 
@@ -224,11 +222,8 @@ initAbundances(boost::python::dict abundances) {
  * @brief Python module exposure.
  */
 BOOST_PYTHON_MODULE(libemissivitycalculator) {
-  // we need to tell Boost we mean numpy.ndarray whenever we write
-  // boost::python::numeric::array
-  boost::python::numeric::array::set_module_and_type("numpy", "ndarray");
-  // we have to kindly ask numpy to initialize its array functionality
-  import_array();
+  Py_Initialize();
+  boost::python::numpy::initialize();
 
   // we tell Boost we want to expose our version of
   // LineCoolingData.get_line_strengths()

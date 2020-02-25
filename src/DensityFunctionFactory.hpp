@@ -35,13 +35,19 @@
 // non library dependent implementations
 #include "AsciiFileDensityFunction.hpp"
 #include "BlockSyntaxDensityFunction.hpp"
+#include "BondiProfileDensityFunction.hpp"
+#include "CoredDMProfileDensityFunction.hpp"
+#include "DiscICDensityFunction.hpp"
+#include "DiscPatchDensityFunction.hpp"
 #include "HomogeneousDensityFunction.hpp"
 #include "InterpolatedDensityFunction.hpp"
+#include "PhantomSnapshotDensityFunction.hpp"
 #include "SPHNGSnapshotDensityFunction.hpp"
 #include "SpiralGalaxyDensityFunction.hpp"
 
 // HDF5 dependent implementations
 #ifdef HAVE_HDF5
+#include "AmunSnapshotDensityFunction.hpp"
 #include "CMacIonizeSnapshotDensityFunction.hpp"
 #include "FLASHSnapshotDensityFunction.hpp"
 #include "GadgetSnapshotDensityFunction.hpp"
@@ -62,8 +68,8 @@ public:
    * @param log Log to write logging info to.
    */
   static void check_hdf5(std::string type, Log *log = nullptr) {
-    if (type == "CMacIonizeSnapshot" || type == "FLASHSnapshot" ||
-        type == "GadgetSnapshot") {
+    if (type == "AmunSnapshot" || type == "CMacIonizeSnapshot" ||
+        type == "FLASHSnapshot" || type == "GadgetSnapshot") {
       if (log) {
         log->write_error("Cannot create an instance of ", type,
                          "DensityFunction, since the code was "
@@ -80,10 +86,17 @@ public:
    * file.
    *
    * Supported types are (default: Homogeneous):
+   *  - AmunSnapshot: Implementation that reads a density grid from an Amun
+   *    snapshot file
    *  - AsciiFile: Implementation that reads a density grid from an ASCII text
    *    file
    *  - BlockSyntax: Implementation that reads a geometrically constructed
    *    density field from a text file containing block syntax
+   *  - BondiProfile: Bondi accretion profile.
+   *  - CoredDMProfile: Density profile in hydrostatic equilibrium with a cored
+   *    DM density profile.
+   *  - DiscIC: Constant value density field with a tangential velocity profile
+   *  - DiscPatch: Hydrostatic disc patch (Creasey, Theuns & Bower, 2013).
    *  - Homogeneous: Constant value density field.
    *  - Interpolated: Implementation that reads a density field from a text file
    *    and interpolates on it
@@ -99,6 +112,8 @@ public:
    *    file format of the SPH simulation code Gadget2 (also supported by SWIFT,
    *    AREPO, GIZMO and Shadowfax; the CMacIonize snapshot format is a variant
    *    of this format)
+   *  - PhantomSnapshot: Implementation that reads a density field from the
+   *    binary file format used by the SPH simulation code Phantom
    *
    * @param params ParameterFile containing the parameters used by the specific
    * implementation.
@@ -122,15 +137,27 @@ public:
       return new AsciiFileDensityFunction(params, log);
     } else if (type == "BlockSyntax") {
       return new BlockSyntaxDensityFunction(params, log);
+    } else if (type == "BondiProfile") {
+      return new BondiProfileDensityFunction(params);
+    } else if (type == "CoredDMProfile") {
+      return new CoredDMProfileDensityFunction(params);
+    } else if (type == "DiscIC") {
+      return new DiscICDensityFunction(params, log);
+    } else if (type == "DiscPatch") {
+      return new DiscPatchDensityFunction(params);
     } else if (type == "Homogeneous") {
       return new HomogeneousDensityFunction(params, log);
     } else if (type == "Interpolated") {
       return new InterpolatedDensityFunction(params, log);
+    } else if (type == "PhantomSnapshot") {
+      return new PhantomSnapshotDensityFunction(params, log);
     } else if (type == "SPHNGSnapshot") {
       return new SPHNGSnapshotDensityFunction(params, log);
     } else if (type == "SpiralGalaxy") {
       return new SpiralGalaxyDensityFunction(params, log);
 #ifdef HAVE_HDF5
+    } else if (type == "AmunSnapshot") {
+      return new AmunSnapshotDensityFunction(params, log);
     } else if (type == "CMacIonizeSnapshot") {
       return new CMacIonizeSnapshotDensityFunction(params, log);
     } else if (type == "FLASHSnapshot") {

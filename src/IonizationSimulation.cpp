@@ -23,6 +23,7 @@
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
+
 #include "IonizationSimulation.hpp"
 #include "ChargeTransferRates.hpp"
 #include "ContinuousPhotonSourceFactory.hpp"
@@ -31,17 +32,19 @@
 #include "DensityGridFactory.hpp"
 #include "DensityGridWriterFactory.hpp"
 #include "DensityMaskFactory.hpp"
-#include "DiffuseReemissionHandler.hpp"
 #include "IonizationVariablesPropertyAccessors.hpp"
 #include "LineCoolingData.hpp"
 #include "MPICommunicator.hpp"
 #include "ParameterFile.hpp"
 #include "PhotonSourceDistributionFactory.hpp"
 #include "PhotonSourceSpectrumFactory.hpp"
+#include "PhysicalDiffuseReemissionHandler.hpp"
 #include "RecombinationRatesFactory.hpp"
 #include "SimulationBox.hpp"
 #include "TemperatureCalculator.hpp"
+#include "TrackerManager.hpp"
 #include "WorkEnvironment.hpp"
+
 #include <fstream>
 
 /*! @brief Start the serial and total program time timers at the start of a
@@ -80,6 +83,8 @@
  *  - output folder: Folder where all output files will be placed (default: .)
  *  - random seed: Seed used to initialize the random number generator (default:
  *    42)
+ *  - enable trackers: Track photon packets travelling through specific
+ *    positions? (default: no)
  *
  * @param write_output Should this process write output?
  * @param every_iteration_output Write an output file after every iteration of
@@ -114,6 +119,11 @@ IonizationSimulation::IonizationSimulation(const bool write_output,
       _abundances(_parameter_file, _log) {
 
   function_start_timers();
+
+  OperatingSystem::install_signal_handlers(true);
+
+  _time_log.start("root");
+  _time_log.start("simulation start");
 
   if (_log) {
     if (_num_thread == 1) {
@@ -175,7 +185,7 @@ IonizationSimulation::IonizationSimulation(const bool write_output,
   _density_grid_writer = nullptr;
   if (write_output) {
     _density_grid_writer = DensityGridWriterFactory::generate(
-        output_folder, _parameter_file, _log);
+        output_folder, _parameter_file, false, _log);
   }
 
   // used to calculate both the ionization state and the temperature
@@ -193,6 +203,13 @@ IonizationSimulation::IonizationSimulation(const bool write_output,
   _ionization_photon_shoot_job_market = new IonizationPhotonShootJobMarket(
       *_photon_source, random_seed, *_density_grid, 0, 100, _num_thread);
 
+  if (_parameter_file.get_value< bool >("IonizationSimulation:enable trackers",
+                                        false)) {
+    _trackers = new TrackerManager(_parameter_file);
+  } else {
+    _trackers = nullptr;
+  }
+
   // we are done reading the parameter file
   // now output all parameters (also those for which default values were used)
   // to a reference parameter file (only rank 0 does this)
@@ -205,6 +222,8 @@ IonizationSimulation::IonizationSimulation(const bool write_output,
                          "/parameters-usedvalues.param.");
     }
   }
+
+  _time_log.end("simulation start");
 
   function_stop_timers();
 }
@@ -219,11 +238,14 @@ void IonizationSimulation::initialize(DensityFunction *density_function) {
 
   function_start_timers();
 
+  _time_log.start("IonizationSimulation::initialize()");
+
   if (density_function == nullptr) {
     density_function = _density_function;
   }
 
   // initialize the density function
+  _time_log.start("Initializing densityfunction");
   if (_log) {
     _log->write_status("Initializing DensityFunction...");
   }
@@ -231,6 +253,7 @@ void IonizationSimulation::initialize(DensityFunction *density_function) {
   if (_log) {
     _log->write_status("Done.");
   }
+  _time_log.end("Initializing densityfunction");
 
   // initialize the actual grid
   std::pair< cellsize_t, cellsize_t > block;
@@ -242,8 +265,18 @@ void IonizationSimulation::initialize(DensityFunction *density_function) {
   }
 
   start_parallel_timing_block();
-  _density_grid->initialize(block, *density_function);
+  _density_grid->initialize(block, *density_function, &_time_log);
   stop_parallel_timing_block();
+
+  // check that the trackers can be sensibly placed within the grid
+  if (_trackers != nullptr) {
+    // add trackers
+    _trackers->add_trackers(*_density_grid);
+    // now remove them again, as we do not want to activate them just yet
+    for (auto it = _density_grid->begin(); it != _density_grid->end(); ++it) {
+      it.get_ionization_variables().add_tracker(nullptr);
+    }
+  }
 
   // _density_grid->initialize initialized:
   // - densities
@@ -265,10 +298,12 @@ void IonizationSimulation::initialize(DensityFunction *density_function) {
         ->gather< double, IonicFractionPropertyAccessor< ION_H_n > >(
             _density_grid->begin(), _density_grid->end(), local_chunk.first,
             local_chunk.second, 0);
+#ifdef HAS_HELIUM
     _mpi_communicator
         ->gather< double, IonicFractionPropertyAccessor< ION_He_n > >(
             _density_grid->begin(), _density_grid->end(), local_chunk.first,
             local_chunk.second, 0);
+#endif
     stop_parallel_timing_block();
   }
 
@@ -287,6 +322,8 @@ void IonizationSimulation::initialize(DensityFunction *density_function) {
     }
   }
 
+  _time_log.end("IonizationSimulation::initialize()");
+
   function_stop_timers();
 }
 
@@ -299,6 +336,8 @@ void IonizationSimulation::initialize(DensityFunction *density_function) {
 void IonizationSimulation::run(DensityGridWriter *density_grid_writer) {
 
   function_start_timers();
+
+  _time_log.start("IonizationSimulation:run()");
 
   // write the initial state of the grid to an output file
   if (_density_grid_writer) {
@@ -315,6 +354,7 @@ void IonizationSimulation::run(DensityGridWriter *density_grid_writer) {
   std::pair< DensityGrid::iterator, DensityGrid::iterator > local_chunk =
       _density_grid->get_chunk(block.first, block.second);
 
+  _time_log.start("photoionization");
   // finally: the actual program loop whereby the density grid is ray traced
   // using photon packets generated by the stellar sources
   uint_fast32_t loop = 0;
@@ -326,6 +366,11 @@ void IonizationSimulation::run(DensityGridWriter *density_grid_writer) {
 
     uint_fast64_t lnumphoton = _number_of_photons;
 
+    if (_trackers != nullptr && loop == _number_of_iterations - 1) {
+      _trackers->add_trackers(*_density_grid);
+      lnumphoton = std::max(lnumphoton, _trackers->get_number_of_photons());
+    }
+
     if (loop == 0) {
       // overwrite the number of photons for the first loop (might be useful
       // if more than 1 boundary is periodic, since the initial neutral
@@ -334,7 +379,10 @@ void IonizationSimulation::run(DensityGridWriter *density_grid_writer) {
     }
 
     _density_grid->reset_grid(*_density_function);
-    DiffuseReemissionHandler::set_reemission_probabilities(*_density_grid);
+    if (_photon_source->get_reemission_handler()) {
+      _photon_source->get_reemission_handler()->set_reemission_probabilities(
+          *_density_grid);
+    }
     if (_log) {
       _log->write_status("Start shooting ", lnumphoton, " photons...");
     }
@@ -376,8 +424,9 @@ void IonizationSimulation::run(DensityGridWriter *density_grid_writer) {
         _log->write_status(
             100. * typecount[PHOTONTYPE_ABSORBED] / totweight,
             "% of photons were reemitted as non-ionizing photons.");
-        _log->write_status(100. * (typecount[PHOTONTYPE_DIFFUSE_HI] +
-                                   typecount[PHOTONTYPE_DIFFUSE_HeI]) /
+        _log->write_status(100. *
+                               (typecount[PHOTONTYPE_DIFFUSE_HI] +
+                                typecount[PHOTONTYPE_DIFFUSE_HeI]) /
                                totweight,
                            "% of photons were scattered.");
         double escape_fraction =
@@ -412,15 +461,23 @@ void IonizationSimulation::run(DensityGridWriter *density_grid_writer) {
       _mpi_communicator->reduce< MPI_SUM_OF_ALL_PROCESSES, double,
                                  MeanIntensityPropertyAccessor< ION_H_n > >(
           _density_grid->begin(), _density_grid->end(), 0);
+
+#ifdef HAS_HELIUM
       _mpi_communicator->reduce< MPI_SUM_OF_ALL_PROCESSES, double,
                                  MeanIntensityPropertyAccessor< ION_He_n > >(
           _density_grid->begin(), _density_grid->end(), 0);
+#endif
+
+#ifdef HAS_CARBON
       _mpi_communicator->reduce< MPI_SUM_OF_ALL_PROCESSES, double,
                                  MeanIntensityPropertyAccessor< ION_C_p1 > >(
           _density_grid->begin(), _density_grid->end(), 0);
       _mpi_communicator->reduce< MPI_SUM_OF_ALL_PROCESSES, double,
                                  MeanIntensityPropertyAccessor< ION_C_p2 > >(
           _density_grid->begin(), _density_grid->end(), 0);
+#endif
+
+#ifdef HAS_NITROGEN
       _mpi_communicator->reduce< MPI_SUM_OF_ALL_PROCESSES, double,
                                  MeanIntensityPropertyAccessor< ION_N_n > >(
           _density_grid->begin(), _density_grid->end(), 0);
@@ -430,18 +487,27 @@ void IonizationSimulation::run(DensityGridWriter *density_grid_writer) {
       _mpi_communicator->reduce< MPI_SUM_OF_ALL_PROCESSES, double,
                                  MeanIntensityPropertyAccessor< ION_N_p2 > >(
           _density_grid->begin(), _density_grid->end(), 0);
+#endif
+
+#ifdef HAS_OXYGEN
       _mpi_communicator->reduce< MPI_SUM_OF_ALL_PROCESSES, double,
                                  MeanIntensityPropertyAccessor< ION_O_n > >(
           _density_grid->begin(), _density_grid->end(), 0);
       _mpi_communicator->reduce< MPI_SUM_OF_ALL_PROCESSES, double,
                                  MeanIntensityPropertyAccessor< ION_O_p1 > >(
           _density_grid->begin(), _density_grid->end(), 0);
+#endif
+
+#ifdef HAS_NEON
       _mpi_communicator->reduce< MPI_SUM_OF_ALL_PROCESSES, double,
                                  MeanIntensityPropertyAccessor< ION_Ne_n > >(
           _density_grid->begin(), _density_grid->end(), 0);
       _mpi_communicator->reduce< MPI_SUM_OF_ALL_PROCESSES, double,
                                  MeanIntensityPropertyAccessor< ION_Ne_p1 > >(
           _density_grid->begin(), _density_grid->end(), 0);
+#endif
+
+#ifdef HAS_SULPHUR
       _mpi_communicator->reduce< MPI_SUM_OF_ALL_PROCESSES, double,
                                  MeanIntensityPropertyAccessor< ION_S_p1 > >(
           _density_grid->begin(), _density_grid->end(), 0);
@@ -451,12 +517,17 @@ void IonizationSimulation::run(DensityGridWriter *density_grid_writer) {
       _mpi_communicator->reduce< MPI_SUM_OF_ALL_PROCESSES, double,
                                  MeanIntensityPropertyAccessor< ION_S_p3 > >(
           _density_grid->begin(), _density_grid->end(), 0);
+#endif
+
       _mpi_communicator->reduce< MPI_SUM_OF_ALL_PROCESSES, double,
                                  HeatingPropertyAccessor< HEATINGTERM_H > >(
           _density_grid->begin(), _density_grid->end(), 0);
+
+#ifdef HAS_HELIUM
       _mpi_communicator->reduce< MPI_SUM_OF_ALL_PROCESSES, double,
                                  HeatingPropertyAccessor< HEATINGTERM_He > >(
           _density_grid->begin(), _density_grid->end(), 0);
+#endif
     }
 
     _temperature_calculator->calculate_temperature(loop, totweight,
@@ -474,10 +545,15 @@ void IonizationSimulation::run(DensityGridWriter *density_grid_writer) {
           ->gather< double, IonicFractionPropertyAccessor< ION_H_n > >(
               _density_grid->begin(), _density_grid->end(), local_chunk.first,
               local_chunk.second, 0);
+
+#ifdef HAS_HELIUM
       _mpi_communicator
           ->gather< double, IonicFractionPropertyAccessor< ION_He_n > >(
               _density_grid->begin(), _density_grid->end(), local_chunk.first,
               local_chunk.second, 0);
+#endif
+
+#ifdef HAS_CARBON
       _mpi_communicator
           ->gather< double, IonicFractionPropertyAccessor< ION_C_p1 > >(
               _density_grid->begin(), _density_grid->end(), local_chunk.first,
@@ -486,6 +562,9 @@ void IonizationSimulation::run(DensityGridWriter *density_grid_writer) {
           ->gather< double, IonicFractionPropertyAccessor< ION_C_p2 > >(
               _density_grid->begin(), _density_grid->end(), local_chunk.first,
               local_chunk.second, 0);
+#endif
+
+#ifdef HAS_NITROGEN
       _mpi_communicator
           ->gather< double, IonicFractionPropertyAccessor< ION_N_n > >(
               _density_grid->begin(), _density_grid->end(), local_chunk.first,
@@ -498,6 +577,9 @@ void IonizationSimulation::run(DensityGridWriter *density_grid_writer) {
           ->gather< double, IonicFractionPropertyAccessor< ION_N_p2 > >(
               _density_grid->begin(), _density_grid->end(), local_chunk.first,
               local_chunk.second, 0);
+#endif
+
+#ifdef HAS_OXYGEN
       _mpi_communicator
           ->gather< double, IonicFractionPropertyAccessor< ION_O_n > >(
               _density_grid->begin(), _density_grid->end(), local_chunk.first,
@@ -506,6 +588,9 @@ void IonizationSimulation::run(DensityGridWriter *density_grid_writer) {
           ->gather< double, IonicFractionPropertyAccessor< ION_O_p1 > >(
               _density_grid->begin(), _density_grid->end(), local_chunk.first,
               local_chunk.second, 0);
+#endif
+
+#ifdef HAS_NEON
       _mpi_communicator
           ->gather< double, IonicFractionPropertyAccessor< ION_Ne_n > >(
               _density_grid->begin(), _density_grid->end(), local_chunk.first,
@@ -514,6 +599,9 @@ void IonizationSimulation::run(DensityGridWriter *density_grid_writer) {
           ->gather< double, IonicFractionPropertyAccessor< ION_Ne_p1 > >(
               _density_grid->begin(), _density_grid->end(), local_chunk.first,
               local_chunk.second, 0);
+#endif
+
+#ifdef HAS_SULPHUR
       _mpi_communicator
           ->gather< double, IonicFractionPropertyAccessor< ION_S_p1 > >(
               _density_grid->begin(), _density_grid->end(), local_chunk.first,
@@ -526,6 +614,7 @@ void IonizationSimulation::run(DensityGridWriter *density_grid_writer) {
           ->gather< double, IonicFractionPropertyAccessor< ION_S_p3 > >(
               _density_grid->begin(), _density_grid->end(), local_chunk.first,
               local_chunk.second, 0);
+#endif
     }
 
     stop_parallel_timing_block();
@@ -548,10 +637,15 @@ void IonizationSimulation::run(DensityGridWriter *density_grid_writer) {
       _density_grid_writer->write(*_density_grid, loop, _parameter_file);
     }
   }
+  _time_log.end("photoionization");
 
   if (_log && loop == _number_of_iterations) {
     _log->write_status("Maximum number of iterations (", _number_of_iterations,
                        ") reached, stopping.");
+  }
+
+  if (_trackers != nullptr) {
+    _trackers->output_trackers();
   }
 
   // write final snapshot
@@ -560,8 +654,10 @@ void IonizationSimulation::run(DensityGridWriter *density_grid_writer) {
                                 _parameter_file);
   }
   if (density_grid_writer) {
+    _time_log.start("Reverse mapping");
     density_grid_writer->write(*_density_grid, _number_of_iterations,
                                _parameter_file);
+    _time_log.end("Reverse mapping");
   }
 
   if (_log) {
@@ -569,6 +665,8 @@ void IonizationSimulation::run(DensityGridWriter *density_grid_writer) {
                        Utilities::human_readable_time(_work_timer.value()),
                        ".");
   }
+
+  _time_log.end("IonizationSimulation:run()");
 
   function_stop_timers();
 }
@@ -588,6 +686,9 @@ IonizationSimulation::~IonizationSimulation() {
     _log->write_status("Total overall time: ",
                        Utilities::human_readable_time(_total_timer.value()));
   }
+
+  _time_log.end("root");
+  _time_log.output("ionization-simulation-time-log.txt");
 
   // we delete the objects in the opposite order in which they were created
   // note that we do not check for nullptrs, as deleting a nullptr is allowed
@@ -621,4 +722,6 @@ IonizationSimulation::~IonizationSimulation() {
   // cross sections and recombination rates
   delete _cross_sections;
   delete _recombination_rates;
+
+  delete _trackers;
 }

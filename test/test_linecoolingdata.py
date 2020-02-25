@@ -46,7 +46,7 @@ def main():
     data = line.split()
     T = float(data[0])
     # convert to m^-3
-    ne = float(data[1])*1.e6
+    ne = float(data[1]) * 1.e6
     abundances = [float(ab) for ab in data[2:15]]
     fresults = [float(res) for res in data[15:]]
 
@@ -65,10 +65,10 @@ def main():
     for i in range(len(names)):
       a = results[names[i]][0]
       # convert from erg s^-1 to J s^-1
-      b = fresults[i]*1.e-7
-      if abs(a-b) > 1.e-14*abs(a+b):
+      b = fresults[i] * 1.e-7
+      if abs(a - b) > 1.e-5 * abs(a + b):
         print "Error: {a} != {b} ({rel})!".format(a = a, b = b,
-                                                  rel = abs(a-b)/abs(a+b))
+                                                  rel = abs(a - b) / abs(a + b))
         sys.exit(1)
 
   sys.exit(0)

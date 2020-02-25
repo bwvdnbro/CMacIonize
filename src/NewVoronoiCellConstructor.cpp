@@ -94,7 +94,9 @@
  * @brief Empty constructor.
  */
 NewVoronoiCellConstructor::NewVoronoiCellConstructor()
-    : _vertices_size(0), _tetrahedra_size(0), _free_size(0), _max_r2(0.),
+    : _vertices(NEWVORONOICELL_VERTEX_SIZE), _vertices_size(0),
+      _tetrahedra(NEWVORONOICELL_TETRAHEDRA_SIZE), _tetrahedra_size(0),
+      _free_tetrahedra(NEWVORONOICELL_FREE_SIZE), _free_size(0), _max_r2(0.),
       _max_tetrahedron(0) {}
 
 /**
@@ -190,12 +192,15 @@ void NewVoronoiCellConstructor::intersect(
   const uint_fast32_t vertex_index = add_new_vertex(ngb);
 
   uint_fast32_t next_check = 0;
-  bool queue[NEWVORONOICELL_QUEUE_SIZE];
+  std::vector< bool > queue((_tetrahedra_size / NEWVORONOICELL_QUEUE_SIZE + 1) *
+                            NEWVORONOICELL_QUEUE_SIZE);
   for (uint_fast32_t i = 0; i < _tetrahedra_size; ++i) {
     queue[i] = false;
   }
   uint_fast32_t queue_size = _tetrahedra_size;
-  cmac_assert(queue_size < NEWVORONOICELL_QUEUE_SIZE);
+  if (queue_size == queue.size()) {
+    queue.resize(queue_size + NEWVORONOICELL_QUEUE_SIZE);
+  }
   if (number_of_tetrahedra == 1) {
     // normal case: split 'tetrahedra[0]' into 4 new tetrahedra
     uint_fast32_t tn[4];
@@ -739,9 +744,8 @@ void NewVoronoiCellConstructor::two_to_six_flip(uint_fast32_t new_vertex,
   for (uint_fast8_t i = 0; i < 4; ++i) {
     uint_fast8_t t0 = i;
     uint_fast8_t t1 = 0;
-    while (t1 < 4 &&
-           _tetrahedra[tetrahedra[0]].get_vertex(t0) !=
-               _tetrahedra[tetrahedra[1]].get_vertex(t1)) {
+    while (t1 < 4 && _tetrahedra[tetrahedra[0]].get_vertex(t0) !=
+                         _tetrahedra[tetrahedra[1]].get_vertex(t1)) {
       ++t1;
     }
     if (t1 < 4) {
@@ -905,9 +909,8 @@ void NewVoronoiCellConstructor::n_to_2n_flip(uint_fast32_t new_vertex,
     bool is_axis = true;
     for (uint_fast8_t j = 1; j < n; ++j) {
       tj[j] = 0;
-      while (tj[j] < 4 &&
-             _tetrahedra[tetrahedra[0]].get_vertex(tj[0]) !=
-                 _tetrahedra[tetrahedra[j]].get_vertex(tj[j])) {
+      while (tj[j] < 4 && _tetrahedra[tetrahedra[0]].get_vertex(tj[0]) !=
+                              _tetrahedra[tetrahedra[j]].get_vertex(tj[j])) {
         ++tj[j];
       }
       is_axis &= (tj[j] < 4);
@@ -1189,21 +1192,18 @@ void NewVoronoiCellConstructor::four_to_four_flip(uint_fast32_t tetrahedron0,
     uint_fast8_t t0, t1, t2, t3;
     t0 = i;
     t1 = 0;
-    while (t1 < 4 &&
-           _tetrahedra[tetrahedron0].get_vertex(t0) !=
-               _tetrahedra[tetrahedron1].get_vertex(t1)) {
+    while (t1 < 4 && _tetrahedra[tetrahedron0].get_vertex(t0) !=
+                         _tetrahedra[tetrahedron1].get_vertex(t1)) {
       ++t1;
     }
     t2 = 0;
-    while (t2 < 4 &&
-           _tetrahedra[tetrahedron0].get_vertex(t0) !=
-               _tetrahedra[tetrahedron2].get_vertex(t2)) {
+    while (t2 < 4 && _tetrahedra[tetrahedron0].get_vertex(t0) !=
+                         _tetrahedra[tetrahedron2].get_vertex(t2)) {
       ++t2;
     }
     t3 = 0;
-    while (t3 < 4 &&
-           _tetrahedra[tetrahedron0].get_vertex(t0) !=
-               _tetrahedra[tetrahedron3].get_vertex(t3)) {
+    while (t3 < 4 && _tetrahedra[tetrahedron0].get_vertex(t0) !=
+                         _tetrahedra[tetrahedron3].get_vertex(t3)) {
       ++t3;
     }
     if (t1 < 4 && t2 < 4 && t3 < 4) {
@@ -1401,15 +1401,13 @@ void NewVoronoiCellConstructor::three_to_two_flip(uint_fast32_t tetrahedron0,
   for (uint_fast8_t i = 0; i < 4; ++i) {
     uint_fast8_t t0 = i;
     uint_fast8_t t1 = 0;
-    while (t1 < 4 &&
-           _tetrahedra[tetrahedron0].get_vertex(t0) !=
-               _tetrahedra[tetrahedron1].get_vertex(t1)) {
+    while (t1 < 4 && _tetrahedra[tetrahedron0].get_vertex(t0) !=
+                         _tetrahedra[tetrahedron1].get_vertex(t1)) {
       ++t1;
     }
     uint_fast8_t t2 = 0;
-    while (t2 < 4 &&
-           _tetrahedra[tetrahedron0].get_vertex(t0) !=
-               _tetrahedra[tetrahedron2].get_vertex(t2)) {
+    while (t2 < 4 && _tetrahedra[tetrahedron0].get_vertex(t0) !=
+                         _tetrahedra[tetrahedron2].get_vertex(t2)) {
       ++t2;
     }
     if (t1 < 4 && t2 < 4) {
@@ -1478,6 +1476,10 @@ void NewVoronoiCellConstructor::three_to_two_flip(uint_fast32_t tetrahedron0,
   // two other ones
   _free_tetrahedra[_free_size] = tetrahedron2;
   ++_free_size;
+  if (_free_size == _free_tetrahedra.size()) {
+    _free_tetrahedra.resize(_free_size + NEWVORONOICELL_FREE_SIZE);
+  }
+
   // make sure we know this tetrahedron is inactive
   _tetrahedra[tetrahedron2].deactivate();
 
@@ -1534,7 +1536,7 @@ uint_fast32_t NewVoronoiCellConstructor::check_tetrahedron(
     uint_fast32_t tetrahedron, uint_fast32_t new_vertex,
     const NewVoronoiBox &rescaled_box,
     const std::vector< CoordinateVector<> > &rescaled_positions,
-    bool queue[NEWVORONOICELL_QUEUE_SIZE], uint_fast32_t &queue_size) {
+    std::vector< bool > &queue, uint_fast32_t &queue_size) {
 
   uint_fast32_t next_check = tetrahedron + 1;
 

@@ -46,6 +46,12 @@ enum PhysicalConstantName {
   PHYSICALCONSTANT_ELECTRON_MASS,
   /*! @brief Rydberg energy (in J). */
   PHYSICALCONSTANT_RYDBERG_ENERGY,
+  /*! @brief Newton gravitational constant (in m^3 kg^-1 s^-2). */
+  PHYSICALCONSTANT_NEWTON_CONSTANT,
+  /*! @brief Solar mass (in kg). */
+  PHYSICALCONSTANT_SOLAR_MASS,
+  /*! @brief Astronomical unit (in m). */
+  PHYSICALCONSTANT_ASTRONOMICAL_UNIT,
   /*! @brief Counter (should always be last element!). */
   NUMBER_OF_PHYSICALCONSTANTS
 };
@@ -99,6 +105,21 @@ public:
       // NIST 2014 CODATA: https://physics.nist.gov/cgi-bin/cuu/Value?rydhcj
       // in J
       return 2.179872325e-18;
+
+    case PHYSICALCONSTANT_NEWTON_CONSTANT:
+      // NIST 2014 CODATA: https://physics.nist.gov/cgi-bin/cuu/Value?bg
+      // in m^3 kg^-1 s^-2
+      return 6.67408e-11;
+
+    case PHYSICALCONSTANT_SOLAR_MASS:
+      // http://asa.usno.navy.mil/static/files/2014/Astronomical_Constants_2014.pdf
+      // in kg
+      return 1.9884e30;
+
+    case PHYSICALCONSTANT_ASTRONOMICAL_UNIT:
+      // http://asa.usno.navy.mil/static/files/2014/Astronomical_Constants_2014.pdf
+      // in m
+      return 149597870700.;
 
     default:
       cmac_error("Unknown physical constant: %i!", name);

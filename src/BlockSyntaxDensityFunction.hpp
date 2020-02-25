@@ -95,10 +95,20 @@ public:
       std::string type =
           blockfile.get_value< std::string >(blockname.str() + "type");
       double exponent = get_exponent(type);
-      double density = blockfile.get_physical_value< QUANTITY_NUMBER_DENSITY >(
-          blockname.str() + "number density");
+      double density;
+      if (blockfile.has_value(blockname.str() + "number density")) {
+        density = blockfile.get_physical_value< QUANTITY_NUMBER_DENSITY >(
+            blockname.str() + "number density");
+      } else {
+        density = blockfile.get_physical_value< QUANTITY_DENSITY >(
+            blockname.str() + "density");
+        density /= PhysicalConstants::get_physical_constant(
+            PHYSICALCONSTANT_PROTON_MASS);
+      }
       double temperature = blockfile.get_physical_value< QUANTITY_TEMPERATURE >(
           blockname.str() + "initial temperature");
+      double neutral_fraction_H = blockfile.get_value< double >(
+          blockname.str() + "neutral fraction H", 1.e-6);
       CoordinateVector<> velocity =
           blockfile.get_physical_vector< QUANTITY_VELOCITY >(
               blockname.str() + "initial velocity",
@@ -112,8 +122,13 @@ public:
                    temperature, i);
       }
       _blocks.push_back(BlockSyntaxBlock(origin, sides, exponent, density,
-                                         temperature, velocity));
+                                         temperature, neutral_fraction_H,
+                                         velocity));
     }
+
+    std::ofstream ofile(filename + ".used-values");
+    blockfile.print_contents(ofile, true);
+    ofile.close();
 
     if (log) {
       log->write_status("Created BlockSyntaxDensityFunction with ", numblock,
@@ -132,7 +147,7 @@ public:
    */
   BlockSyntaxDensityFunction(ParameterFile &params, Log *log = nullptr)
       : BlockSyntaxDensityFunction(
-            params.get_value< std::string >("DensityFunction:filename"), log) {}
+            params.get_filename("DensityFunction:filename"), log) {}
 
   /**
    * @brief Function that gives the density for a given cell.
@@ -151,11 +166,13 @@ public:
 
     double density = -1.;
     double temperature = -1.;
+    double neutral_fraction_H = -1.;
     CoordinateVector<> velocity;
     for (size_t i = 0; i < _blocks.size(); ++i) {
       if (_blocks[i].is_inside(position)) {
         density = _blocks[i].get_number_density();
         temperature = _blocks[i].get_temperature();
+        neutral_fraction_H = _blocks[i].get_neutral_fraction_H();
         velocity = _blocks[i].get_velocity();
       }
     }
@@ -167,13 +184,34 @@ public:
       cmac_error("No block found containing position [%g m, %g m, %g m]!",
                  position.x(), position.y(), position.z());
     }
+    if (neutral_fraction_H < 0.) {
+      cmac_error("No block found containing position [%g m, %g m, %g m]!",
+                 position.x(), position.y(), position.z());
+    }
 
     values.set_number_density(density);
     values.set_temperature(temperature);
-    values.set_ionic_fraction(ION_H_n, 1.e-6);
+    values.set_ionic_fraction(ION_H_n, neutral_fraction_H);
+#ifdef HAS_HELIUM
     values.set_ionic_fraction(ION_He_n, 1.e-6);
+#endif
     values.set_velocity(velocity);
     return values;
+  }
+
+  /**
+   * @brief Check if the given position is inside the range of the blocks.
+   *
+   * @param position Position (in m).
+   * @return True if the position is inside the range of the blocks (and a call
+   * to operator() will be successful).
+   */
+  inline bool inside(const CoordinateVector<> position) const {
+    size_t i = 0;
+    while (i < _blocks.size() && !_blocks[i].is_inside(position)) {
+      ++i;
+    }
+    return i < _blocks.size();
   }
 };
 

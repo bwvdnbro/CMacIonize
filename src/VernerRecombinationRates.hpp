@@ -1,20 +1,20 @@
 /*******************************************************************************
-* This file is part of CMacIonize
-* Copyright (C) 2016 Bert Vandenbroucke (bert.vandenbroucke@gmail.com)
-*
-* CMacIonize is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* CMacIonize is distributed in the hope that it will be useful,
-* but WITOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-* GNU Affero General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with CMacIonize. If not, see <http://www.gnu.org/licenses/>.
-******************************************************************************/
+ * This file is part of CMacIonize
+ * Copyright (C) 2016 Bert Vandenbroucke (bert.vandenbroucke@gmail.com)
+ *
+ * CMacIonize is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * CMacIonize is distributed in the hope that it will be useful,
+ * but WITOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with CMacIonize. If not, see <http://www.gnu.org/licenses/>.
+ ******************************************************************************/
 
 /**
  * @file VernerRecombinationRates.hpp
@@ -85,10 +85,12 @@ private:
 public:
   VernerRecombinationRates();
 
-  double get_recombination_rate_verner(uint_fast8_t iz, uint_fast8_t in,
-                                       double T) const;
+  double get_recombination_rate_verner(const uint_fast8_t iz,
+                                       const uint_fast8_t in,
+                                       const double T) const;
 
-  virtual double get_recombination_rate(IonName ion, double temperature) const;
+  virtual double get_recombination_rate(const int_fast32_t ion,
+                                        const double temperature) const;
 };
 
 #endif // VERNERRECOMBINATIONRATES_HPP

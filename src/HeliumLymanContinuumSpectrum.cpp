@@ -66,9 +66,9 @@ HeliumLymanContinuumSpectrum::HeliumLymanContinuumSpectrum(
 
   // set up the frequency bins
   for (uint_fast32_t i = 0; i < HELIUMLYMANCONTINUUMSPECTRUM_NUMFREQ; ++i) {
-    _frequency[i] = min_frequency +
-                    i * (max_frequency - min_frequency) /
-                        (HELIUMLYMANCONTINUUMSPECTRUM_NUMFREQ - 1.);
+    _frequency[i] =
+        min_frequency + i * (max_frequency - min_frequency) /
+                            (HELIUMLYMANCONTINUUMSPECTRUM_NUMFREQ - 1.);
   }
 
   // set up the temperature bins and precompute the spectrum
@@ -80,8 +80,12 @@ HeliumLymanContinuumSpectrum::HeliumLymanContinuumSpectrum(
     for (uint_fast32_t inu = 1; inu < HELIUMLYMANCONTINUUMSPECTRUM_NUMFREQ;
          ++inu) {
       // first do the lower edge of the frequency interval
+#ifdef HAS_HELIUM
       double xsecHe =
           cross_sections.get_cross_section(ION_He_n, _frequency[inu - 1]);
+#else
+      double xsecHe = 0.;
+#endif
       // Wood, Mathis & Ercolano (2004), equation (8)
       // note that we ignore all constant prefactors, since we normalize the
       // spectrum afterwards
@@ -94,7 +98,9 @@ HeliumLymanContinuumSpectrum::HeliumLymanContinuumSpectrum(
           std::exp(-(planck_constant * (_frequency[inu - 1] - min_frequency)) /
                    (boltzmann_constant * _temperature[iT]));
       // now do the upper edge of the interval
+#ifdef HAS_HELIUM
       xsecHe = cross_sections.get_cross_section(ION_He_n, _frequency[inu]);
+#endif
       const double jHeIi2 =
           _frequency[inu] * _frequency[inu] * _frequency[inu] * xsecHe *
           std::exp(-(planck_constant * (_frequency[inu] - min_frequency)) /
@@ -150,10 +156,10 @@ double HeliumLymanContinuumSpectrum::get_random_frequency(
   const uint_fast32_t inu2 =
       Utilities::locate(x, _cumulative_distribution[iT + 1].data(),
                         HELIUMLYMANCONTINUUMSPECTRUM_NUMFREQ);
-  const double frequency = _frequency[inu1] +
-                           (temperature - _temperature[iT]) *
-                               (_frequency[inu2] - _frequency[inu1]) /
-                               (_temperature[iT + 1] - _temperature[iT]);
+  const double frequency =
+      _frequency[inu1] + (temperature - _temperature[iT]) *
+                             (_frequency[inu2] - _frequency[inu1]) /
+                             (_temperature[iT + 1] - _temperature[iT]);
   return frequency;
 }
 

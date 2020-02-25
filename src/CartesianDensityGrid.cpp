@@ -33,6 +33,7 @@
 #include "RecombinationRates.hpp"
 #include "SimulationBox.hpp"
 #include "Timer.hpp"
+#include <cfloat>
 #include <sstream>
 
 /**
@@ -47,8 +48,7 @@
 CartesianDensityGrid::CartesianDensityGrid(
     const Box<> &simulation_box, CoordinateVector< int_fast32_t > ncell,
     CoordinateVector< bool > periodic, bool hydro, Log *log)
-    : DensityGrid(simulation_box, periodic, hydro, log), _box(simulation_box),
-      _periodicity_flags(periodic), _ncell(ncell), _log(log) {
+    : DensityGrid(simulation_box, periodic, hydro, log), _ncell(ncell) {
 
   if (_log) {
     _log->write_status(
@@ -81,19 +81,13 @@ CartesianDensityGrid::CartesianDensityGrid(
   double cellside_y = _box.get_sides().y() / _ncell.y();
   double cellside_z = _box.get_sides().z() / _ncell.z();
   _cellside = CoordinateVector<>(cellside_x, cellside_y, cellside_z);
-
-  _cellside_max = _cellside.x();
-  if (_cellside.y() > _cellside_max) {
-    _cellside_max = _cellside.y();
-  }
-  if (_cellside.z() > _cellside_max) {
-    _cellside_max = _cellside.z();
-  }
+  _inverse_cellside[0] = 1. / _cellside.x();
+  _inverse_cellside[1] = 1. / _cellside.y();
+  _inverse_cellside[2] = 1. / _cellside.z();
 
   if (_log) {
     _log->write_info("Cell size is ", _cellside.x(), " m x ", _cellside.y(),
-                     " m x ", _cellside.z(), " m, maximum side length is ",
-                     _cellside_max, " m.");
+                     " m x ", _cellside.z(), " m.");
     _log->write_status("Done creating grid.");
   }
 }
@@ -124,12 +118,19 @@ CartesianDensityGrid::CartesianDensityGrid(const SimulationBox &simulation_box,
  *
  * @param block Block that should be initialized by this MPI process.
  * @param density_function DensityFunction to use.
+ * @param time_log TimeLogger.
  */
 void CartesianDensityGrid::initialize(
     std::pair< cellsize_t, cellsize_t > &block,
-    DensityFunction &density_function) {
+    DensityFunction &density_function, TimeLogger *time_log) {
   DensityGrid::initialize(block, density_function);
+  if (time_log) {
+    time_log->start("Forward density mapping");
+  }
   DensityGrid::set_densities(block, density_function);
+  if (time_log) {
+    time_log->end("Forward density mapping");
+  }
 }
 
 /**
@@ -150,9 +151,12 @@ cellsize_t CartesianDensityGrid::get_number_of_cells() const {
  */
 CoordinateVector< int_fast32_t >
 CartesianDensityGrid::get_cell_indices(CoordinateVector<> position) const {
-  int_fast32_t ix = (position.x() - _box.get_anchor().x()) / _cellside.x();
-  int_fast32_t iy = (position.y() - _box.get_anchor().y()) / _cellside.y();
-  int_fast32_t iz = (position.z() - _box.get_anchor().z()) / _cellside.z();
+  int_fast32_t ix =
+      (position.x() - _box.get_anchor().x()) * _inverse_cellside.x();
+  int_fast32_t iy =
+      (position.y() - _box.get_anchor().y()) * _inverse_cellside.y();
+  int_fast32_t iz =
+      (position.z() - _box.get_anchor().z()) * _inverse_cellside.z();
   return CoordinateVector< int_fast32_t >(ix, iy, iz);
 }
 
@@ -264,6 +268,7 @@ bool CartesianDensityGrid::is_inside_non_periodic(
  *
  * @param photon_origin Current position of the photon (in m).
  * @param photon_direction Direction the photon is travelling in.
+ * @param inverse_photon_direction Inverse of the photon travel direction.
  * @param cell Cell in which the photon currently resides.
  * @param next_index Index of the neighbouring cell, relative with respect to
  * the current cell.
@@ -273,119 +278,43 @@ bool CartesianDensityGrid::is_inside_non_periodic(
  * of the photon and the closest wall (in m).
  */
 CoordinateVector<> CartesianDensityGrid::get_wall_intersection(
-    CoordinateVector<> &photon_origin, CoordinateVector<> &photon_direction,
-    Box<> &cell, CoordinateVector< int_fast8_t > &next_index,
-    double &ds) const {
-  CoordinateVector<> cell_bottom_anchor = cell.get_anchor();
-  CoordinateVector<> cell_top_anchor = cell.get_top_anchor();
+    const CoordinateVector<> &photon_origin,
+    const CoordinateVector<> &photon_direction,
+    const CoordinateVector<> &inverse_photon_direction, const Box<> &cell,
+    CoordinateVector< int_fast8_t > &next_index, double &ds) {
 
-  // find out which cell wall the photon is going to hit next
-  CoordinateVector<> next_x;
-  double l;
-  if (photon_direction.x() > 0.) {
-    // if the photon starts at \vec{o} and travels in the direction \vec{d},
-    // the general position of the photon at any later time is given by
-    // \vec{o} + l*\vec{d}, with l some positive parameter
-    // we know that the photon hits the next x wall when the x-component of
-    // this expression equals cell_xmax, so we can solve for l:
-    l = (cell_top_anchor.x() - photon_origin.x()) / photon_direction.x();
-    next_index[0] = 1;
-  } else if (photon_direction.x() < 0.) {
-    l = (cell_bottom_anchor.x() - photon_origin.x()) / photon_direction.x();
-    next_index[0] = -1;
-  } else {
-    // we never reach an x wall, since the photon travels parallel with it
-    // we just set l to a ridiculous value that will always cause dx
-    // to be larger than dy and/or dz
-    // we know that at least one of the direction components needs to be
-    // larger
-    // than 1/\sqrt{3}, since the minimal direction components are found when
-    // all three are equal, and we have 3*component_size^2 = 1 (due to the
-    // normalization).
-    // the largest l values are found for the smallest components, so this
-    // gives
-    // us a good bound on the denominator in the expression for l
-    // the numerator is bound by the cell size: the maximal value is obtained
-    // for a cell size cellside_max
-    // in other words: if we set l > \sqrt{3}*cellside_max, we are sure dy or
-    // dz will always be smaller
-    l = 1000. * _cellside_max;
-    next_index[0] = 0;
-  }
-  // the y and z coordinates are then trivially found
-  next_x = photon_origin + l * photon_direction;
-  double dx = (next_x - photon_origin).norm2();
+  const CoordinateVector<> cell_bottom_anchor = cell.get_anchor();
+  const CoordinateVector<> cell_top_anchor = cell.get_top_anchor();
 
-  CoordinateVector<> next_y;
-  if (photon_direction.y() > 0.) {
-    l = (cell_top_anchor.y() - photon_origin.y()) / photon_direction.y();
-    next_index[1] = 1;
-  } else if (photon_direction.y() < 0.) {
-    l = (cell_bottom_anchor.y() - photon_origin.y()) / photon_direction.y();
-    next_index[1] = -1;
-  } else {
-    l = 1000. * _cellside_max;
-    next_index[1] = 0;
-  }
-  next_y = photon_origin + l * photon_direction;
-  double dy = (next_y - photon_origin).norm2();
+  const double dx = (photon_direction.x() > 0.)
+                        ? (cell_top_anchor.x() - photon_origin.x()) *
+                              inverse_photon_direction.x()
+                        : ((photon_direction.x() < 0.)
+                               ? (cell_bottom_anchor.x() - photon_origin.x()) *
+                                     inverse_photon_direction.x()
+                               : DBL_MAX);
+  const double dy = (photon_direction.y() > 0.)
+                        ? (cell_top_anchor.y() - photon_origin.y()) *
+                              inverse_photon_direction.y()
+                        : ((photon_direction.y() < 0.)
+                               ? (cell_bottom_anchor.y() - photon_origin.y()) *
+                                     inverse_photon_direction.y()
+                               : DBL_MAX);
+  const double dz = (photon_direction.z() > 0.)
+                        ? (cell_top_anchor.z() - photon_origin.z()) *
+                              inverse_photon_direction.z()
+                        : ((photon_direction.z() < 0.)
+                               ? (cell_bottom_anchor.z() - photon_origin.z()) *
+                                     inverse_photon_direction.z()
+                               : DBL_MAX);
 
-  CoordinateVector<> next_z;
-  if (photon_direction.z() > 0.) {
-    l = (cell_top_anchor.z() - photon_origin.z()) / photon_direction.z();
-    next_index[2] = 1;
-  } else if (photon_direction.z() < 0.) {
-    l = (cell_bottom_anchor.z() - photon_origin.z()) / photon_direction.z();
-    next_index[2] = -1;
-  } else {
-    l = 1000. * _cellside_max;
-    next_index[2] = 0;
-  }
-  next_z = photon_origin + l * photon_direction;
-  double dz = (next_z - photon_origin).norm2();
+  ds = std::min(dx, std::min(dy, dz));
 
-  CoordinateVector<> next_wall;
-  if (dx < dy && dx < dz) {
-    next_wall = next_x;
-    ds = dx;
-    next_index[1] = 0;
-    next_index[2] = 0;
-  } else if (dy < dx && dy < dz) {
-    next_wall = next_y;
-    ds = dy;
-    next_index[0] = 0;
-    next_index[2] = 0;
-  } else if (dz < dx && dz < dy) {
-    next_wall = next_z;
-    ds = dz;
-    next_index[0] = 0;
-    next_index[1] = 0;
-  } else {
-    // special cases: at least two of the smallest values are equal
-    if (dx == dy && dx < dz) {
-      // it does not matter which values we pick, they will be the same
-      next_wall = next_x;
-      ds = dx;
-      next_index[2] = 0;
-    } else if (dx == dz && dx < dy) {
-      next_wall = next_x;
-      ds = dx;
-      next_index[1] = 0;
-    } else if (dy == dz && dy < dx) {
-      next_wall = next_y;
-      ds = dy;
-      next_index[0] = 0;
-    } else {
-      // all values are equal, we sit on a corner of the box
-      next_wall = next_x;
-      ds = dx;
-    }
-  }
+  next_index[0] = (dx == ds) ? ((photon_direction.x() > 0.) ? 1 : -1) : 0;
+  next_index[1] = (dy == ds) ? ((photon_direction.y() > 0.) ? 1 : -1) : 0;
+  next_index[2] = (dz == ds) ? ((photon_direction.z() > 0.) ? 1 : -1) : 0;
 
-  // ds contains the squared norm, take the square root
-  ds = sqrt(ds);
-
-  return next_wall;
+  return photon_origin + ds * photon_direction;
 }
 
 /**
@@ -401,21 +330,22 @@ double CartesianDensityGrid::integrate_optical_depth(const Photon &photon) {
   double optical_depth = 0.;
 
   CoordinateVector<> photon_origin = photon.get_position();
-  CoordinateVector<> photon_direction = photon.get_direction();
+  const CoordinateVector<> photon_direction = photon.get_direction();
+  const CoordinateVector<> inverse_photon_direction =
+      photon.get_inverse_direction();
 
   // find out in which cell the photon is currently hiding
   CoordinateVector< int_fast32_t > index = get_cell_indices(photon_origin);
 
-  unsigned int ncell = 0;
   // while the photon is still in the box
   while (is_inside(index, photon_origin)) {
-    ++ncell;
     Box<> cell = get_cell(index);
 
     double ds;
     CoordinateVector< int_fast8_t > next_index;
-    CoordinateVector<> next_wall = get_wall_intersection(
-        photon_origin, photon_direction, cell, next_index, ds);
+    CoordinateVector<> next_wall =
+        get_wall_intersection(photon_origin, photon_direction,
+                              inverse_photon_direction, cell, next_index, ds);
 
     // get the optical depth of the path from the current photon location to the
     // cell wall, update S
@@ -444,10 +374,13 @@ double CartesianDensityGrid::integrate_optical_depth(const Photon &photon) {
  */
 DensityGrid::iterator CartesianDensityGrid::interact(Photon &photon,
                                                      double optical_depth) {
+
   double S = 0.;
 
   CoordinateVector<> photon_origin = photon.get_position();
-  CoordinateVector<> photon_direction = photon.get_direction();
+  const CoordinateVector<> photon_direction = photon.get_direction();
+  const CoordinateVector<> inverse_photon_direction =
+      photon.get_inverse_direction();
 
   // find out in which cell the photon is currently hiding
   CoordinateVector< int_fast32_t > index = get_cell_indices(photon_origin);
@@ -461,15 +394,15 @@ DensityGrid::iterator CartesianDensityGrid::interact(Photon &photon,
 
     double ds;
     CoordinateVector< int_fast8_t > next_index;
-    CoordinateVector<> next_wall = get_wall_intersection(
-        photon_origin, photon_direction, cell, next_index, ds);
+    CoordinateVector<> next_wall =
+        get_wall_intersection(photon_origin, photon_direction,
+                              inverse_photon_direction, cell, next_index, ds);
 
     // get the optical depth of the path from the current photon location to the
     // cell wall, update S
     DensityGrid::iterator it(get_long_index(index), *this);
     last_cell = it;
 
-    // Helium abundance. Should be a parameter.
     double tau = get_optical_depth(ds, it.get_ionization_variables(), photon);
     optical_depth -= tau;
 
@@ -530,6 +463,10 @@ DensityGrid::iterator CartesianDensityGrid::interact(Photon &photon,
 double CartesianDensityGrid::get_total_emission(CoordinateVector<> origin,
                                                 CoordinateVector<> direction,
                                                 EmissionLine line) {
+
+  const CoordinateVector<> inverse_direction(
+      1. / direction.x(), 1. / direction.y(), 1. / direction.z());
+
   double S = 0.;
 
   // find out in which cell the origin lies
@@ -543,8 +480,8 @@ double CartesianDensityGrid::get_total_emission(CoordinateVector<> origin,
 
     double ds;
     CoordinateVector< int_fast8_t > next_index;
-    CoordinateVector<> next_wall =
-        get_wall_intersection(origin, direction, cell, next_index, ds);
+    CoordinateVector<> next_wall = get_wall_intersection(
+        origin, direction, inverse_direction, cell, next_index, ds);
 
     // get the optical depth of the path from the current photon location to the
     // cell wall, update S

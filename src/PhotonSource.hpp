@@ -93,8 +93,10 @@ private:
    */
   double _total_luminosity;
 
+#ifndef HAVE_HYDROGEN_ONLY
   /*! @brief Abundances of the elements in the ISM. */
   const Abundances &_abundances;
+#endif
 
   /*! @brief Cross sections for photoionization. */
   const CrossSections &_cross_sections;
@@ -113,7 +115,8 @@ public:
                const ContinuousPhotonSource *continuous_source,
                const PhotonSourceSpectrum *continuous_spectrum,
                const Abundances &abundances,
-               const CrossSections &cross_sections, bool diffuse_field = true,
+               const CrossSections &cross_sections,
+               DiffuseReemissionHandler *reemission_handler = nullptr,
                Log *log = nullptr);
 
   PhotonSource(PhotonSourceDistribution *distribution,
@@ -149,6 +152,17 @@ public:
 
   bool reemit(Photon &photon, const IonizationVariables &ionization_variables,
               RandomGenerator &random_generator) const;
+
+  void update(PhotonSourceDistribution *distribution);
+
+  /**
+   * @brief Get a pointer to the reemission handler.
+   *
+   * @return Pointer to the remission handler.
+   */
+  inline DiffuseReemissionHandler *get_reemission_handler() {
+    return _reemission_handler;
+  }
 };
 
 #endif // PHOTONSOURCE_HPP

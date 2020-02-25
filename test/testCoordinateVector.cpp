@@ -119,6 +119,11 @@ int main(int argc, char **argv) {
     assert_condition(b.x() == 0.25);
     assert_condition(b.y() == 0.5);
     assert_condition(b.z() == 0.75);
+
+    CoordinateVector<> c = 1. / a;
+    assert_condition(c.x() == 2.);
+    assert_condition(c.y() == 1.);
+    assert_condition(c.z() == 2. / 3.);
   }
 
   // test norm

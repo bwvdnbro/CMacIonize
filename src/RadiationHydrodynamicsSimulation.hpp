@@ -35,6 +35,8 @@ class Timer;
  */
 class RadiationHydrodynamicsSimulation {
 public:
+  static void add_command_line_parameters(CommandLineParser &parser);
+
   static int do_simulation(CommandLineParser &parser, bool write_output,
                            Timer &programtimer, Log *log = nullptr);
 };

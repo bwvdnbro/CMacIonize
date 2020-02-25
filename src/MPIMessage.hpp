@@ -59,12 +59,15 @@
  */
 class MPITagSizeMessage {
 private:
+  /*! @brief Anonymous union that makes it possible to both index the message
+   *  properties and access them individually using sensible names. */
   union {
     /*! @brief Array containing the actual data of the message. We use this
      *  in an anonymous union with an anonymous struct to be able to assign
      *  meaningful names to the array elements. */
     int _array[3];
 
+    /*! @brief Anonymous struct grouping the individual message properties. */
     struct {
       /*! @brief Type of the message announced by this message. */
       int _type;

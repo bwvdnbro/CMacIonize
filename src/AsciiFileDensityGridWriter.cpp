@@ -28,6 +28,7 @@
 
 #include "AsciiFileDensityGridWriter.hpp"
 #include "DensityGrid.hpp"
+#include "DensitySubGridCreator.hpp"
 #include "Utilities.hpp"
 #include <fstream>
 
@@ -40,7 +41,9 @@
  */
 AsciiFileDensityGridWriter::AsciiFileDensityGridWriter(
     std::string prefix, std::string output_folder, Log *log)
-    : DensityGridWriter(output_folder, log), _prefix(prefix) {}
+    : DensityGridWriter(output_folder, false, DensityGridWriterFields(false),
+                        log),
+      _prefix(prefix) {}
 
 /**
  * @brief ParameterFile constructor.
@@ -67,10 +70,12 @@ AsciiFileDensityGridWriter::AsciiFileDensityGridWriter(
  * @param params ParameterFile containing the run parameters that should be
  * written to the file.
  * @param time Simulation time (in s).
+ * @param hydro_units Internal unit system for the hydro.
  */
 void AsciiFileDensityGridWriter::write(DensityGrid &grid,
                                        uint_fast32_t iteration,
-                                       ParameterFile &params, double time) {
+                                       ParameterFile &params, double time,
+                                       const InternalHydroUnits *hydro_units) {
 
   std::string filename =
       Utilities::compose_filename(_output_folder, _prefix, "txt", iteration, 3);
@@ -86,5 +91,38 @@ void AsciiFileDensityGridWriter::write(DensityGrid &grid,
     double volume = it.get_volume();
     file << x.x() << "\t" << x.y() << "\t" << x.z() << "\t" << n << "\t"
          << volume << "\t" << frac << "\n";
+  }
+}
+
+/**
+ * @brief Write a snapshot for a split grid.
+ *
+ * @param grid_creator Grid.
+ * @param counter Counter value to add to the snapshot file name.
+ * @param params ParameterFile containing the run parameters that should be
+ * written to the file.
+ * @param time Simulation time (in s).
+ */
+void AsciiFileDensityGridWriter::write(
+    DensitySubGridCreator< DensitySubGrid > &grid_creator,
+    const uint_fast32_t counter, ParameterFile &params, double time) {
+
+  std::string filename =
+      Utilities::compose_filename(_output_folder, _prefix, "txt", counter, 3);
+  std::ofstream file(filename);
+
+  file << "#x (m)\ty (m)\tz (m)\tn (m^-3)\tvolume (m^3)\tneutral H fraction\n";
+
+  for (auto gridit = grid_creator.begin();
+       gridit != grid_creator.original_end(); ++gridit) {
+    for (auto cellit = (*gridit).begin(); cellit != (*gridit).end(); ++cellit) {
+      const CoordinateVector<> x = cellit.get_cell_midpoint();
+      const double n = cellit.get_ionization_variables().get_number_density();
+      const double xH =
+          cellit.get_ionization_variables().get_ionic_fraction(ION_H_n);
+      const double volume = cellit.get_volume();
+      file << x.x() << "\t" << x.y() << "\t" << x.z() << "\t" << n << "\t"
+           << volume << "\t" << xH << "\n";
+    }
   }
 }

@@ -29,13 +29,16 @@
 /// adjustable parameters
 
 /*! @brief Size of the vertex array stored in a cell. */
-#define NEWVORONOICELL_VERTEX_SIZE 1000
+#define NEWVORONOICELL_VERTEX_SIZE 150000
+//#define NEWVORONOICELL_VERTEX_SIZE 1000
 
 /*! @brief Size of the tetrahedra array stored in a cell. */
-#define NEWVORONOICELL_TETRAHEDRA_SIZE 10000
+#define NEWVORONOICELL_TETRAHEDRA_SIZE 1000000
+//#define NEWVORONOICELL_TETRAHEDRA_SIZE 10000
 
 /*! @brief Size of the free tetrahedra array stored in a cell. */
-#define NEWVORONOICELL_FREE_SIZE 100
+#define NEWVORONOICELL_FREE_SIZE 20000
+//#define NEWVORONOICELL_FREE_SIZE 100
 
 /*! @brief Desired number of cells per bucket in the neigbour search
  *  structure. */

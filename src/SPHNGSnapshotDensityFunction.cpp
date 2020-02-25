@@ -55,13 +55,13 @@ double SPHNGSnapshotDensityFunction::kernel(const double q, const double h) {
     double q2 = q * q;
     double h2 = h * h;
     double h3 = h2 * h;
-    return (1. - 1.5 * q2 + 0.75 * q2 * q) / M_PI / h3;
+    return (1. - 1.5 * q2 + 0.75 * q2 * q) / (M_PI * h3);
   } else if (q < 2.) {
     double c = 2. - q;
     double c2 = c * c;
     double h2 = h * h;
     double h3 = h * h2;
-    return 0.25 * c2 * c / M_PI / h3;
+    return 0.25 * c2 * c / (M_PI * h3);
   } else {
     return 0.;
   }
@@ -85,16 +85,28 @@ double SPHNGSnapshotDensityFunction::kernel(const double q, const double h) {
  * @param stats_filename Name of the file with neighbour statistics that will be
  * written out.
  * @param use_new_algorithm Use the new mapping algorithm?
+ * @param binary_dump Dump the particle positions and densities to a binary
+ * file?
+ * @param binary_dump_name Name of the file in which the particle positions and
+ * densities are dumped.
  * @param log Log to write logging info to.
  */
 SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
-    std::string filename, double initial_temperature, bool write_stats,
-    uint_fast32_t stats_numbin, double stats_mindist, double stats_maxdist,
-    std::string stats_filename, bool use_new_algorithm, Log *log)
+    const std::string filename, const double initial_temperature,
+    const bool write_stats, const uint_fast32_t stats_numbin,
+    const double stats_mindist, const double stats_maxdist,
+    const std::string stats_filename, const bool use_new_algorithm,
+    const bool binary_dump, const std::string binary_dump_name, Log *log)
     : _use_new_algorithm(use_new_algorithm), _octree(nullptr),
-      _initial_temperature(initial_temperature), _stats_numbin(stats_numbin),
+      _initial_temperature(initial_temperature),
+      _stats_numbin(write_stats ? stats_numbin : 0),
       _stats_mindist(stats_mindist), _stats_maxdist(stats_maxdist),
       _stats_filename(stats_filename), _log(log) {
+
+  if (binary_dump && binary_dump_name == "") {
+    cmac_error("No valid name provided for binary dump file!");
+  }
+
   std::ifstream file(filename, std::ios::binary | std::ios::in);
 
   if (!file) {
@@ -118,13 +130,26 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
     tagged = false;
   }
 
+  if (_log) {
+    if (tagged) {
+      _log->write_info("File is tagged.");
+    } else {
+      _log->write_info("File is not tagged.");
+    }
+  }
+
   // the third, fourth and fifth block contain a dictionary of particle numbers
   // the code below reads it
-  // since we currently don't use these values, we skip these 3 blocks instead
   std::map< std::string, uint32_t > numbers =
       read_dict< uint32_t >(file, tagged);
+  if (_log) {
+    _log->write_info("Number header:");
+    for (auto it = numbers.begin(); it != numbers.end(); ++it) {
+      _log->write_info(it->first, ": ", it->second);
+    }
+  }
   if (!tagged) {
-    size_t numnumbers = numbers.size();
+    const size_t numnumbers = numbers.size();
     numbers["nparttot"] = numbers["tag"];
     if (numnumbers == 6) {
       numbers["nblocks"] = 1;
@@ -132,13 +157,12 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
       numbers["nblocks"] = numbers["tag6"];
     }
   }
-  uint_fast32_t numpart = numbers["nparttot"];
-  uint_fast32_t numblock = numbers["nblocks"];
-  //  skip_block(file);
-  //  if (tagged) {
-  //    skip_block(file);
-  //  }
-  //  skip_block(file);
+  const uint_fast32_t numpart = numbers["nparttot"];
+  const uint_fast32_t numblock = numbers["nblocks"];
+  if (_log) {
+    _log->write_info("nparttot: ", numbers["nparttot"]);
+    _log->write_info("nblocks: ", numbers["nblocks"]);
+  }
 
   // skip 3 blocks
   // in the example file I got from Will, all these blocks contain a single
@@ -165,12 +189,20 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
   // the next three blocks contain a number of double precision floating point
   // values that we don't use. They can be read in with the code below, but we
   // just skip them.
-  //  std::map< std::string, double > headerdict = read_dict< double >(file);
-  skip_block(file);
-  if (tagged) {
+  if (_log) {
+    _log->write_info("Header dictionary:");
+    std::map< std::string, double > headerdict =
+        read_dict< double >(file, tagged);
+    for (auto it = headerdict.begin(); it != headerdict.end(); ++it) {
+      _log->write_info(it->first, ": ", it->second);
+    }
+  } else {
+    skip_block(file);
+    if (tagged) {
+      skip_block(file);
+    }
     skip_block(file);
   }
-  skip_block(file);
 
   // the next block again corresponds to a block that is absent from Will's
   // example file
@@ -178,9 +210,19 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
 
   // the next three blocks contain the units
   std::map< std::string, double > units = read_dict< double >(file, tagged);
+  if (_log) {
+    _log->write_info("Unit block:");
+    for (auto it = units.begin(); it != units.end(); ++it) {
+      _log->write_info(it->first, ": ", it->second);
+    }
+  }
   if (!tagged) {
     units["udist"] = units["tag"];
     units["umass"] = units["tag1"];
+  }
+  if (_log) {
+    _log->write_info("udist: ", units["udist"]);
+    _log->write_info("umass: ", units["umass"]);
   }
 
   // the last header block is again absent from Will's file
@@ -203,9 +245,12 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
   rawunitsbox.get_sides()[1] = -DBL_MAX;
   rawunitsbox.get_sides()[2] = -DBL_MAX;
 
-  double unit_length =
+  const double unit_length =
       UnitConverter::to_SI< QUANTITY_LENGTH >(units["udist"], "cm");
-  double unit_mass = UnitConverter::to_SI< QUANTITY_MASS >(units["umass"], "g");
+  const double unit_mass =
+      UnitConverter::to_SI< QUANTITY_MASS >(units["umass"], "g");
+  const double unit_density =
+      unit_mass / (unit_length * unit_length * unit_length);
 
   _positions.reserve(numpart);
   _masses.reserve(numpart);
@@ -213,8 +258,18 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
   //  std::vector<uint64_t> all_iunique;
   //  all_iunique.reserve(numpart);
 
+  std::ofstream bfile;
+  if (binary_dump) {
+    bfile.open(binary_dump_name);
+  }
+
   // read blocks
   for (uint_fast32_t iblock = 0; iblock < numblock; ++iblock) {
+
+    if (_log) {
+      _log->write_info("Block ", iblock);
+    }
+
     uint64_t npart;
     std::vector< uint32_t > nums(8);
     read_block(file, npart, nums);
@@ -222,6 +277,17 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
     uint64_t nptmass;
     std::vector< uint32_t > numssink(8);
     read_block(file, nptmass, numssink);
+
+    if (_log) {
+      _log->write_info("npart: ", npart);
+      _log->write_info("nums: ", nums[0], " ", nums[1], " ", nums[2], " ",
+                       nums[3], " ", nums[4], " ", nums[5], " ", nums[6], " ",
+                       nums[7]);
+      _log->write_info("nptmass: ", nptmass);
+      _log->write_info("numssink: ", numssink[0], " ", numssink[1], " ",
+                       numssink[2], " ", numssink[3], " ", numssink[4], " ",
+                       numssink[5], " ", numssink[6], " ", numssink[7]);
+    }
 
     if (tagged) {
       skip_block(file);
@@ -295,8 +361,35 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
     }
     read_block(file, h);
 
-    // skip velocity, thermal energy and density blocks
-    for (uint_fast8_t i = 0; i < 5; ++i) {
+    // skip velocity and thermal energy blocks
+    for (uint_fast8_t i = 0; i < 4; ++i) {
+      if (tagged) {
+        skip_block(file);
+      }
+      skip_block(file);
+    }
+
+    if (binary_dump) {
+      std::vector< float > rho(npart);
+      if (tagged) {
+        skip_block(file);
+      }
+      read_block(file, rho);
+
+      for (uint_fast32_t i = 0; i < npart; ++i) {
+        if (iphase[i] == 0) {
+          const double xi = x[i] * unit_length;
+          const double yi = y[i] * unit_length;
+          const double zi = z[i] * unit_length;
+          const double rhoi = rho[i] * unit_density;
+          bfile.write(reinterpret_cast< const char * >(&xi), sizeof(double));
+          bfile.write(reinterpret_cast< const char * >(&yi), sizeof(double));
+          bfile.write(reinterpret_cast< const char * >(&zi), sizeof(double));
+          bfile.write(reinterpret_cast< const char * >(&rhoi), sizeof(double));
+        }
+      }
+    } else {
+      // skip density block
       if (tagged) {
         skip_block(file);
       }
@@ -321,13 +414,13 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
 
     for (uint_fast32_t i = 0; i < npart; ++i) {
       if (iphase[i] == 0) {
-        CoordinateVector<> rawunitsposition(x[i], y[i], z[i]);
+        const CoordinateVector<> rawunitsposition(x[i], y[i], z[i]);
         rawunitsbox.get_anchor() =
             CoordinateVector<>::min(rawunitsbox.get_anchor(), rawunitsposition);
         rawunitsbox.get_sides() =
             CoordinateVector<>::max(rawunitsbox.get_sides(), rawunitsposition);
-        CoordinateVector<> position(x[i] * unit_length, y[i] * unit_length,
-                                    z[i] * unit_length);
+        const CoordinateVector<> position(
+            x[i] * unit_length, y[i] * unit_length, z[i] * unit_length);
         _positions.push_back(position);
         _partbox.get_anchor() =
             CoordinateVector<>::min(_partbox.get_anchor(), position);
@@ -338,6 +431,11 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
         //        all_iunique.push_back(iunique[i]);
       }
     }
+  }
+
+  if (_log) {
+    _log->write_info("position size: ", _positions.size());
+    _log->write_info("number of particles: ", numpart);
   }
 
   // done reading file
@@ -374,10 +472,6 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
         rawunitsbox.get_sides().x(), ", ", rawunitsbox.get_sides().y(), ", ",
         rawunitsbox.get_sides().z(), "].");
   }
-
-  if (!write_stats) {
-    _stats_numbin = 0;
-  }
 }
 
 /**
@@ -398,6 +492,10 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
  *    (default: ngb_statistics.txt)
  *  - use new algorithm: Use Maya Petkova's more accurate mapping algorithm
  *    (default: false)?
+ *  - binary dump: Produce a binary dump of the particle positions and
+ *    densities (default: false)?
+ *  - binary dump name: Name of the file in which to dump the particle positions
+ *    and densities.
  *
  * @param params ParameterFile to read from.
  * @param log Log to write logging info to.
@@ -405,7 +503,7 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
 SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
     ParameterFile &params, Log *log)
     : SPHNGSnapshotDensityFunction(
-          params.get_value< std::string >("DensityFunction:filename"),
+          params.get_filename("DensityFunction:filename"),
           params.get_physical_value< QUANTITY_TEMPERATURE >(
               "DensityFunction:initial temperature", "8000. K"),
           params.get_value< bool >("DensityFunction:write statistics", false),
@@ -418,6 +516,9 @@ SPHNGSnapshotDensityFunction::SPHNGSnapshotDensityFunction(
           params.get_value< std::string >("DensityFunction:statistics filename",
                                           "ngb_statistics.txt"),
           params.get_value< bool >("DensityFunction:use new algorithm", false),
+          params.get_value< bool >("DensityFunction:binary dump", false),
+          params.get_value< std::string >("DensityFunction:binary dump name",
+                                          ""),
           log) {}
 
 /**
@@ -436,7 +537,11 @@ SPHNGSnapshotDensityFunction::~SPHNGSnapshotDensityFunction() {
 void SPHNGSnapshotDensityFunction::initialize() {
 
   _octree = new Octree(_positions, _partbox, false);
-  _octree->set_auxiliaries(_smoothing_lengths, Octree::max< double >);
+  std::vector< double > h2s = _smoothing_lengths;
+  for (uint_fast32_t i = 0; i < _smoothing_lengths.size(); ++i) {
+    h2s[i] *= 2.;
+  }
+  _octree->set_auxiliaries(h2s, Octree::max< double >);
 
   if (_stats_numbin > 0) {
     if (_log) {
@@ -573,10 +678,12 @@ double SPHNGSnapshotDensityFunction::full_integral(double phi, double r0,
   if (r0 >= 2.0 * h) {
     B3 = h2 * h / 4.;
   } else if (r0 > h) {
-    B3 = r03 / 4. * (-4. / 3. + (r0 / h) - 0.3 * r0h2 + 1. / 30. * r0h3 -
-                     1. / 15. * r0h_3 + 8. / 5. * r0h_2);
-    B2 = r03 / 4. * (-4. / 3. + (r0 / h) - 0.3 * r0h2 + 1. / 30. * r0h3 -
-                     1. / 15. * r0h_3);
+    B3 = r03 / 4. *
+         (-4. / 3. + (r0 / h) - 0.3 * r0h2 + 1. / 30. * r0h3 -
+          1. / 15. * r0h_3 + 8. / 5. * r0h_2);
+    B2 =
+        r03 / 4. *
+        (-4. / 3. + (r0 / h) - 0.3 * r0h2 + 1. / 30. * r0h3 - 1. / 15. * r0h_3);
   } else {
     B3 = r03 / 4. * (-2. / 3. + 0.3 * r0h2 - 0.1 * r0h3 + 7. / 5. * r0h_2);
     B2 = r03 / 4. * (-2. / 3. + 0.3 * r0h2 - 0.1 * r0h3 - 1. / 5. * r0h_2);
@@ -614,10 +721,9 @@ double SPHNGSnapshotDensityFunction::full_integral(double phi, double r0,
 
     I_1 = a / 2. * logs + I1;
     I_3 = I_1 + a * (1. + a2) / 4. * (2 * u / (1 - u * u) + logs);
-    I_5 =
-        I_3 +
-        a * (1. + a2) * (1. + a2) / 16. *
-            ((10 * u - 6 * u * u * u) / (1 - u * u) / (1 - u * u) + 3. * logs);
+    I_5 = I_3 + a * (1. + a2) * (1. + a2) / 16. *
+                    ((10 * u - 6 * u * u * u) / (1 - u * u) / (1 - u * u) +
+                     3. * logs);
 
     D2 = -1. / 6. * I_2 + 0.25 * (r0 / h) * I_3 - 0.15 * r0h2 * I_4 +
          1. / 30. * r0h3 * I_5 - 1. / 60. * r0h_3 * I1 + (B1 - B2) / r03 * I0;
@@ -641,10 +747,9 @@ double SPHNGSnapshotDensityFunction::full_integral(double phi, double r0,
 
     I_1 = a / 2. * logs + I1;
     I_3 = I_1 + a * (1. + a2) / 4. * (2 * u / (1 - u * u) + logs);
-    I_5 =
-        I_3 +
-        a * (1. + a2) * (1. + a2) / 16. *
-            ((10 * u - 6 * u * u * u) / (1 - u * u) / (1 - u * u) + 3. * logs);
+    I_5 = I_3 + a * (1. + a2) * (1. + a2) / 16. *
+                    ((10 * u - 6 * u * u * u) / (1 - u * u) / (1 - u * u) +
+                     3. * logs);
 
     D3 = 1. / 3. * I_2 - 0.25 * (r0 / h) * I_3 + 3. / 40. * r0h2 * I_4 -
          1. / 120. * r0h3 * I_5 + 4. / 15. * r0h_3 * I1 + (B2 - B3) / r03 * I0 +
@@ -669,10 +774,9 @@ double SPHNGSnapshotDensityFunction::full_integral(double phi, double r0,
 
     I_1 = a / 2. * logs + I1;
     I_3 = I_1 + a * (1. + a2) / 4. * (2 * u / (1 - u * u) + logs);
-    I_5 =
-        I_3 +
-        a * (1. + a2) * (1. + a2) / 16. *
-            ((10 * u - 6 * u * u * u) / (1 - u * u) / (1 - u * u) + 3. * logs);
+    I_5 = I_3 + a * (1. + a2) * (1. + a2) / 16. *
+                    ((10 * u - 6 * u * u * u) / (1 - u * u) / (1 - u * u) +
+                     3. * logs);
 
     D3 = 1. / 3. * I_2 - 0.25 * (r0 / h) * I_3 + 3. / 40. * r0h2 * I_4 -
          1. / 120. * r0h3 * I_5 + 4. / 15. * r0h_3 * I1 + (B2 - B3) / r03 * I0 +
@@ -706,8 +810,9 @@ double SPHNGSnapshotDensityFunction::full_integral(double phi, double r0,
   // Calculating the integral expression.
 
   if (r2 < h2) {
-    full_int = r0h3 / M_PI * (1. / 6. * I_2 - 3. / 40. * r0h2 * I_4 +
-                              1. / 40. * r0h3 * I_5 + B1 / r03 * I0);
+    full_int = r0h3 / M_PI *
+               (1. / 6. * I_2 - 3. / 40. * r0h2 * I_4 + 1. / 40. * r0h3 * I_5 +
+                B1 / r03 * I0);
   } else if (r2 < 4.0 * h2) {
     full_int = r0h3 / M_PI *
                (0.25 * (4. / 3. * I_2 - (r0 / h) * I_3 + 0.3 * r0h2 * I_4 -
@@ -939,7 +1044,9 @@ DensityValues SPHNGSnapshotDensityFunction::operator()(const Cell &cell) const {
     // temporary values
     values.set_temperature(_initial_temperature);
     values.set_ionic_fraction(ION_H_n, 1.e-6);
+#ifdef HAS_HELIUM
     values.set_ionic_fraction(ION_He_n, 1.e-6);
+#endif
 
   } else {
 
@@ -964,7 +1071,9 @@ DensityValues SPHNGSnapshotDensityFunction::operator()(const Cell &cell) const {
     // temporary values
     values.set_temperature(_initial_temperature);
     values.set_ionic_fraction(ION_H_n, 1.e-6);
+#ifdef HAS_HELIUM
     values.set_ionic_fraction(ION_He_n, 1.e-6);
+#endif
   }
 
   return values;

@@ -83,6 +83,8 @@ int main(int argc, char **argv) {
     }
   }
 
+#if defined(HAS_HELIUM) && defined(HAS_CARBON) && defined(HAS_NITROGEN) &&     \
+    defined(HAS_OXYGEN) && defined(HAS_NEON) && defined(HAS_SULPHUR)
   // hiilines
   {
     std::ifstream file("hiilines_testdata.txt");
@@ -123,7 +125,7 @@ int main(int argc, char **argv) {
       EmissivityValues values = calculator.calculate_emissivities(
           ionization_variables, abundances, lines);
 
-      double tolerance = 1.e-14;
+      double tolerance = 1.e-6;
 
       assert_values_equal_rel(
           values.get_emissivity(EMISSIONLINE_HAlpha),
@@ -264,6 +266,7 @@ int main(int argc, char **argv) {
                               em[29], tolerance);
     }
   }
+#endif
 
   return 0;
 }

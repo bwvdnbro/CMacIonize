@@ -29,12 +29,14 @@
 #include "Configuration.hpp"
 #include "DensityGrid.hpp"
 #include "DensityGridTraversalJobMarket.hpp"
+#include "DensitySubGrid.hpp"
 #include "DensityValues.hpp"
 #include "IonizationStateCalculator.hpp"
 #include "LineCoolingData.hpp"
 #include "PhysicalConstants.hpp"
 #include "RecombinationRates.hpp"
 #include "WorkDistributor.hpp"
+
 #include <cinttypes>
 #include <cmath>
 
@@ -177,8 +179,10 @@ TemperatureCalculator::TemperatureCalculator(
  * @param gain Total energy gain due to heating.
  * @param loss Total energy loss due to cooling.
  * @param T Temperature (in K).
- * @param cell Cell for which we compute the ionization equilibrium and cooling
- * and heating.
+ * @param ionization_variables Ionization variables for the cell for which we
+ * compute the balance.
+ * @param cell_midpoint Midpoint of the cell for which we compute the ionization
+ * equilibrium and cooling and heating.
  * @param j Mean ionizing intensity integrals (in s^-1).
  * @param abundances Abundances.
  * @param h Heating integrals (in J s^-1).
@@ -194,7 +198,8 @@ TemperatureCalculator::TemperatureCalculator(
  */
 void TemperatureCalculator::compute_cooling_and_heating_balance(
     double &h0, double &he0, double &gain, double &loss, double T,
-    DensityGrid::iterator &cell, const double j[NUMBER_OF_IONNAMES],
+    IonizationVariables &ionization_variables,
+    const CoordinateVector<> cell_midpoint, const double j[NUMBER_OF_IONNAMES],
     const Abundances &abundances, const double h[NUMBER_OF_HEATINGTERMS],
     double pahfac, double crfac, double crscale,
     const LineCoolingData &line_cooling_data,
@@ -203,23 +208,30 @@ void TemperatureCalculator::compute_cooling_and_heating_balance(
 
   /// step 0: initialize some variables
 
-  // get a reference to the ionization variables of the cell
-  // this will be used to set the ionic fractions of the coolants, and to get
-  // access to the number density
-  IonizationVariables &ionization_variables = cell.get_ionization_variables();
-
   // get the recombination rates of all elements at the selected temperature
   const double alphaH = recombination_rates.get_recombination_rate(ION_H_n, T);
+#ifdef HAS_HELIUM
   const double alphaHe =
       recombination_rates.get_recombination_rate(ION_He_n, T);
+#else
+  const double alphaHe = 0.;
+#endif
 
   // mean intensity integrals
   const double jH = j[ION_H_n];
+#ifdef HAS_HELIUM
   const double jHe = j[ION_He_n];
+#else
+  const double jHe = 0.;
+#endif
 
   // heating integrals
   const double hH = h[HEATINGTERM_H];
+#ifdef HAS_HELIUM
   const double hHe = h[HEATINGTERM_He];
+#else
+  const double hHe = 0.;
+#endif
 
   // number density in the cell
   const double n = ionization_variables.get_number_density();
@@ -230,8 +242,12 @@ void TemperatureCalculator::compute_cooling_and_heating_balance(
   const double sqrtT = std::sqrt(T);
   const double logT = std::log(T);
 
+#ifdef HAS_HELIUM
   // helium abundance. Used to scale the helium number density.
   const double AHe = abundances.get_abundance(ELEMENT_He);
+#else
+  const double AHe = 0.;
+#endif
 
   /// step 1: get the ionization equilibrium for hydrogen and helium
 
@@ -273,7 +289,7 @@ void TemperatureCalculator::compute_cooling_and_heating_balance(
   // Wood, Mathis & Ercolano (2004), equation 17
   // we extracted the factor 10^4 from the square root and multiplied it with
   // the constant 0.77
-  const double pHots = 1. / (1. + 77. / sqrtT * he0 / h0);
+  const double pHots = 1. / (1. + 77. * he0 / (sqrtT * h0));
   // the constant factor is the energy gain due to a helium Lyman alpha photon
   // being absorbed by hydrogen: (21.2 eV - 13.6 eV) = 1.21765423e-18 J
   gain += pHots * 1.21765423e-18 * alpha_e_2sP * nenhep;
@@ -294,7 +310,7 @@ void TemperatureCalculator::compute_cooling_and_heating_balance(
   if (crfac > 0.) {
     heatcr = crfac * 1.2e-25 / std::sqrt(ne);
     if (crscale > 0.) {
-      heatcr *= std::exp(-std::abs(cell.get_cell_midpoint().z()) / crscale);
+      heatcr *= std::exp(-std::abs(cell_midpoint.z()) / crscale);
     }
   }
   gain += heatcr;
@@ -322,6 +338,7 @@ void TemperatureCalculator::compute_cooling_and_heating_balance(
   // get the abundances required by LineCoolingData and feed them to that class
   double abund[LINECOOLINGDATA_NUMELEMENTS];
 
+#ifdef HAS_CARBON
   // carbon
   // we assume that all carbon is either C+, C++, or C+++
   // we only use C+ and C++
@@ -332,7 +349,9 @@ void TemperatureCalculator::compute_cooling_and_heating_balance(
                 ionization_variables.get_ionic_fraction(ION_C_p2));
   abund[CIII] = abundances.get_abundance(ELEMENT_C) *
                 ionization_variables.get_ionic_fraction(ION_C_p1);
+#endif
 
+#ifdef HAS_NITROGEN
   // nitrogen
   // we assume all nitrogen is either N0, N+, N++ or N+++
   // we only use N0, N+ and N++
@@ -344,7 +363,9 @@ void TemperatureCalculator::compute_cooling_and_heating_balance(
                ionization_variables.get_ionic_fraction(ION_N_n);
   abund[NIII] = abundances.get_abundance(ELEMENT_N) *
                 ionization_variables.get_ionic_fraction(ION_N_p1);
+#endif
 
+#ifdef HAS_OXYGEN
   // oxygen
   // we assume all oxygen is either O0, O+ or O++
   // we use all of them
@@ -355,7 +376,9 @@ void TemperatureCalculator::compute_cooling_and_heating_balance(
                ionization_variables.get_ionic_fraction(ION_O_n);
   abund[OIII] = abundances.get_abundance(ELEMENT_O) *
                 ionization_variables.get_ionic_fraction(ION_O_p1);
+#endif
 
+#ifdef HAS_NEON
   // neon
   // we make no assumptions on the relative abundances of different neon ions
   // we only use Ne+ and Ne++
@@ -363,7 +386,9 @@ void TemperatureCalculator::compute_cooling_and_heating_balance(
                 ionization_variables.get_ionic_fraction(ION_Ne_n);
   abund[NeIII] = abundances.get_abundance(ELEMENT_Ne) *
                  ionization_variables.get_ionic_fraction(ION_Ne_p1);
+#endif
 
+#ifdef HAS_SULPHUR
   // sulphur
   // we assume all sulphur is either S+, S++, S+++ or S++++
   // we only use S+ and S++
@@ -375,6 +400,7 @@ void TemperatureCalculator::compute_cooling_and_heating_balance(
                 ionization_variables.get_ionic_fraction(ION_S_p1);
   abund[SIV] = abundances.get_abundance(ELEMENT_S) *
                ionization_variables.get_ionic_fraction(ION_S_p2);
+#endif
 
 #ifdef DO_OUTPUT_COOLING
   loss = 0.;
@@ -389,18 +415,34 @@ void TemperatureCalculator::compute_cooling_and_heating_balance(
     cooling[i] *= n;
     loss += cooling[i];
   }
+
+#ifdef HAS_CARBON
   ionization_variables.set_cooling(ION_C_p1, cooling[CII]);
   ionization_variables.set_cooling(ION_C_p2, cooling[CIII]);
+#endif
+
+#ifdef HAS_NITROGEN
   ionization_variables.set_cooling(ION_N_n, cooling[NI]);
   ionization_variables.set_cooling(ION_N_p1, cooling[NII]);
   ionization_variables.set_cooling(ION_N_p2, cooling[NIII]);
+#endif
+
+#ifdef HAS_OXYGEN
   ionization_variables.set_cooling(ION_O_n, cooling[OII]);
   ionization_variables.set_cooling(ION_O_p1, cooling[OIII]);
+#endif
+
+#ifdef HAS_NEON
   ionization_variables.set_cooling(ION_Ne_n, cooling[NeII]);
   ionization_variables.set_cooling(ION_Ne_p1, cooling[NeIII]);
+#endif
+
+#ifdef HAS_SULPHUR
   ionization_variables.set_cooling(ION_S_p1, cooling[SII]);
   ionization_variables.set_cooling(ION_S_p2, cooling[SIII]);
   ionization_variables.set_cooling(ION_S_p3, cooling[SIV]);
+#endif
+
 #else
   loss = line_cooling_data.get_cooling(T, ne, abund) * n;
 #endif
@@ -431,7 +473,9 @@ void TemperatureCalculator::compute_cooling_and_heating_balance(
   const double Lhep = 1.55e-39 * nenhep * std::pow(T, 0.3647);
 #ifdef DO_OUTPUT_COOLING
   ionization_variables.set_cooling(ION_H_n, Lhp);
+#ifdef HAS_HELIUM
   ionization_variables.set_cooling(ION_He_n, Lhep);
+#endif
 #endif
   loss += Lhp + Lhep;
 
@@ -498,82 +542,136 @@ void TemperatureCalculator::compute_cooling_and_heating_balance(
  * is zero or negative. We therefore make sure that our heating/cooling is never
  * negative, and add extra code to handle a zero heating/cooling term.
  *
+ * @param ionization_variables Ionization variables of the cell we are working
+ * on.
  * @param jfac Normalization factor for the mean intensity integrals.
  * @param hfac Normalization factor for the heating integrals.
- * @param cell DensityGrid::iterator pointing to a cell.
+ * @param cell_midpoint Midpoint of the cell we are working on.
  */
 void TemperatureCalculator::calculate_temperature(
-    double jfac, double hfac, DensityGrid::iterator &cell) const {
+    IonizationVariables &ionization_variables, const double jfac,
+    const double hfac, const CoordinateVector<> cell_midpoint) const {
 
-  IonizationVariables &ionization_variables = cell.get_ionization_variables();
+  const double jH = jfac * ionization_variables.get_mean_intensity(ION_H_n);
+#ifdef HAS_HELIUM
+  const double jHe = jfac * ionization_variables.get_mean_intensity(ION_He_n);
+#else
+  const double jHe = 0.;
+#endif
 
   // if the ionizing intensity is 0, the gas is trivially neutral and all
   // coolants are in the ground state
-  if ((ionization_variables.get_mean_intensity(ION_H_n) == 0. &&
-       ionization_variables.get_mean_intensity(ION_He_n) == 0.) ||
+  if ((jH == 0. && jHe == 0.) ||
       ionization_variables.get_number_density() == 0.) {
     ionization_variables.set_temperature(500.);
 
     ionization_variables.set_ionic_fraction(ION_H_n, 1.);
 
+#ifdef HAS_HELIUM
     ionization_variables.set_ionic_fraction(ION_He_n, 1.);
+#endif
 
+#ifdef HAS_CARBON
     ionization_variables.set_ionic_fraction(ION_C_p1, 0.);
     ionization_variables.set_ionic_fraction(ION_C_p2, 0.);
+#endif
 
+#ifdef HAS_NITROGEN
     ionization_variables.set_ionic_fraction(ION_N_n, 0.);
     ionization_variables.set_ionic_fraction(ION_N_p1, 0.);
     ionization_variables.set_ionic_fraction(ION_N_p2, 0.);
+#endif
 
+#ifdef HAS_OXYGEN
     ionization_variables.set_ionic_fraction(ION_O_n, 0.);
     ionization_variables.set_ionic_fraction(ION_O_p1, 0.);
+#endif
 
+#ifdef HAS_NEON
     ionization_variables.set_ionic_fraction(ION_Ne_n, 0.);
     ionization_variables.set_ionic_fraction(ION_Ne_p1, 0.);
+#endif
 
+#ifdef HAS_SULPHUR
     ionization_variables.set_ionic_fraction(ION_S_p1, 0.);
     ionization_variables.set_ionic_fraction(ION_S_p2, 0.);
     ionization_variables.set_ionic_fraction(ION_S_p3, 0.);
+#endif
+    // set the heating term values to zero
+    for (int_fast32_t heating_term = 0; heating_term < NUMBER_OF_HEATINGTERMS;
+         ++heating_term) {
+      ionization_variables.set_heating(heating_term, 0.);
+    }
 
     return;
+  }
+
+  double crfac = _crfac * ionization_variables.get_cosmic_ray_factor();
+  if (crfac < 0.) {
+    crfac = _crfac;
   }
 
   // if cosmic ray heating is active, check if the gas is ionized enough
   // if it is not, we just assume the gas is neutral and do not apply heating
   double h0, he0;
-  if (_crfac > 0.) {
+  if (crfac > 0.) {
     const double alphaH =
         _recombination_rates.get_recombination_rate(ION_H_n, 8000.);
+#ifdef HAS_HELIUM
     const double alphaHe =
         _recombination_rates.get_recombination_rate(ION_He_n, 8000.);
-    const double jH = jfac * ionization_variables.get_mean_intensity(ION_H_n);
-    const double jHe = jfac * ionization_variables.get_mean_intensity(ION_He_n);
+#else
+    const double alphaHe = 0.;
+#endif
     const double nH = ionization_variables.get_number_density();
+#ifdef HAS_HELIUM
     const double AHe = _abundances.get_abundance(ELEMENT_He);
+#else
+    const double AHe = 0.;
+#endif
     IonizationStateCalculator::compute_ionization_states_hydrogen_helium(
         alphaH, alphaHe, jH, jHe, nH, AHe, 8000., h0, he0);
-    if (_crfac > 0. && h0 > _crlim) {
+    if (crfac > 0. && h0 > _crlim) {
       // assume fully neutral
       ionization_variables.set_temperature(500.);
       ionization_variables.set_ionic_fraction(ION_H_n, 1.);
-      ionization_variables.set_ionic_fraction(ION_He_n, 1.);
 
+#ifdef HAS_HELIUM
+      ionization_variables.set_ionic_fraction(ION_He_n, 1.);
+#endif
+
+#ifdef HAS_CARBON
       ionization_variables.set_ionic_fraction(ION_C_p1, 0.);
       ionization_variables.set_ionic_fraction(ION_C_p2, 0.);
+#endif
 
+#ifdef HAS_NITROGEN
       ionization_variables.set_ionic_fraction(ION_N_n, 0.);
       ionization_variables.set_ionic_fraction(ION_N_p1, 0.);
       ionization_variables.set_ionic_fraction(ION_N_p2, 0.);
+#endif
 
+#ifdef HAS_OXYGEN
       ionization_variables.set_ionic_fraction(ION_O_n, 0.);
       ionization_variables.set_ionic_fraction(ION_O_p1, 0.);
+#endif
 
+#ifdef HAS_NEON
       ionization_variables.set_ionic_fraction(ION_Ne_n, 0.);
       ionization_variables.set_ionic_fraction(ION_Ne_p1, 0.);
+#endif
 
+#ifdef HAS_SULPHUR
       ionization_variables.set_ionic_fraction(ION_S_p1, 0.);
       ionization_variables.set_ionic_fraction(ION_S_p2, 0.);
       ionization_variables.set_ionic_fraction(ION_S_p3, 0.);
+#endif
+      // set the heating term values to zero
+      for (int_fast32_t heating_term = 0; heating_term < NUMBER_OF_HEATINGTERMS;
+           ++heating_term) {
+        ionization_variables.set_heating(heating_term, 0.);
+      }
+
       return;
     }
   }
@@ -586,16 +684,15 @@ void TemperatureCalculator::calculate_temperature(
 
   // normalize the mean intensity integrals
   double j[NUMBER_OF_IONNAMES];
-  for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-    IonName ion = static_cast< IonName >(i);
-    j[i] = jfac * ionization_variables.get_mean_intensity(ion);
+  for (int_fast32_t ion = 0; ion < NUMBER_OF_IONNAMES; ++ion) {
+    j[ion] = jfac * ionization_variables.get_mean_intensity(ion);
   }
 
   // normalize the heating integrals
   double h[NUMBER_OF_HEATINGTERMS];
-  for (int_fast32_t i = 0; i < NUMBER_OF_HEATINGTERMS; ++i) {
-    HeatingTermName heating_term = static_cast< HeatingTermName >(i);
-    h[i] = hfac * ionization_variables.get_heating(heating_term);
+  for (int_fast32_t heating_term = 0; heating_term < NUMBER_OF_HEATINGTERMS;
+       ++heating_term) {
+    h[heating_term] = hfac * ionization_variables.get_heating(heating_term);
   }
 
   // iteratively find the equilibrium temperature by starting from a guess and
@@ -616,23 +713,23 @@ void TemperatureCalculator::calculate_temperature(
     // ioneng
     double h01, he01, gain1, loss1;
     compute_cooling_and_heating_balance(
-        h01, he01, gain1, loss1, T1, cell, j, _abundances, h, _pahfac, _crfac,
-        _crscale, _line_cooling_data, _recombination_rates,
-        _charge_transfer_rates);
+        h01, he01, gain1, loss1, T1, ionization_variables, cell_midpoint, j,
+        _abundances, h, _pahfac, crfac, _crscale, _line_cooling_data,
+        _recombination_rates, _charge_transfer_rates);
 
     const double T2 = 0.9 * T0;
     // ioneng
     double h02, he02, gain2, loss2;
     compute_cooling_and_heating_balance(
-        h02, he02, gain2, loss2, T2, cell, j, _abundances, h, _pahfac, _crfac,
-        _crscale, _line_cooling_data, _recombination_rates,
-        _charge_transfer_rates);
+        h02, he02, gain2, loss2, T2, ionization_variables, cell_midpoint, j,
+        _abundances, h, _pahfac, crfac, _crscale, _line_cooling_data,
+        _recombination_rates, _charge_transfer_rates);
 
     // ioneng - this one sets h0, he0, gain0 and loss0
     compute_cooling_and_heating_balance(
-        h0, he0, gain0, loss0, T0, cell, j, _abundances, h, _pahfac, _crfac,
-        _crscale, _line_cooling_data, _recombination_rates,
-        _charge_transfer_rates);
+        h0, he0, gain0, loss0, T0, ionization_variables, cell_midpoint, j,
+        _abundances, h, _pahfac, crfac, _crscale, _line_cooling_data,
+        _recombination_rates, _charge_transfer_rates);
 
     // funny detail: this value is actually constant :p
     static const double logtt = std::log(1.1 / 0.9);
@@ -723,70 +820,93 @@ void TemperatureCalculator::calculate_temperature(
   if (ionization_variables.get_mean_intensity(ION_H_n) == 0.) {
     h0 = 1.;
   }
+
+#ifdef HAS_HELIUM
   if (ionization_variables.get_mean_intensity(ION_He_n) == 0.) {
     he0 = 1.;
   }
+#endif
 
   ionization_variables.set_ionic_fraction(ION_H_n, h0);
+
+#ifdef HAS_HELIUM
   ionization_variables.set_ionic_fraction(ION_He_n, he0);
+#endif
 
   // if hydrogen is completely neutral, then we assume that all coolants are
   // neutral as well
   if (h0 == 1.) {
+#ifdef HAS_CARBON
     ionization_variables.set_ionic_fraction(ION_C_p1, 0.);
     ionization_variables.set_ionic_fraction(ION_C_p2, 0.);
+#endif
 
+#ifdef HAS_NITROGEN
     ionization_variables.set_ionic_fraction(ION_N_n, 0.);
     ionization_variables.set_ionic_fraction(ION_N_p1, 0.);
     ionization_variables.set_ionic_fraction(ION_N_p2, 0.);
+#endif
 
+#ifdef HAS_OXYGEN
     ionization_variables.set_ionic_fraction(ION_O_n, 0.);
     ionization_variables.set_ionic_fraction(ION_O_p1, 0.);
+#endif
 
+#ifdef HAS_NEON
     ionization_variables.set_ionic_fraction(ION_Ne_n, 0.);
     ionization_variables.set_ionic_fraction(ION_Ne_p1, 0.);
+#endif
 
+#ifdef HAS_SULPHUR
     ionization_variables.set_ionic_fraction(ION_S_p1, 0.);
     ionization_variables.set_ionic_fraction(ION_S_p2, 0.);
     ionization_variables.set_ionic_fraction(ION_S_p3, 0.);
+#endif
   }
 
   // if hydrogen is completely ionized, then we assume that all coolants are
   // in very high ionization states as well
   if (h0 <= 1.e-10) {
+#ifdef HAS_CARBON
     ionization_variables.set_ionic_fraction(ION_C_p1, 0.);
     ionization_variables.set_ionic_fraction(ION_C_p2, 0.);
+#endif
 
+#ifdef HAS_NITROGEN
     ionization_variables.set_ionic_fraction(ION_N_n, 0.);
     ionization_variables.set_ionic_fraction(ION_N_p1, 0.);
     ionization_variables.set_ionic_fraction(ION_N_p2, 0.);
+#endif
 
+#ifdef HAS_OXYGEN
     ionization_variables.set_ionic_fraction(ION_O_n, 0.);
     ionization_variables.set_ionic_fraction(ION_O_p1, 0.);
+#endif
 
+#ifdef HAS_NEON
     ionization_variables.set_ionic_fraction(ION_Ne_n, 0.);
     ionization_variables.set_ionic_fraction(ION_Ne_p1, 0.);
+#endif
 
+#ifdef HAS_SULPHUR
     ionization_variables.set_ionic_fraction(ION_S_p1, 0.);
     ionization_variables.set_ionic_fraction(ION_S_p2, 0.);
     ionization_variables.set_ionic_fraction(ION_S_p3, 0.);
+#endif
   }
 
 #ifdef DO_OUTPUT_PHOTOIONIZATION_RATES
   // set the mean intensity values to the actual physical values
-  for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-    IonName ion = static_cast< IonName >(i);
-    ionization_variables.set_mean_intensity(ion, j[i]);
+  for (int_fast32_t ion = 0; ion < NUMBER_OF_IONNAMES; ++ion) {
+    ionization_variables.set_mean_intensity(ion, j[ion]);
   }
 #endif
 
-#ifdef DO_OUTPUT_HEATING
   // set the heating term values to the actual physical values
-  for (int_fast32_t i = 0; i < NUMBER_OF_HEATINGTERMS; ++i) {
-    HeatingTermName heating_term = static_cast< HeatingTermName >(i);
-    ionization_variables.set_heating(heating_term, h[i]);
+  for (int_fast32_t heating_term = 0; heating_term < NUMBER_OF_HEATINGTERMS;
+       ++heating_term) {
+    ionization_variables.set_heating(heating_term, h[heating_term]);
   }
-#endif
 }
 
 /**
@@ -825,5 +945,36 @@ void TemperatureCalculator::calculate_temperature(
   } else {
     _ionization_state_calculator.calculate_ionization_state(totweight, grid,
                                                             block);
+  }
+}
+
+/**
+ * @brief Calculate the temperature and ionization balance for all cells in the
+ * given subgrid.
+ *
+ * @param loop Iteration number.
+ * @param totweight Total weight of all photon packets.
+ * @param subgrid DensitySubGrid to operate on.
+ */
+void TemperatureCalculator::calculate_temperature(
+    const uint_fast32_t loop, const double totweight,
+    DensitySubGrid &subgrid) const {
+
+  if (_do_temperature_computation && loop > _minimum_iteration_number) {
+    // get the normalization factors for the ionizing intensity and heating
+    // integrals (they depend on the total weight of the photons)
+    const double jfac = _luminosity / totweight;
+    // the integral calculation uses the photon frequency (in Hz)
+    // we want to convert this to the photon energy (in Joule)
+    // we do this by multiplying with the Planck constant (in Js)
+    const double hfac = jfac * PhysicalConstants::get_physical_constant(
+                                   PHYSICALCONSTANT_PLANCK);
+    for (auto cellit = subgrid.begin(); cellit != subgrid.end(); ++cellit) {
+      calculate_temperature(
+          cellit.get_ionization_variables(), jfac / cellit.get_volume(),
+          hfac / cellit.get_volume(), cellit.get_cell_midpoint());
+    }
+  } else {
+    _ionization_state_calculator.calculate_ionization_state(totweight, subgrid);
   }
 }

@@ -46,19 +46,35 @@ int main(int argc, char **argv) {
   ChargeTransferRates rates;
 
   // table that links atom and stage indices to IonNames
-  IonName ion[17][6];
+  int_fast32_t ion[17][6] = {{0}};
+
+#ifdef HAS_CARBON
   ion[6][4] = ION_C_p2;
+#endif
+
+#ifdef HAS_NITROGEN
   ion[7][1] = ION_N_n;
   ion[7][2] = ION_N_n;
   ion[7][3] = ION_N_p1;
   ion[7][4] = ION_N_p2;
+#endif
+
+#ifdef HAS_OXYGEN
   ion[8][1] = ION_O_n;
   ion[8][2] = ION_O_n;
   ion[8][3] = ION_O_p1;
+#endif
+
+#ifdef HAS_NEON
   ion[10][3] = ION_Ne_p1;
+#endif
+
+#ifdef HAS_SULPHUR
   ion[16][3] = ION_S_p1;
   ion[16][4] = ION_S_p2;
   ion[16][5] = ION_S_p3;
+#endif
+
   std::ifstream file("KingdonFerland_testdata.txt");
   std::string line;
   while (getline(file, line)) {
@@ -71,6 +87,36 @@ int main(int argc, char **argv) {
 
       linestream >> stage >> atom >> temperature >> recombination_rate >>
           ionization_rate;
+
+#ifndef HAS_CARBON
+      if (atom == 6) {
+        continue;
+      }
+#endif
+
+#ifndef HAS_NITROGEN
+      if (atom == 7) {
+        continue;
+      }
+#endif
+
+#ifndef HAS_OXYGEN
+      if (atom == 8) {
+        continue;
+      }
+#endif
+
+#ifndef HAS_NEON
+      if (atom == 10) {
+        continue;
+      }
+#endif
+
+#ifndef HAS_SULPHUR
+      if (atom == 16) {
+        continue;
+      }
+#endif
 
       // since we test both ionization and recombination, there are some stages
       // in the test file that do not have a recombination rate
@@ -90,10 +136,11 @@ int main(int argc, char **argv) {
       if ((atom == 7 && stage == 1) || (atom == 8 && stage == 1)) {
 
         assert_values_equal_rel(
-            ionization_rate, UnitConverter::to_unit< QUANTITY_REACTION_RATE >(
-                                 rates.get_charge_transfer_ionization_rate_H(
-                                     ion[atom][stage], temperature * 1.e-4),
-                                 "cm^3s^-1"),
+            ionization_rate,
+            UnitConverter::to_unit< QUANTITY_REACTION_RATE >(
+                rates.get_charge_transfer_ionization_rate_H(
+                    ion[atom][stage], temperature * 1.e-4),
+                "cm^3s^-1"),
             1.e-6);
       }
     }

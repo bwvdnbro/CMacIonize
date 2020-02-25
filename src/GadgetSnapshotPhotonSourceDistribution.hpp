@@ -34,6 +34,7 @@
 
 class Log;
 class ParameterFile;
+class UVLuminosityFunction;
 
 /**
  * @brief PhotonSourceDistribution that reads photon sources from a Gadget2 type
@@ -44,6 +45,9 @@ private:
   /*! @brief Positions of the sources in the snapshot file (in m). */
   std::vector< CoordinateVector<> > _positions;
 
+  /*! @brief UV luminosities of the sources in the snapshot file (in s^-1). */
+  std::vector< double > _luminosities;
+
   /*! @brief Total luminosity of all sources in the snapshot file (in s^-1). */
   double _total_luminosity;
 
@@ -52,13 +56,14 @@ private:
 
 public:
   GadgetSnapshotPhotonSourceDistribution(
-      std::string filename, std::string formation_time_name,
+      std::string filename, std::string formation_time_name, const Box<> box,
+      UVLuminosityFunction *luminosity_function,
       double fallback_unit_length_in_SI = 0.,
       double fallback_unit_time_in_SI = 0.,
       double fallback_unit_mass_in_SI = 0., double cutoff_age = 1.577e14,
-      double rate_per_mass_unit = 2.5e16, bool use_gas = false,
-      double SFR_unit = 0., bool comoving_integration = false,
-      double hubble_parameter = 0.7, Log *log = nullptr);
+      bool use_gas = false, double SFR_unit = 0.,
+      bool comoving_integration = false, double hubble_parameter = 0.7,
+      Log *log = nullptr);
   GadgetSnapshotPhotonSourceDistribution(ParameterFile &params,
                                          Log *log = nullptr);
 

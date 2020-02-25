@@ -26,13 +26,18 @@
 #ifndef DENSITYGRIDWRITER_HPP
 #define DENSITYGRIDWRITER_HPP
 
+#include "DensityGridWriterFields.hpp"
 #include "Log.hpp"
 
 #include <cstdlib>
 #include <string>
 
 class DensityGrid;
+class DensitySubGrid;
+template < class _subgrid_type_ > class DensitySubGridCreator;
+class HydroDensitySubGrid;
 class ParameterFile;
+class InternalHydroUnits;
 
 /**
  * @brief Snapshot file writer for the DensityGrid.
@@ -41,6 +46,13 @@ class DensityGridWriter {
 protected:
   /*! @brief Name of the folder where output files should be placed. */
   std::string _output_folder;
+
+  /*! @brief Flag specifying whether or not hydro is active. */
+  const bool _hydro;
+
+  /*! @brief DensityGridWriterFields containing information about which
+   *  output fields are active. */
+  const DensityGridWriterFields _fields;
 
   /*! @brief Log to write logging information to. */
   Log *_log;
@@ -51,10 +63,15 @@ public:
    *
    * @param output_folder Name of the folder where output files should be
    * placed.
+   * @param hydro Flag specifying whether or not hydro is active.
+   * @param fields DensityGridWriterFields containing information about which
+   * output fields are active.
    * @param log Log to write logging information to.
    */
-  DensityGridWriter(std::string output_folder, Log *log = nullptr)
-      : _output_folder(output_folder), _log(log) {
+  DensityGridWriter(std::string output_folder, const bool hydro,
+                    const DensityGridWriterFields fields, Log *log)
+      : _output_folder(output_folder), _hydro(hydro), _fields(fields),
+        _log(log) {
 
     if (_log) {
       _log->write_status("Output will be written to ", _output_folder, "/");
@@ -74,9 +91,37 @@ public:
    * @param params ParameterFile containing the run parameters that should be
    * written to the file.
    * @param time Simulation time (in s).
+   * @param hydro_units Internal unit system for the hydro.
    */
   virtual void write(DensityGrid &grid, uint_fast32_t iteration,
-                     ParameterFile &params, double time = 0.) = 0;
+                     ParameterFile &params, double time = 0.,
+                     const InternalHydroUnits *hydro_units = nullptr) = 0;
+
+  /**
+   * @brief Write a snapshot for a split grid.
+   *
+   * @param grid_creator Grid.
+   * @param counter Counter value to add to the snapshot file name.
+   * @param params ParameterFile containing the run parameters that should be
+   * written to the file.
+   * @param time Simulation time (in s).
+   */
+  virtual void write(DensitySubGridCreator< DensitySubGrid > &grid_creator,
+                     const uint_fast32_t counter, ParameterFile &params,
+                     double time = 0.) = 0;
+
+  /**
+   * @brief Write a snapshot for a split grid with hydro.
+   *
+   * @param grid_creator Grid.
+   * @param counter Counter value to add to the snapshot file name.
+   * @param params ParameterFile containing the run parameters that should be
+   * written to the file.
+   * @param time Simulation time (in s).
+   */
+  virtual void write(DensitySubGridCreator< HydroDensitySubGrid > &grid_creator,
+                     const uint_fast32_t counter, ParameterFile &params,
+                     double time = 0.) = 0;
 };
 
 #endif // DENSITYGRIDWRITER_HPP

@@ -13,6 +13,9 @@ DensityFunction:
   type: BlockSyntax
   filename: lexingtonHII40.yml
 
+DiffuseReemissionHandler:
+  type: Physical
+
 SimulationBox:
   anchor: [-5. pc, -5. pc, -5. pc]
   sides: [10. pc, 10. pc, 10. pc]
@@ -26,6 +29,24 @@ DensityGridWriter:
   type: Gadget
   prefix: lexingtonHII40_
   padding: 3
+
+# Enable extra output fields, since we need them
+DensityGridWriterFields:
+  NumberDensity: 0
+  Temperature: 1
+  NeutralFractionHe: 1
+  NeutralFractionO: 1
+  NeutralFractionO+: 1
+  NeutralFractionC+: 1
+  NeutralFractionC++: 1
+  NeutralFractionN: 1
+  NeutralFractionN+: 1
+  NeutralFractionN++: 1
+  NeutralFractionNe: 1
+  NeutralFractionNe+: 1
+  NeutralFractionS+: 1
+  NeutralFractionS++: 1
+  NeutralFractionS+++: 1
 
 IonizationSimulation:
   output folder: .

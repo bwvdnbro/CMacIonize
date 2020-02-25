@@ -63,12 +63,15 @@ int main(int argc, char **argv) {
               "cm^3s^-1"),
           alphaH, tolerance);
 
+#ifdef HAS_HELIUM
       assert_values_equal_rel(
           UnitConverter::to_unit< QUANTITY_REACTION_RATE >(
               recombination_rates.get_recombination_rate(ION_He_n, T),
               "cm^3s^-1"),
           alphaHe, tolerance);
+#endif
 
+#ifdef HAS_CARBON
       assert_values_equal_rel(
           UnitConverter::to_unit< QUANTITY_REACTION_RATE >(
               recombination_rates.get_recombination_rate(ION_C_p1, T),
@@ -80,7 +83,9 @@ int main(int argc, char **argv) {
               recombination_rates.get_recombination_rate(ION_C_p2, T),
               "cm^3s^-1"),
           alphaCp2, tolerance);
+#endif
 
+#ifdef HAS_NITROGEN
       assert_values_equal_rel(
           UnitConverter::to_unit< QUANTITY_REACTION_RATE >(
               recombination_rates.get_recombination_rate(ION_N_n, T),
@@ -96,7 +101,9 @@ int main(int argc, char **argv) {
               recombination_rates.get_recombination_rate(ION_N_p2, T),
               "cm^3s^-1"),
           alphaNp2, tolerance);
+#endif
 
+#ifdef HAS_OXYGEN
       assert_values_equal_rel(
           UnitConverter::to_unit< QUANTITY_REACTION_RATE >(
               recombination_rates.get_recombination_rate(ION_O_n, T),
@@ -107,7 +114,9 @@ int main(int argc, char **argv) {
               recombination_rates.get_recombination_rate(ION_O_p1, T),
               "cm^3s^-1"),
           alphaOp1, tolerance);
+#endif
 
+#ifdef HAS_NEON
       assert_values_equal_rel(
           UnitConverter::to_unit< QUANTITY_REACTION_RATE >(
               recombination_rates.get_recombination_rate(ION_Ne_n, T),
@@ -118,7 +127,9 @@ int main(int argc, char **argv) {
               recombination_rates.get_recombination_rate(ION_Ne_p1, T),
               "cm^3s^-1"),
           alphaNep1, tolerance);
+#endif
 
+#ifdef HAS_SULPHUR
       assert_values_equal_rel(
           UnitConverter::to_unit< QUANTITY_REACTION_RATE >(
               recombination_rates.get_recombination_rate(ION_S_p1, T),
@@ -134,6 +145,7 @@ int main(int argc, char **argv) {
               recombination_rates.get_recombination_rate(ION_S_p3, T),
               "cm^3s^-1"),
           alphaSp3, tolerance);
+#endif
     }
   }
 

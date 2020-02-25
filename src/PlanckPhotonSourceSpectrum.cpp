@@ -74,9 +74,8 @@ PlanckPhotonSourceSpectrum::PlanckPhotonSourceSpectrum(double temperature,
   std::vector< double > frequency(PLANCKPHOTONSOURCESPECTRUM_NUMFREQ, 0.);
   std::vector< double > luminosity(PLANCKPHOTONSOURCESPECTRUM_NUMFREQ, 0.);
   for (uint_fast32_t i = 0; i < PLANCKPHOTONSOURCESPECTRUM_NUMFREQ; ++i) {
-    frequency[i] =
-        1. +
-        i * (max_frequency - 1.) / (PLANCKPHOTONSOURCESPECTRUM_NUMFREQ - 1.);
+    frequency[i] = 1. + i * (max_frequency - 1.) /
+                            (PLANCKPHOTONSOURCESPECTRUM_NUMFREQ - 1.);
     luminosity[i] = frequency[i] * frequency[i] * frequency[i] /
                     (std::exp(planck_constant * frequency[i] * min_frequency /
                               (boltzmann_constant * temperature)) -
@@ -87,8 +86,9 @@ PlanckPhotonSourceSpectrum::PlanckPhotonSourceSpectrum(double temperature,
   _cumulative_distribution[0] = 0.;
   for (uint_fast32_t i = 1; i < PLANCKPHOTONSOURCESPECTRUM_NUMFREQ; ++i) {
     _cumulative_distribution[i] = _cumulative_distribution[i - 1] +
-                                  0.5 * (luminosity[i] / frequency[i] +
-                                         luminosity[i - 1] / frequency[i - 1]) *
+                                  0.5 *
+                                      (luminosity[i] / frequency[i] +
+                                       luminosity[i - 1] / frequency[i - 1]) *
                                       (frequency[i] - frequency[i - 1]);
   }
 

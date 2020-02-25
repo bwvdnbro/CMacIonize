@@ -197,8 +197,9 @@ public:
   /// constructor and destructor
 
   OldVoronoiGrid(const std::vector< CoordinateVector<> > &positions,
-                 const Box<> box, const CoordinateVector< bool > periodic =
-                                      CoordinateVector< bool >(false));
+                 const Box<> box,
+                 const CoordinateVector< bool > periodic =
+                     CoordinateVector< bool >(false));
 
   virtual ~OldVoronoiGrid();
 
@@ -210,7 +211,7 @@ public:
 
   virtual double get_volume(uint_fast32_t index) const;
   virtual CoordinateVector<> get_centroid(uint_fast32_t index) const;
-  virtual CoordinateVector<> get_wall_normal(int_fast32_t wallindex) const;
+  virtual CoordinateVector<> get_wall_normal(uint_fast32_t wallindex) const;
   virtual std::vector< VoronoiFace > get_faces(uint_fast32_t index) const;
   virtual std::vector< Face > get_geometrical_faces(uint_fast32_t index) const;
 

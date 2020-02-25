@@ -55,9 +55,9 @@ FaucherGiguerePhotonSourceSpectrum::FaucherGiguerePhotonSourceSpectrum(
   const double max_frequency = 4. * min_frequency;
   for (uint_fast32_t i = 0; i < FAUCHERGIGUEREPHOTONSOURCESPECTRUM_NUMFREQ;
        ++i) {
-    _frequencies[i] = min_frequency +
-                      i * (max_frequency - min_frequency) /
-                          (FAUCHERGIGUEREPHOTONSOURCESPECTRUM_NUMFREQ - 1.);
+    _frequencies[i] =
+        min_frequency + i * (max_frequency - min_frequency) /
+                            (FAUCHERGIGUEREPHOTONSOURCESPECTRUM_NUMFREQ - 1.);
   }
 
   // find the redshift bin that contains the requested redshift (we have values

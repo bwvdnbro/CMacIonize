@@ -31,6 +31,7 @@
 #include "IonizationPhotonShootJobMarket.hpp"
 #include "LineCoolingData.hpp"
 #include "ParameterFile.hpp"
+#include "TimeLogger.hpp"
 #include "Timer.hpp"
 
 #include <string>
@@ -48,6 +49,7 @@ class PhotonSourceDistribution;
 class PhotonSourceSpectrum;
 class RecombinationRates;
 class TemperatureCalculator;
+class TrackerManager;
 
 /**
  * @brief Ionization radiative transfer simulation.
@@ -163,6 +165,9 @@ private:
    *  parallel. */
   IonizationPhotonShootJobMarket *_ionization_photon_shoot_job_market;
 
+  /*! @brief Optional spectrum tracker manager. */
+  TrackerManager *_trackers;
+
   /// internal timers
 
   /*! @brief Timer to quantify time spent in ray tracing. */
@@ -176,6 +181,9 @@ private:
 
   /*! @brief Timer to quantity total time spent in the ionization code .*/
   Timer _total_timer;
+
+  /*! @brief Time log. */
+  TimeLogger _time_log;
 
 public:
   IonizationSimulation(const bool write_output,

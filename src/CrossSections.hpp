@@ -46,7 +46,8 @@ public:
    * @param energy Photon frequency (in Hz).
    * @return Photoionization cross section (in m^2).
    */
-  virtual double get_cross_section(IonName ion, double energy) const = 0;
+  virtual double get_cross_section(const int_fast32_t ion,
+                                   const double energy) const = 0;
 };
 
 #endif // CROSSSECTIONS_HPP

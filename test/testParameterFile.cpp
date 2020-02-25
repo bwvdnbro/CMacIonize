@@ -45,7 +45,31 @@ int main(int argc, char **argv) {
     std::istringstream test_stream(test_string);
     YAMLDictionary dictionary(test_stream);
 
+    std::cout << "Original:\n";
     dictionary.print_contents(std::cout);
+
+    assert_condition(dictionary.get_value< double >("test_value_1", -1.) ==
+                     42.);
+    assert_condition(dictionary.get_physical_value< QUANTITY_LENGTH >(
+                         "test_value_2", "-1. m") == 1.);
+
+    // restart test
+    {
+      RestartWriter restart_writer("yamldictionary.dump");
+      dictionary.write_restart_file(restart_writer);
+    }
+    {
+      RestartReader restart_reader("yamldictionary.dump");
+      YAMLDictionary restart_dictionary(restart_reader);
+
+      std::cout << "Restart:\n";
+      restart_dictionary.print_contents(std::cout);
+
+      assert_condition(
+          restart_dictionary.get_value< double >("test_value_1", -1.) == 42.);
+      assert_condition(restart_dictionary.get_physical_value< QUANTITY_LENGTH >(
+                           "test_value_2", "-1. m") == 1.);
+    }
   }
 
   ParameterFile params("test.param");
@@ -142,7 +166,28 @@ int main(int argc, char **argv) {
                        "test_group2:test_group_group:test_group_str_member",
                        "hello!") == "hello!");
 
+  assert_condition(params.get_filename("test_filename", "test.param") ==
+                   "test.param");
+#ifdef DO_CHECKSUM
+  assert_condition(params.get_value< std::string >("test_filename checksum") ==
+                   "5430d38453a81cac10ee4b159f7908bf");
+#endif
+
+  std::cout << "Original:\n";
   params.print_contents(std::cout);
+
+  // restart test
+  {
+    RestartWriter restart_writer("parameterfile.dump");
+    params.write_restart_file(restart_writer);
+  }
+  {
+    RestartReader restart_reader("parameterfile.dump");
+    ParameterFile restart_params(restart_reader);
+
+    std::cout << "Restart:\n";
+    restart_params.print_contents(std::cout);
+  }
 
   return 0;
 }

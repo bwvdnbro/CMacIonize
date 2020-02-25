@@ -27,6 +27,8 @@
 #define HYDROVARIABLES_HPP
 
 #include "CoordinateVector.hpp"
+#include "RestartReader.hpp"
+#include "RestartWriter.hpp"
 
 /**
  * @brief Hydro related variables.
@@ -45,13 +47,23 @@ private:
   /*! @brief Gradients for the primitive variables. */
   CoordinateVector<> _primitive_gradients[5];
 
+  /*! @brief Gravitational acceleration (in m s^-2). */
+  CoordinateVector<> _gravitational_acceleration;
+
+  /*! @brief External cooling and/or heating (in J s^-1). */
+  double _energy_rate_term;
+
+  /*! @brief External instanteneous energy terms (in J). */
+  double _energy_term;
+
 public:
   /**
    * @brief (Empty) constructor.
    */
   inline HydroVariables()
       : _primitives{0., 0., 0., 0., 0.}, _conserved{0., 0., 0., 0., 0.},
-        _delta_conserved{0., 0., 0., 0., 0.} {}
+        _delta_conserved{0., 0., 0., 0., 0.}, _energy_rate_term(0.),
+        _energy_term(0.) {}
 
   /**
    * @brief Get read only access to the given component of the primitive
@@ -102,7 +114,7 @@ public:
    *
    * @param density New fluid density (in kg m^-3).
    */
-  inline void set_primitives_density(double density) {
+  inline void set_primitives_density(const double density) {
     _primitives[0] = density;
   }
 
@@ -111,7 +123,7 @@ public:
    *
    * @param velocity New fluid velocity (in m s^-1).
    */
-  inline void set_primitives_velocity(CoordinateVector<> velocity) {
+  inline void set_primitives_velocity(const CoordinateVector<> velocity) {
     _primitives[1] = velocity.x();
     _primitives[2] = velocity.y();
     _primitives[3] = velocity.z();
@@ -122,7 +134,7 @@ public:
    *
    * @param pressure New fluid pressure (in kg m^-1 s^-2).
    */
-  inline void set_primitives_pressure(double pressure) {
+  inline void set_primitives_pressure(const double pressure) {
     _primitives[4] = pressure;
   }
 
@@ -175,14 +187,14 @@ public:
    *
    * @param mass New fluid mass (in kg).
    */
-  inline void set_conserved_mass(double mass) { _conserved[0] = mass; }
+  inline void set_conserved_mass(const double mass) { _conserved[0] = mass; }
 
   /**
    * @brief Set the fluid momentum.
    *
    * @param momentum New fluid momentum (in kg m s^-1).
    */
-  inline void set_conserved_momentum(CoordinateVector<> momentum) {
+  inline void set_conserved_momentum(const CoordinateVector<> momentum) {
     _conserved[1] = momentum.x();
     _conserved[2] = momentum.y();
     _conserved[3] = momentum.z();
@@ -193,7 +205,7 @@ public:
    *
    * @param total_energy New fluid total energy (in kg m^2 s^-2).
    */
-  inline void set_conserved_total_energy(double total_energy) {
+  inline void set_conserved_total_energy(const double total_energy) {
     _conserved[4] = total_energy;
   }
 
@@ -244,6 +256,113 @@ public:
    */
   inline CoordinateVector<> &primitive_gradients(uint_fast8_t index) {
     return _primitive_gradients[index];
+  }
+
+  /**
+   * @brief Get the gravitational acceleration.
+   *
+   * @return Gravitational acceleration (in m s^-2).
+   */
+  inline const CoordinateVector<> get_gravitational_acceleration() const {
+    return _gravitational_acceleration;
+  }
+
+  /**
+   * @brief Set the gravitational acceleration.
+   *
+   * @param gravitational_acceleration Gravitational acceleration (in m s^-2).
+   */
+  inline void set_gravitational_acceleration(
+      const CoordinateVector<> gravitational_acceleration) {
+    _gravitational_acceleration = gravitational_acceleration;
+  }
+
+  /**
+   * @brief Get the energy rate term.
+   *
+   * @return Energy rate term (in J s^-1).
+   */
+  inline double get_energy_rate_term() const { return _energy_rate_term; }
+
+  /**
+   * @brief Set the energy rate term.
+   *
+   * @param energy_rate_term Energy rate term (in J s^-1).
+   */
+  inline void set_energy_rate_term(const double energy_rate_term) {
+    _energy_rate_term = energy_rate_term;
+  }
+
+  /**
+   * @brief Get the energy term.
+   *
+   * @return Energy term (in J).
+   */
+  inline double get_energy_term() const { return _energy_term; }
+
+  /**
+   * @brief Set the energy term.
+   *
+   * @param energy_term Energy term (in J).
+   */
+  inline void set_energy_term(const double energy_term) {
+    _energy_term = energy_term;
+  }
+
+  /**
+   * @brief Copy the contents of the given HydroVariables instance into
+   * this one.
+   *
+   * @param other Other HydroVariables instance.
+   */
+  inline void copy_all(const HydroVariables &other) {
+
+    for (uint_fast8_t i = 0; i < 5; ++i) {
+      _primitives[i] = other._primitives[i];
+      _conserved[i] = other._conserved[i];
+      _delta_conserved[i] = other._delta_conserved[i];
+      _primitive_gradients[i] = other._primitive_gradients[i];
+      _gravitational_acceleration[i] = other._gravitational_acceleration[i];
+    }
+
+    _energy_rate_term = other._energy_rate_term;
+    _energy_term = other._energy_term;
+  }
+
+  /**
+   * @brief Write the ionization variables to the given restart file.
+   *
+   * @param restart_writer RestartWriter to use.
+   */
+  inline void write_restart_file(RestartWriter &restart_writer) const {
+
+    for (uint_fast8_t i = 0; i < 5; ++i) {
+      restart_writer.write(_primitives[i]);
+      restart_writer.write(_conserved[i]);
+      restart_writer.write(_delta_conserved[i]);
+      _primitive_gradients[i].write_restart_file(restart_writer);
+    }
+    _gravitational_acceleration.write_restart_file(restart_writer);
+    restart_writer.write(_energy_rate_term);
+    restart_writer.write(_energy_term);
+  }
+
+  /**
+   * @brief Restart constructor.
+   *
+   * @param restart_reader Restart file to read from.
+   */
+  inline HydroVariables(RestartReader &restart_reader) {
+
+    for (uint_fast8_t i = 0; i < 5; ++i) {
+      _primitives[i] = restart_reader.read< double >();
+      _conserved[i] = restart_reader.read< double >();
+      _delta_conserved[i] = restart_reader.read< double >();
+      _primitive_gradients[i] = CoordinateVector<>(restart_reader);
+    }
+    _gravitational_acceleration = CoordinateVector<>(restart_reader);
+    _energy_rate_term = restart_reader.read< double >();
+    _energy_term = restart_reader.read< double >();
   }
 };
 

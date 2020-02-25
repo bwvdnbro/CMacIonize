@@ -45,7 +45,7 @@ int main(int argc, char **argv) {
     Box<> box(CoordinateVector<>(0.), CoordinateVector<>(1.));
     UniformRandomVoronoiGeneratorDistribution *test_positions =
         new UniformRandomVoronoiGeneratorDistribution(box, 100, 42);
-    VoronoiDensityGrid grid(test_positions, box, "Old", 0, false, false,
+    VoronoiDensityGrid grid(test_positions, box, "Old", 0, false, false, false,
                             nullptr);
     std::pair< cellsize_t, cellsize_t > block =
         std::make_pair(0, grid.get_number_of_cells());
@@ -63,7 +63,7 @@ int main(int argc, char **argv) {
     UniformRegularVoronoiGeneratorDistribution *test_positions =
         new UniformRegularVoronoiGeneratorDistribution(
             box, CoordinateVector< uint_fast32_t >(5));
-    VoronoiDensityGrid grid(test_positions, box, "Old", 0, false, false,
+    VoronoiDensityGrid grid(test_positions, box, "Old", 0, false, false, false,
                             nullptr);
     std::pair< cellsize_t, cellsize_t > block =
         std::make_pair(0, grid.get_number_of_cells());

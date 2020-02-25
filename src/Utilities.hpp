@@ -698,7 +698,7 @@ inline std::pair< double, std::string > split_value(const std::string &svalue) {
   double value;
   try {
     value = std::stod(svalue, &idx);
-  } catch (std::invalid_argument e) {
+  } catch (std::invalid_argument &e) {
     cmac_error("Error extracting value from \"%s\" unit-value pair!",
                svalue.c_str());
   }
@@ -1003,6 +1003,36 @@ inline std::string as_binary_sequence(uint64_t long_value) {
 }
 
 /**
+ * @brief Convert the given double precision value to a byte sequence.
+ *
+ * @param double_value Double precision value.
+ * @return Byte sequence representation.
+ */
+inline uint64_t as_bytes(const double double_value) {
+  union {
+    double double_value;
+    uint64_t uint64_value;
+  } union_value;
+  union_value.double_value = double_value;
+  return union_value.uint64_value;
+}
+
+/**
+ * @brief Convert the given byte sequence to a double precision value.
+ *
+ * @param uint64_value Byte sequence representation.
+ * @return Double precision value.
+ */
+inline double as_double(const uint64_t uint64_value) {
+  union {
+    double double_value;
+    uint64_t uint64_value;
+  } union_value;
+  union_value.uint64_value = uint64_value;
+  return union_value.double_value;
+}
+
+/**
  * @brief Return a std::vector that contains the indices that would sort the
  * given vector.
  *
@@ -1022,6 +1052,6 @@ std::vector< uint_fast32_t > argsort(const std::vector< _datatype_ > &values) {
   });
   return idx;
 }
-}
+} // namespace Utilities
 
 #endif // UTILITIES_HPP

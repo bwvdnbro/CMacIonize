@@ -29,6 +29,7 @@
 #include "GadgetSnapshotPhotonSourceDistribution.hpp"
 #include "PhotonSource.hpp"
 #include "PhotonSourceSpectrum.hpp"
+#include "RateBasedUVLuminosityFunction.hpp"
 
 /**
  * @brief Test implementation of CrossSections.
@@ -43,7 +44,7 @@ public:
    * @param energy Photon energy.
    * @return Photoionization cross section.
    */
-  virtual double get_cross_section(IonName ion, double energy) const {
+  virtual double get_cross_section(int_fast32_t ion, double energy) const {
     return 1.;
   }
 };
@@ -87,8 +88,10 @@ public:
  */
 int main(int argc, char **argv) {
 
-  GadgetSnapshotPhotonSourceDistribution distribution("test.hdf5",
-                                                      "FormationTime");
+  RateBasedUVLuminosityFunction *luminosity_function =
+      new RateBasedUVLuminosityFunction(2., 2.);
+  GadgetSnapshotPhotonSourceDistribution distribution(
+      "test.hdf5", "FormationTime", Box<>(0., 1.), luminosity_function);
   TestCrossSections cross_sections;
   TestPhotonSourceSpectrum spectrum;
   RandomGenerator random_generator;
@@ -100,6 +103,8 @@ int main(int argc, char **argv) {
   assert_condition(photon.get_position().x() == 0.5);
   assert_condition(photon.get_position().y() == 0.5);
   assert_condition(photon.get_position().z() == 0.5);
+  assert_values_equal(distribution.get_total_luminosity(), 2.);
+  assert_values_equal(source.get_total_luminosity(), 2.);
 
   return 0;
 }
