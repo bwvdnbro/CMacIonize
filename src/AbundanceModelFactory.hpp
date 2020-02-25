@@ -61,9 +61,9 @@ public:
     }
 
     if (type == "FixedValue") {
-      return new FixedValueAbundanceModel(params);
+      return new FixedValueAbundanceModel(params, log);
     } else if (type == "SolarMetallicity") {
-      return new SolarMetallicityAbundanceModel(params);
+      return new SolarMetallicityAbundanceModel(params, log);
     } else {
       cmac_error("Unknown AbundanceModel type: \"%s\"!", type.c_str());
       return nullptr;

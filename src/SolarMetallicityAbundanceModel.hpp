@@ -63,8 +63,10 @@ public:
    *
    * @param metallicity Metallicity of the gas (given as the logarithm of the
    * oxygen abundance, @f$\log_{10}(O/H)@f$).
+   * @param log Log to write logging info to.
    */
-  inline SolarMetallicityAbundanceModel(const double metallicity) {
+  inline SolarMetallicityAbundanceModel(const double metallicity,
+                                        Log *log = nullptr) {
 
     // based on a table provided by Natalia Vale Asari (private
     // communication)
@@ -118,6 +120,14 @@ public:
     (void)actual_N;
     (void)actual_Ne;
     (void)actual_S;
+
+    if (log) {
+      log->write_status("Abundances:");
+      for (int_fast32_t i = 0; i < NUMBER_OF_ELEMENTNAMES; ++i) {
+        log->write_status(get_element_name(i), ": ",
+                          _abundances.get_abundance(i));
+      }
+    }
   }
 
   /**
@@ -127,10 +137,13 @@ public:
    *  - metallicity: Metallicity of the gas (default: -3.31).
    *
    * @param params ParameterFile to read from.
+   * @param log Log to write logging info to.
    */
-  inline SolarMetallicityAbundanceModel(ParameterFile &params)
+  inline SolarMetallicityAbundanceModel(ParameterFile &params,
+                                        Log *log = nullptr)
       : SolarMetallicityAbundanceModel(
-            params.get_value< double >("AbundanceModel:metallicity", -3.31)) {}
+            params.get_value< double >("AbundanceModel:metallicity", -3.31),
+            log) {}
 
   virtual ~SolarMetallicityAbundanceModel() {}
 

@@ -49,12 +49,21 @@ public:
    * ElementNames::get_element_name() (default value: 0.).
    *
    * @param params ParameterFile to read from.
+   * @param log Log to write logging info to.
    */
-  inline FixedValueAbundanceModel(ParameterFile &params) {
+  inline FixedValueAbundanceModel(ParameterFile &params, Log *log = nullptr) {
     for (int_fast32_t i = 0; i < NUMBER_OF_ELEMENTNAMES; ++i) {
       _abundances.set_abundance(
           i, params.get_value< double >("AbundanceModel:" + get_element_name(i),
                                         0.));
+    }
+
+    if (log) {
+      log->write_status("Abundances:");
+      for (int_fast32_t i = 0; i < NUMBER_OF_ELEMENTNAMES; ++i) {
+        log->write_status(get_element_name(i), ": ",
+                          _abundances.get_abundance(i));
+      }
     }
   }
 
