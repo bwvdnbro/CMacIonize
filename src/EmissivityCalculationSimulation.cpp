@@ -158,7 +158,7 @@ int EmissivityCalculationSimulation::do_simulation(CommandLineParser &parser,
     abundances = Abundances(simulation_parameters);
   } else {
     const AbundanceModel *abundance_model =
-        AbundanceModelFactory::generate(params, log);
+        AbundanceModelFactory::generate(simulation_parameters, log);
     abundances = abundance_model->get_abundances();
     delete abundance_model;
   }
