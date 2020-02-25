@@ -43,6 +43,7 @@
 #include "LiveOutputManager.hpp"
 #include "MemoryLogger.hpp"
 #include "MemorySpace.hpp"
+#include "OpenMP.hpp"
 #include "ParameterFile.hpp"
 #include "PhotonSourceDistributionFactory.hpp"
 #include "PhotonSourceSpectrumFactory.hpp"
@@ -53,8 +54,6 @@
 #include "TemperatureCalculator.hpp"
 #include "TimeLine.hpp"
 #include "TimeLogger.hpp"
-
-#include <omp.h>
 
 /*! @brief Stop the serial time timer and start the parallel time timer. */
 #define start_parallel_timing_block()                                          \
@@ -924,7 +923,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
   time_logger.start("parameter reading");
 
   const int_fast32_t num_thread = parser.get_value< int_fast32_t >("threads");
-  omp_set_num_threads(num_thread);
+  set_number_of_threads(num_thread);
 
   // set the unit for time stats terminal output
   std::string output_time_unit =
@@ -1294,7 +1293,9 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
   if (hydro_mask != nullptr && restart_reader == nullptr) {
     AtomicValue< size_t > igrid(0);
     start_parallel_timing_block();
+#ifdef HAVE_OPENMP
 #pragma omp parallel default(shared)
+#endif
     while (igrid.value() < grid_creator->number_of_original_subgrids()) {
       const size_t this_igrid = igrid.post_increment();
       if (this_igrid < grid_creator->number_of_original_subgrids()) {
@@ -1310,7 +1311,9 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
   if (external_potential != nullptr && restart_reader == nullptr) {
     AtomicValue< size_t > igrid(0);
     start_parallel_timing_block();
+#ifdef HAVE_OPENMP
 #pragma omp parallel default(shared)
+#endif
     while (igrid.value() < grid_creator->number_of_original_subgrids()) {
       const size_t this_igrid = igrid.post_increment();
       if (this_igrid < grid_creator->number_of_original_subgrids()) {
@@ -1330,7 +1333,9 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
       sourcedistribution->do_stellar_feedback(0.)) {
     AtomicValue< size_t > igrid(0);
     start_parallel_timing_block();
+#ifdef HAVE_OPENMP
 #pragma omp parallel default(shared)
+#endif
     while (igrid.value() < grid_creator->number_of_original_subgrids()) {
       const size_t this_igrid = igrid.post_increment();
       if (this_igrid < grid_creator->number_of_original_subgrids()) {
@@ -1374,7 +1379,9 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
           grid_creator->number_of_original_subgrids(), DBL_MAX);
       AtomicValue< size_t > igrid(0);
       start_parallel_timing_block();
+#ifdef HAVE_OPENMP
 #pragma omp parallel default(shared)
+#endif
       while (igrid.value() < grid_creator->number_of_original_subgrids()) {
         const size_t this_igrid = igrid.post_increment();
         if (this_igrid < grid_creator->number_of_original_subgrids()) {
@@ -1582,7 +1589,9 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
         {
           AtomicValue< size_t > igrid(0);
           start_parallel_timing_block();
+#ifdef HAVE_OPENMP
 #pragma omp parallel default(shared)
+#endif
           while (igrid.value() < grid_creator->number_of_original_subgrids()) {
             const size_t this_igrid = igrid.post_increment();
             if (this_igrid < grid_creator->number_of_original_subgrids()) {
@@ -1600,7 +1609,9 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
         {
           AtomicValue< size_t > igrid(0);
           start_parallel_timing_block();
+#ifdef HAVE_OPENMP
 #pragma omp parallel default(shared)
+#endif
           while (igrid.value() < grid_creator->number_of_actual_subgrids()) {
             const size_t this_igrid = igrid.post_increment();
             if (this_igrid < grid_creator->number_of_actual_subgrids()) {
@@ -1626,7 +1637,9 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
           {
             AtomicValue< size_t > igrid(0);
             start_parallel_timing_block();
+#ifdef HAVE_OPENMP
 #pragma omp parallel default(shared)
+#endif
             while (igrid.value() < grid_creator->number_of_actual_subgrids()) {
               const size_t this_igrid = igrid.post_increment();
               if (this_igrid < grid_creator->number_of_actual_subgrids()) {
@@ -1647,7 +1660,9 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
           if (reemission_handler != nullptr) {
             AtomicValue< size_t > igrid(0);
             start_parallel_timing_block();
+#ifdef HAVE_OPENMP
 #pragma omp parallel default(shared)
+#endif
             while (igrid.value() < grid_creator->number_of_actual_subgrids()) {
               const size_t this_igrid = igrid.post_increment();
               if (this_igrid < grid_creator->number_of_actual_subgrids()) {
@@ -1689,10 +1704,12 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
           AtomicValue< uint_fast32_t > num_active_buffers(0);
           AtomicValue< uint_fast32_t > num_photon_done(0);
           start_parallel_timing_block();
+#ifdef HAVE_OPENMP
 #pragma omp parallel default(shared)
+#endif
           {
             // thread initialisation
-            const int_fast8_t thread_id = omp_get_thread_num();
+            const int_fast8_t thread_id = get_thread_index();
             PhotonBuffer local_buffers[TRAVELDIRECTION_NUMBER];
             bool local_buffer_flags[TRAVELDIRECTION_NUMBER];
             for (int_fast8_t i = 0; i < TRAVELDIRECTION_NUMBER; ++i) {
@@ -2267,7 +2284,9 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
           {
             AtomicValue< size_t > igrid(0);
             start_parallel_timing_block();
+#ifdef HAVE_OPENMP
 #pragma omp parallel default(shared)
+#endif
             while (igrid.value() <
                    grid_creator->number_of_original_subgrids()) {
               const size_t this_igrid = igrid.post_increment();
@@ -2281,7 +2300,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
                 cpucycle_tick(task_start);
 
                 task.set_type(TASKTYPE_TEMPERATURE_STATE);
-                task.start(omp_get_thread_num());
+                task.start(get_thread_index());
 
                 // correct the intensity counters for abundance factors
                 for (auto cellit = (*gridit).begin(); cellit != (*gridit).end();
@@ -2300,7 +2319,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
                                                               *gridit);
                 task.stop();
                 cpucycle_tick(task_stop);
-                active_time[omp_get_thread_num()] += task_stop - task_start;
+                active_time[get_thread_index()] += task_stop - task_start;
               }
             }
             stop_parallel_timing_block();
@@ -2322,7 +2341,9 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
         {
           AtomicValue< size_t > igrid(0);
           start_parallel_timing_block();
+#ifdef HAVE_OPENMP
 #pragma omp parallel default(shared)
+#endif
           while (igrid.value() < grid_creator->number_of_original_subgrids()) {
             const size_t this_igrid = igrid.post_increment();
             if (this_igrid < grid_creator->number_of_original_subgrids()) {
@@ -2345,7 +2366,9 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
         time_logger.start("ionizing energy update");
         AtomicValue< size_t > igrid(0);
         start_parallel_timing_block();
+#ifdef HAVE_OPENMP
 #pragma omp parallel default(shared)
+#endif
         while (igrid.value() < grid_creator->number_of_original_subgrids()) {
           const size_t this_igrid = igrid.post_increment();
           if (this_igrid < grid_creator->number_of_original_subgrids()) {
@@ -2368,7 +2391,9 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
       time_logger.start("cooling");
       AtomicValue< size_t > igrid(0);
       start_parallel_timing_block();
+#ifdef HAVE_OPENMP
 #pragma omp parallel default(shared)
+#endif
       while (igrid.value() < grid_creator->number_of_original_subgrids()) {
         const size_t this_igrid = igrid.post_increment();
         if (this_igrid < grid_creator->number_of_original_subgrids()) {
@@ -2414,7 +2439,9 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
       time_logger.start("gravity");
       AtomicValue< size_t > igrid(0);
       start_parallel_timing_block();
+#ifdef HAVE_OPENMP
 #pragma omp parallel default(shared)
+#endif
       while (igrid.value() < grid_creator->number_of_original_subgrids()) {
         const size_t this_igrid = igrid.post_increment();
         if (this_igrid < grid_creator->number_of_original_subgrids()) {
@@ -2428,7 +2455,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
             it.get_hydro_variables().set_gravitational_acceleration(a);
           }
           cpucycle_tick(task_stop);
-          active_time[omp_get_thread_num()] += task_stop - task_start;
+          active_time[get_thread_index()] += task_stop - task_start;
         }
       }
       stop_parallel_timing_block();
@@ -2447,7 +2474,9 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
       time_logger.start("grid update");
       AtomicValue< size_t > igrid(0);
       start_parallel_timing_block();
+#ifdef HAVE_OPENMP
 #pragma omp parallel default(shared)
+#endif
       while (igrid.value() < grid_creator->number_of_original_subgrids()) {
         const size_t this_igrid = igrid.post_increment();
         if (this_igrid < grid_creator->number_of_original_subgrids()) {
@@ -2456,7 +2485,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
           HydroDensitySubGrid &subgrid = *grid_creator->get_subgrid(this_igrid);
           turbulence_forcing->add_turbulent_forcing(this_igrid, subgrid);
           cpucycle_tick(task_stop);
-          active_time[omp_get_thread_num()] += task_stop - task_start;
+          active_time[get_thread_index()] += task_stop - task_start;
         }
       }
       stop_parallel_timing_block();
@@ -2483,9 +2512,11 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
     }
 
     start_parallel_timing_block();
+#ifdef HAVE_OPENMP
 #pragma omp parallel default(shared)
+#endif
     {
-      const int_fast32_t thread_id = omp_get_thread_num();
+      const int_fast32_t thread_id = get_thread_index();
       while (number_of_tasks.value() > 0) {
         size_t current_task = queues[thread_id]->get_task(*tasks);
         if (current_task == NO_TASK) {
@@ -2530,7 +2561,9 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
       time_logger.start("mask");
       AtomicValue< size_t > igrid(0);
       start_parallel_timing_block();
+#ifdef HAVE_OPENMP
 #pragma omp parallel default(shared)
+#endif
       while (igrid.value() < grid_creator->number_of_original_subgrids()) {
         const size_t this_igrid = igrid.post_increment();
         if (this_igrid < grid_creator->number_of_original_subgrids()) {
@@ -2579,7 +2612,9 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
       time_logger.start("live output");
       AtomicValue< size_t > igrid(0);
       start_parallel_timing_block();
+#ifdef HAVE_OPENMP
 #pragma omp parallel default(shared)
+#endif
       while (igrid.value() < grid_creator->number_of_original_subgrids()) {
         const size_t this_igrid = igrid.post_increment();
         if (this_igrid < grid_creator->number_of_original_subgrids()) {
@@ -2614,7 +2649,9 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
         sourcedistribution->do_stellar_feedback(current_time)) {
       AtomicValue< size_t > igrid(0);
       start_parallel_timing_block();
+#ifdef HAVE_OPENMP
 #pragma omp parallel default(shared)
+#endif
       while (igrid.value() < grid_creator->number_of_original_subgrids()) {
         const size_t this_igrid = igrid.post_increment();
         if (this_igrid < grid_creator->number_of_original_subgrids()) {
@@ -2644,7 +2681,9 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
           grid_creator->number_of_original_subgrids(), DBL_MAX);
       AtomicValue< size_t > igrid(0);
       start_parallel_timing_block();
+#ifdef HAVE_OPENMP
 #pragma omp parallel default(shared)
+#endif
       while (igrid.value() < grid_creator->number_of_original_subgrids()) {
         const size_t this_igrid = igrid.post_increment();
         if (this_igrid < grid_creator->number_of_original_subgrids()) {

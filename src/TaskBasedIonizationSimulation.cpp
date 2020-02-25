@@ -34,6 +34,7 @@
 #include "DiffuseReemissionHandlerFactory.hpp"
 #include "DistributedPhotonSource.hpp"
 #include "MemorySpace.hpp"
+#include "OpenMP.hpp"
 #include "ParameterFile.hpp"
 #include "PhotonSourceDistributionFactory.hpp"
 #include "PhotonSourceSpectrumFactory.hpp"
@@ -45,7 +46,6 @@
 #include "TrackerManager.hpp"
 
 #include <fstream>
-#include <omp.h>
 #include <sstream>
 
 /*! @brief Stop the serial time timer and start the parallel time timer. */
@@ -237,7 +237,7 @@ TaskBasedIonizationSimulation::TaskBasedIonizationSimulation(
       _simulation_box(_parameter_file), _abundances(_parameter_file, nullptr),
       _log(log) {
 
-  omp_set_num_threads(num_thread);
+  set_number_of_threads(num_thread);
 
   // install signal handlers
   OperatingSystem::install_signal_handlers(true);
@@ -596,14 +596,16 @@ void TaskBasedIonizationSimulation::run(
   {
     AtomicValue< size_t > igrid(0);
     start_parallel_timing_block();
+#ifdef HAVE_OPENMP
 #pragma omp parallel default(shared)
+#endif
     while (igrid.value() < _grid_creator->number_of_actual_subgrids()) {
       const size_t this_igrid = igrid.post_increment();
       if (this_igrid < _grid_creator->number_of_actual_subgrids()) {
         DensitySubGrid &subgrid = *_grid_creator->get_subgrid(this_igrid);
         for (int ingb = 0; ingb < TRAVELDIRECTION_NUMBER; ++ingb) {
           subgrid.set_active_buffer(ingb, NEIGHBOUR_OUTSIDE);
-          subgrid.set_owning_thread(omp_get_thread_num());
+          subgrid.set_owning_thread(get_thread_index());
         }
       }
     }
@@ -648,7 +650,9 @@ void TaskBasedIonizationSimulation::run(
     {
       AtomicValue< size_t > igrid(0);
       start_parallel_timing_block();
+#ifdef HAVE_OPENMP
 #pragma omp parallel default(shared)
+#endif
       while (igrid.value() < _grid_creator->number_of_actual_subgrids()) {
         const size_t this_igrid = igrid.post_increment();
         if (this_igrid < _grid_creator->number_of_actual_subgrids()) {
@@ -664,7 +668,9 @@ void TaskBasedIonizationSimulation::run(
     if (_reemission_handler != nullptr) {
       AtomicValue< size_t > igrid(0);
       start_parallel_timing_block();
+#ifdef HAVE_OPENMP
 #pragma omp parallel default(shared)
+#endif
       while (igrid.value() < _grid_creator->number_of_actual_subgrids()) {
         const size_t this_igrid = igrid.post_increment();
         if (this_igrid < _grid_creator->number_of_actual_subgrids()) {
@@ -748,10 +754,12 @@ void TaskBasedIonizationSimulation::run(
     AtomicValue< uint_fast32_t > num_active_buffers(0);
     AtomicValue< uint_fast32_t > num_photon_done(0);
     start_parallel_timing_block();
+#ifdef HAVE_OPENMP
 #pragma omp parallel default(shared)
+#endif
     {
       // thread initialisation
-      const int_fast8_t thread_id = omp_get_thread_num();
+      const int_fast8_t thread_id = get_thread_index();
       PhotonBuffer local_buffers[TRAVELDIRECTION_NUMBER];
       bool local_buffer_flags[TRAVELDIRECTION_NUMBER];
       for (int_fast8_t i = 0; i < TRAVELDIRECTION_NUMBER; ++i) {
@@ -1456,7 +1464,9 @@ void TaskBasedIonizationSimulation::run(
     {
       AtomicValue< size_t > igrid(0);
       start_parallel_timing_block();
+#ifdef HAVE_OPENMP
 #pragma omp parallel default(shared)
+#endif
       while (igrid.value() < _grid_creator->number_of_original_subgrids()) {
         const size_t this_igrid = igrid.post_increment();
         if (this_igrid < _grid_creator->number_of_original_subgrids()) {
@@ -1465,7 +1475,7 @@ void TaskBasedIonizationSimulation::run(
           const size_t itask = _tasks->get_free_element();
           Task &task = (*_tasks)[itask];
           task.set_type(TASKTYPE_TEMPERATURE_STATE);
-          task.start(omp_get_thread_num());
+          task.start(get_thread_index());
 
           // correct the intensity counters for abundance factors
           for (auto cellit = (*gridit).begin(); cellit != (*gridit).end();

@@ -35,6 +35,7 @@
 #include "HydroVariables.hpp"
 #include "IonizationVariables.hpp"
 #include "MPITypes.hpp"
+#include "OpenMP.hpp"
 #include "PhotonPacket.hpp"
 #include "RestartReader.hpp"
 #include "RestartWriter.hpp"
@@ -46,7 +47,6 @@
 #include <cfloat>
 #include <cmath>
 #include <iostream>
-#include <omp.h>
 #include <ostream>
 
 #ifdef HAVE_MPI
