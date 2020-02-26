@@ -32,7 +32,10 @@
 import numpy as np
 
 # for plotting
-import pylab as pl
+import matplotlib
+
+matplotlib.use("Agg")
+import matplotlib.pyplot as pl
 
 # load the binary file
 image = np.fromfile("galaxy_image.dat", dtype=np.float64)

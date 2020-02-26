@@ -36,7 +36,7 @@ import h5py
 import matplotlib
 
 matplotlib.use("Agg")
-import pylab as pl
+import matplotlib.pyplot as pl
 
 # load the lambert W function, as the analytic solution uses it
 import scipy.special.lambertw as lambertw
