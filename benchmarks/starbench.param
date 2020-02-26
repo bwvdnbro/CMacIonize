@@ -1,12 +1,3 @@
-# set the abundances of all elements other than hydrogen to zero
-Abundances:
-  carbon: 0.
-  helium: 0.
-  neon: 0.
-  nitrogen: 0.
-  oxygen: 0.
-  sulphur: 0.
-
 # set the photoionization cross section for neutral hydrogen and disable the
 # cross sections for all other ions
 CrossSections:
@@ -58,10 +49,6 @@ HydroIntegrator:
   # we only consider radiative heating, no cooling
   radiative heating: true
   radiative cooling: false
-
-# disable the diffuse field
-PhotonSource:
-  diffuse field: false
 
 # set up the source
 PhotonSourceDistribution:

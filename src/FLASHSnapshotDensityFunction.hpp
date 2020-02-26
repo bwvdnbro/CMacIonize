@@ -40,7 +40,7 @@ class ParameterFile;
 class FLASHSnapshotDensityFunction : public DensityFunction {
 private:
   /*! @brief AMRGrid containing the snapshot file contents. */
-  AMRGrid< DensityValues > _grid;
+  AMRGrid< DensityValues > *_grid;
 
   /*! @brief Flag indicating if cosmic ray heating variables should be read or
    *  not. */
@@ -54,6 +54,8 @@ public:
                                bool read_cosmic_ray_heating = false,
                                Log *log = nullptr);
   FLASHSnapshotDensityFunction(ParameterFile &params, Log *log = nullptr);
+
+  virtual void free();
 
   virtual DensityValues operator()(const Cell &cell) const;
 };

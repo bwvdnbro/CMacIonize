@@ -62,6 +62,23 @@ public:
   }
 
   /**
+   * @brief Get the value for the given key, without registering that it was
+   * accessed.
+   *
+   * This function should only be used to access values that are deprecated; it
+   * allows to retrieve them without marking them as valid parameters.
+   *
+   * @param key Key to read.
+   * @param default_value Default value to use if the key is not found.
+   * @return Value of the parameter.
+   */
+  template < typename _datatype_ >
+  inline _datatype_ steal_value(const std::string key,
+                                const _datatype_ default_value) {
+    return _yaml_dictionary.steal_value(key, default_value);
+  }
+
+  /**
    * @brief Add the given value and key to the internal dictionary.
    *
    * If the key already exists, the existing value is replaced.

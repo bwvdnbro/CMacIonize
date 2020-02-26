@@ -26,6 +26,7 @@
  */
 
 #include "EmissivityCalculationSimulation.hpp"
+#include "AbundanceModelFactory.hpp"
 #include "Abundances.hpp"
 #include "CommandLineParser.hpp"
 #include "EmissivityCalculator.hpp"
@@ -149,7 +150,18 @@ int EmissivityCalculationSimulation::do_simulation(CommandLineParser &parser,
     log->write_status("Setting up emissivity calculator...");
   }
 
-  Abundances abundances(simulation_parameters);
+  // make sure we read the abundances in the right way:
+  //  - old parameter file: directly
+  //  - new paramter file: using the AbundanceModel
+  Abundances abundances;
+  if (simulation_parameters.has_value("Abundances:helium")) {
+    abundances = Abundances(simulation_parameters);
+  } else {
+    const AbundanceModel *abundance_model =
+        AbundanceModelFactory::generate(simulation_parameters, log);
+    abundances = abundance_model->get_abundances();
+    delete abundance_model;
+  }
   EmissivityCalculator calculator(abundances);
 
   if (log) {

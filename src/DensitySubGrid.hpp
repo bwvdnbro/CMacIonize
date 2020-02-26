@@ -559,12 +559,23 @@ protected:
                                   const double distance,
                                   const PhotonPacket &photon) const {
 #ifdef HAS_HELIUM
+#ifdef VARIABLE_ABUNDANCES
+    return distance * _ionization_variables[active_cell].get_number_density() *
+           (photon.get_photoionization_cross_section(ION_H_n) *
+                _ionization_variables[active_cell].get_ionic_fraction(ION_H_n) +
+            _ionization_variables[active_cell].get_abundances().get_abundance(
+                ELEMENT_He) *
+                photon.get_photoionization_cross_section(ION_He_n) *
+                _ionization_variables[active_cell].get_ionic_fraction(
+                    ION_He_n));
+#else
     return distance * _ionization_variables[active_cell].get_number_density() *
            (photon.get_photoionization_cross_section(ION_H_n) *
                 _ionization_variables[active_cell].get_ionic_fraction(ION_H_n) +
             photon.get_photoionization_cross_section(ION_He_n) *
                 _ionization_variables[active_cell].get_ionic_fraction(
                     ION_He_n));
+#endif
 #else
     return distance * _ionization_variables[active_cell].get_number_density() *
            photon.get_photoionization_cross_section(ION_H_n) *

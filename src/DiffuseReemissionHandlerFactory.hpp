@@ -59,6 +59,31 @@ public:
   generate(const CrossSections &cross_sections, ParameterFile &params,
            Log *log = nullptr) {
 
+    if (!params.has_value("DiffuseReemissionHandler:type") &&
+        params.has_value("PhotonSource:diffuse field")) {
+      if (log) {
+        log->write_warning(
+            "Could not find DiffuseReemissionHandler parameter block, but "
+            "detected deprecated PhotonSource parameter block.");
+        log->write_warning("\"PhotonSource:diffuse field\" was replaced by "
+                           "\"DiffuseReemissionHandler\".");
+        log->write_warning("Automatically converting to new parameters.");
+      }
+      const bool has_diffuse_field =
+          params.steal_value< bool >("PhotonSource:diffuse field", false);
+      if (has_diffuse_field) {
+        params.add_value("DiffuseReemissionHandler:type", "Physical");
+      } else {
+        params.add_value("DiffuseReemissionHandler:type", "None");
+      }
+      // this only works because TaskBasedIonizationSimulation parameters
+      // are read before this function is called
+      if (params.has_value("TaskBasedIonizationSimulation:random seed")) {
+        params.add_value("TaskBasedIonizationSimulation:diffuse field",
+                         Utilities::to_string(has_diffuse_field));
+      }
+    }
+
     const std::string type = params.get_value< std::string >(
         "DiffuseReemissionHandler:type", "None");
 
@@ -70,7 +95,7 @@ public:
       return new FixedValueDiffuseReemissionHandler(params);
     } else if (type == "Physical") {
       return new PhysicalDiffuseReemissionHandler(cross_sections);
-    } else if ("None") {
+    } else if (type == "None") {
       return nullptr;
     } else {
       cmac_error("Unknown DiffuseReemissionHandler type: \"%s\"!",

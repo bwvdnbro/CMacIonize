@@ -83,13 +83,13 @@ TemperatureCalculator::TemperatureCalculator(
       _do_temperature_computation(do_temperature_computation),
       _epsilon_convergence(epsilon_convergence),
       _maximum_number_of_iterations(maximum_number_of_iterations),
-      _minimum_iteration_number(minimum_iteration_number) {
+      _minimum_iteration_number(minimum_iteration_number), _log(log) {
 
-  if (log) {
-    log->write_status("Set up TemperatureCalculator with total luminosity ",
-                      _luminosity, " s^-1, PAH factor ", _pahfac,
-                      ", and cosmic ray factor ", _crfac, " (limit: ", _crlim,
-                      ", scale height: ", _crscale, " m).");
+  if (_log) {
+    _log->write_status("Set up TemperatureCalculator with total luminosity ",
+                       _luminosity, " s^-1, PAH factor ", _pahfac,
+                       ", and cosmic ray factor ", _crfac, " (limit: ", _crlim,
+                       ", scale height: ", _crscale, " m).");
   }
 }
 
@@ -106,7 +106,7 @@ TemperatureCalculator::TemperatureCalculator(
  *  - minimum number of iterations: Minimum number of iterations of the
  *    photoionization algorithm to perform before computing the temperature
  *    (default: 3)
- *  - PAH heating factor: Strength of PAH heating (default: 1.)
+ *  - PAH heating factor: Strength of PAH heating (default: 0.)
  *  - cosmic ray heating factor: Strength of cosmic ray heating (default: 0.)
  *  - cosmic ray heating limit: Neutral fraction limit below which cosmic ray
  *    heating is applied (default: 0.75)
@@ -141,7 +141,7 @@ TemperatureCalculator::TemperatureCalculator(
           params.get_value< uint_fast32_t >(
               "TemperatureCalculator:maximum number of iterations", 100),
           params.get_value< double >("TemperatureCalculator:PAH heating factor",
-                                     1.),
+                                     0.),
           params.get_value< double >(
               "TemperatureCalculator:cosmic ray heating factor", 0.),
           params.get_value< double >(
@@ -184,7 +184,7 @@ TemperatureCalculator::TemperatureCalculator(
  * @param cell_midpoint Midpoint of the cell for which we compute the ionization
  * equilibrium and cooling and heating.
  * @param j Mean ionizing intensity integrals (in s^-1).
- * @param abundances Abundances.
+ * @param input_abundances Abundances.
  * @param h Heating integrals (in J s^-1).
  * @param pahfac Normalization factor for PAH heating.
  * @param crfac Normalization factor for cosmic ray heating.
@@ -200,7 +200,7 @@ void TemperatureCalculator::compute_cooling_and_heating_balance(
     double &h0, double &he0, double &gain, double &loss, double T,
     IonizationVariables &ionization_variables,
     const CoordinateVector<> cell_midpoint, const double j[NUMBER_OF_IONNAMES],
-    const Abundances &abundances, const double h[NUMBER_OF_HEATINGTERMS],
+    const Abundances &input_abundances, const double h[NUMBER_OF_HEATINGTERMS],
     double pahfac, double crfac, double crscale,
     const LineCoolingData &line_cooling_data,
     const RecombinationRates &recombination_rates,
@@ -241,6 +241,14 @@ void TemperatureCalculator::compute_cooling_and_heating_balance(
   const double T4 = T * 1.e-4;
   const double sqrtT = std::sqrt(T);
   const double logT = std::log(T);
+
+#ifndef HAVE_HYDROGEN_ONLY
+#ifdef VARIABLE_ABUNDANCES
+  const Abundances &abundances = ionization_variables.get_abundances();
+#else
+  const Abundances &abundances = input_abundances;
+#endif
+#endif
 
 #ifdef HAS_HELIUM
   // helium abundance. Used to scale the helium number density.
@@ -625,7 +633,12 @@ void TemperatureCalculator::calculate_temperature(
 #endif
     const double nH = ionization_variables.get_number_density();
 #ifdef HAS_HELIUM
+#ifdef VARIABLE_ABUNDANCES
+    const double AHe =
+        ionization_variables.get_abundances().get_abundance(ELEMENT_He);
+#else
     const double AHe = _abundances.get_abundance(ELEMENT_He);
+#endif
 #else
     const double AHe = 0.;
 #endif
@@ -799,12 +812,12 @@ void TemperatureCalculator::calculate_temperature(
       loss0 = 1.;
     }
   }
-  if (niter == _maximum_number_of_iterations) {
-    cmac_warning("Maximum number of iterations (%" PRIuFAST32
-                 ") reached (temperature: %g, "
-                 "relative difference cooling/heating: %g, aim: %g)!",
-                 niter, T0, std::abs(loss0 - gain0) / gain0,
-                 _epsilon_convergence);
+  if (_log != nullptr && niter == _maximum_number_of_iterations) {
+    _log->write_info(
+        "Maximum number of iterations (", niter, ") reached (temperature: ", T0,
+        ","
+        "relative difference cooling/heating: ",
+        std::abs(loss0 - gain0) / gain0, ", aim: ", _epsilon_convergence, ")!");
   }
 
   // cap the temperature at 30,000 K, since helium charge transfer rates are

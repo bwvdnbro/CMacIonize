@@ -32,6 +32,10 @@
 #include "RestartWriter.hpp"
 #include "Tracker.hpp"
 
+#ifdef VARIABLE_ABUNDANCES
+#include "Abundances.hpp"
+#endif
+
 #ifdef USE_LOCKFREE
 #include "Atomic.hpp"
 #endif
@@ -106,6 +110,10 @@ private:
   /*! @brief Cosmic ray heating factor (in kg m A^-1 s^-4). */
   double _cosmic_ray_factor;
 
+#ifdef VARIABLE_ABUNDANCES
+  Abundances _abundances;
+#endif
+
   /*! @brief (Optional) tracker for this cell. */
   Tracker *_tracker;
 
@@ -146,6 +154,9 @@ public:
     _number_density = other._number_density;
     _temperature = other._temperature;
     _cosmic_ray_factor = other._cosmic_ray_factor;
+#ifdef VARIABLE_ABUNDANCES
+    _abundances = other._abundances;
+#endif
 
     // ionic variables
     for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
@@ -458,6 +469,22 @@ public:
    * @return Tracker for this cell.
    */
   inline Tracker *get_tracker() { return _tracker; }
+
+#ifdef VARIABLE_ABUNDANCES
+  /**
+   * @brief Access the abundances for this cell.
+   *
+   * @return Reference to the cell abundances.
+   */
+  inline Abundances &get_abundances() { return _abundances; }
+
+  /**
+   * @brief Read-only access to the abundances for this cell.
+   *
+   * @return Reference to the cell abundances.
+   */
+  inline const Abundances &get_abundances() const { return _abundances; }
+#endif
 };
 
 #endif // IONIZATIONVARIABLES_HPP

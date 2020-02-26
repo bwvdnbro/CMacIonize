@@ -25,6 +25,7 @@
  */
 
 #include "IonizationSimulation.hpp"
+#include "AbundanceModelFactory.hpp"
 #include "ChargeTransferRates.hpp"
 #include "ContinuousPhotonSourceFactory.hpp"
 #include "CrossSectionsFactory.hpp"
@@ -116,7 +117,8 @@ IonizationSimulation::IonizationSimulation(const bool write_output,
       _number_of_photons_init(_parameter_file.get_value< uint_fast64_t >(
           "IonizationSimulation:number of photons first loop",
           _number_of_photons)),
-      _abundances(_parameter_file, _log) {
+      _abundance_model(AbundanceModelFactory::generate(_parameter_file, log)),
+      _abundances(_abundance_model->get_abundances()) {
 
   function_start_timers();
 
@@ -267,6 +269,12 @@ void IonizationSimulation::initialize(DensityFunction *density_function) {
   start_parallel_timing_block();
   _density_grid->initialize(block, *density_function, &_time_log);
   stop_parallel_timing_block();
+
+#ifdef VARIABLE_ABUNDANCES
+  for (auto it = _density_grid->begin(); it != _density_grid->end(); ++it) {
+    it.get_ionization_variables().get_abundances().set_abundances(_abundances);
+  }
+#endif
 
   // check that the trackers can be sensibly placed within the grid
   if (_trackers != nullptr) {
@@ -724,4 +732,6 @@ IonizationSimulation::~IonizationSimulation() {
   delete _recombination_rates;
 
   delete _trackers;
+
+  delete _abundance_model;
 }

@@ -25,6 +25,7 @@
  */
 
 #include "TaskBasedIonizationSimulation.hpp"
+#include "AbundanceModelFactory.hpp"
 #include "ContinuousPhotonSourceFactory.hpp"
 #include "CrossSectionsFactory.hpp"
 #include "DensityFunctionFactory.hpp"
@@ -198,6 +199,94 @@ TaskBasedIonizationSimulation::get_task(const int_fast8_t thread_id) {
 }
 
 /**
+ * @brief Output diagnostic information about the task execution (if activated).
+ *
+ * @param verbose Is verbose output activated?
+ * @param log Log to write logging info to.
+ * @param thread_id Thread ID (only thread 0 writes diagnostic info).
+ * @param verbose_timer Timer used to regulate diagnostic output (output is
+ * written every minute).
+ * @param num_empty Atomic counter for the number of inactive subgrid buffers.
+ * @param num_empty_target Target number of inactive subgrid buffers.
+ * @param num_active_buffers Number of active buffers not related to any
+ * subgrid.
+ * @param num_photon_done Total number of photon packets that has been
+ * processed.
+ * @param num_photon_target Target number of photon packets to process.
+ * @param verbose_last_num_empty Number of empty photon buffers last time
+ * around (to detect if we are stuck).
+ * @param verbose_last_num_active_buffers Number of active buffers last time
+ * around (to detect if we are stuck).
+ * @param verbose_last_num_photon_done Number of processed photon packets last
+ * time around (to detect if we are stuck).
+ * @param shared_queue Shared queue (to output its statistics).
+ * @param queues Thread queues (to output their statistics).
+ * @param tasks Tasks (to output the unfinished ones).
+ * @param grid_creator Subgrids (to access their photon buffers).
+ */
+inline void task_status(const bool verbose, Log *log,
+                        const int_fast32_t thread_id, Timer &verbose_timer,
+                        AtomicValue< uint_fast32_t > &num_empty,
+                        const uint_fast32_t num_empty_target,
+                        AtomicValue< uint_fast32_t > &num_active_buffers,
+                        AtomicValue< uint_fast32_t > &num_photon_done,
+                        const uint_fast32_t num_photon_target,
+                        uint_fast32_t &verbose_last_num_empty,
+                        uint_fast32_t &verbose_last_num_active_buffers,
+                        uint_fast32_t &verbose_last_num_photon_done,
+                        TaskQueue &shared_queue,
+                        std::vector< TaskQueue * > &queues,
+                        ThreadSafeVector< Task > &tasks,
+                        DensitySubGridCreator< DensitySubGrid > &grid_creator) {
+
+  if (verbose && log != nullptr && thread_id == 0) {
+    if (verbose_timer.interval() > 60.) {
+      const uint_fast32_t current_num_empty = num_empty.value();
+      const uint_fast32_t current_num_active_buffers =
+          num_active_buffers.value();
+      const uint_fast32_t current_num_photon_done = num_photon_done.value();
+      log->write_info("num_empty: ", current_num_empty, " (", num_empty_target,
+                      "), num_active_buffers: ", current_num_active_buffers,
+                      ", num_photon_done: ", current_num_photon_done, " (",
+                      num_photon_target, ")");
+      if (current_num_empty == verbose_last_num_empty &&
+          current_num_active_buffers == verbose_last_num_active_buffers &&
+          current_num_photon_done == verbose_last_num_photon_done) {
+        // This is curious. We might be deadlocked. Output additional
+        // information.
+        log->write_info("Shared queue size: ", shared_queue.size());
+        log->write_info("Thread queue sizes:");
+        for (uint_fast32_t ithread = 0; ithread < queues.size(); ++ithread) {
+          log->write_info("queue[", ithread, "]: ", queues[ithread]->size());
+        }
+        const size_t current_num_tasks = tasks.get_number_of_active_elements();
+        log->write_info("Number of unfinished tasks: ", current_num_tasks);
+        Task **current_tasks = new Task *[current_num_tasks];
+        const size_t number_of_tasks_retrieved =
+            tasks.get_active_elements(current_num_tasks, current_tasks);
+        for (size_t itask = 0; itask < number_of_tasks_retrieved; ++itask) {
+          log->write_info("task[", itask,
+                          "]: ", current_tasks[itask]->get_type());
+        }
+        delete[] current_tasks;
+        log->write_info("Subgrid buffers:");
+        for (auto gridit = grid_creator.begin();
+             gridit != grid_creator.all_end(); ++gridit) {
+          DensitySubGrid &this_subgrid = *gridit;
+          log->write_info("subgrid[", gridit.get_index(),
+                          "]: ", this_subgrid.get_largest_buffer_size());
+        }
+      }
+      verbose_last_num_empty = current_num_empty;
+      verbose_last_num_active_buffers = current_num_active_buffers;
+      verbose_last_num_photon_done = current_num_photon_done;
+      // reset the timer
+      verbose_timer.start();
+    }
+  }
+}
+
+/**
  * @brief Constructor.
  *
  * This method will read the following parameters from the parameter file:
@@ -222,11 +311,16 @@ TaskBasedIonizationSimulation::get_task(const int_fast8_t thread_id) {
  *
  * @param num_thread Number of shared memory parallel threads to use.
  * @param parameterfile_name Name of the parameter file to use.
+ * @param task_plot Output task plot information?
+ * @param verbose Output detailed diagnostic output to the standard output?
+ * @param output_initial_snapshot Output a snapshot before the initial
+ * iteration?
  * @param log Log to write logging info to.
  */
 TaskBasedIonizationSimulation::TaskBasedIonizationSimulation(
     const int_fast32_t num_thread, const std::string parameterfile_name,
-    Log *log)
+    const bool task_plot, const bool verbose,
+    const bool output_initial_snapshot, Log *log)
     : _parameter_file(parameterfile_name),
       _number_of_iterations(_parameter_file.get_value< uint_fast32_t >(
           "TaskBasedIonizationSimulation:number of iterations", 10)),
@@ -234,8 +328,11 @@ TaskBasedIonizationSimulation::TaskBasedIonizationSimulation(
           "TaskBasedIonizationSimulation:number of photons", 1e6)),
       _source_copy_level(_parameter_file.get_value< uint_fast32_t >(
           "TaskBasedIonizationSimulation:source copy level", 4)),
-      _simulation_box(_parameter_file), _abundances(_parameter_file, nullptr),
-      _log(log) {
+      _simulation_box(_parameter_file),
+      _abundance_model(AbundanceModelFactory::generate(_parameter_file, log)),
+      _abundances(_abundance_model->get_abundances()), _log(log),
+      _task_plot(task_plot), _verbose(verbose),
+      _output_initial_snapshot(output_initial_snapshot) {
 
   set_number_of_threads(num_thread);
 
@@ -342,8 +439,10 @@ TaskBasedIonizationSimulation::TaskBasedIonizationSimulation(
       _total_luminosity, _abundances, _line_cooling_data, *_recombination_rates,
       _charge_transfer_rates, _parameter_file, _log);
 
+  // the second condition is necessary to deal with old parameter files
   if (_parameter_file.get_value< bool >(
-          "TaskBasedIonizationSimulation:diffuse field", false)) {
+          "TaskBasedIonizationSimulation:diffuse field", false) ||
+      _parameter_file.has_value("PhotonSource:diffuse field")) {
     _reemission_handler = DiffuseReemissionHandlerFactory::generate(
         *_cross_sections, _parameter_file, _log);
   } else {
@@ -397,7 +496,7 @@ TaskBasedIonizationSimulation::~TaskBasedIonizationSimulation() {
                        Utilities::human_readable_time(_worktimer.value()), ".");
   }
 
-  {
+  if (_task_plot) {
     std::ofstream pfile("program_time.txt");
     pfile << "# rank\tstart\tstop\ttime\n";
     pfile << "0\t" << _program_start << "\t" << program_end << "\t"
@@ -434,6 +533,7 @@ TaskBasedIonizationSimulation::~TaskBasedIonizationSimulation() {
   delete _recombination_rates;
   delete _reemission_handler;
   delete _trackers;
+  delete _abundance_model;
 }
 
 /**
@@ -461,6 +561,17 @@ void TaskBasedIonizationSimulation::initialize(
   start_parallel_timing_block();
   _grid_creator->initialize(*density_function);
   stop_parallel_timing_block();
+
+#ifdef VARIABLE_ABUNDANCES
+  for (auto gridit = _grid_creator->begin();
+       gridit != _grid_creator->original_end(); ++gridit) {
+    for (auto cellit = (*gridit).begin(); cellit != (*gridit).end(); ++cellit) {
+      cellit.get_ionization_variables().get_abundances().set_abundances(
+          _abundances);
+    }
+  }
+#endif
+
   _memory_log.finalize_entry();
   _time_log.end("grid");
 
@@ -484,7 +595,7 @@ void TaskBasedIonizationSimulation::run(
 
   // write the initial state of the grid to an output file (only do this if
   // we are not in library mode)
-  if (_density_grid_writer) {
+  if (_density_grid_writer && _output_initial_snapshot) {
     _time_log.start("snapshot");
     _density_grid_writer->write(*_grid_creator, 0, _parameter_file);
     _time_log.end("snapshot");
@@ -753,6 +864,11 @@ void TaskBasedIonizationSimulation::run(
     AtomicValue< uint_fast32_t > num_empty(num_empty_target);
     AtomicValue< uint_fast32_t > num_active_buffers(0);
     AtomicValue< uint_fast32_t > num_photon_done(0);
+    Timer verbose_timer;
+    verbose_timer.start();
+    uint_fast32_t verbose_last_num_empty = 0;
+    uint_fast32_t verbose_last_num_active_buffers = 0;
+    uint_fast32_t verbose_last_num_photon_done = 0;
     start_parallel_timing_block();
 #ifdef HAVE_OPENMP
 #pragma omp parallel default(shared)
@@ -928,9 +1044,11 @@ void TaskBasedIonizationSimulation::run(
               for (int_fast32_t ion = 0; ion < NUMBER_OF_IONNAMES; ++ion) {
                 double sigma =
                     _cross_sections->get_cross_section(ion, frequency);
+#ifndef VARIABLE_ABUNDANCES
                 if (ion != ION_H_n) {
                   sigma *= _abundances.get_abundance(get_element(ion));
                 }
+#endif
                 photon.set_photoionization_cross_section(ion, sigma);
               }
             }
@@ -1002,9 +1120,11 @@ void TaskBasedIonizationSimulation::run(
               for (int_fast32_t ion = 0; ion < NUMBER_OF_IONNAMES; ++ion) {
                 double sigma =
                     _cross_sections->get_cross_section(ion, frequency);
+#ifndef VARIABLE_ABUNDANCES
                 if (ion != ION_H_n) {
                   sigma *= _abundances.get_abundance(get_element(ion));
                 }
+#endif
                 photon.set_photoionization_cross_section(ion, sigma);
               }
 
@@ -1153,7 +1273,14 @@ void TaskBasedIonizationSimulation::run(
                   subgrid.get_cell(old_photon.get_position())
                       .get_ionization_variables();
 #ifdef HAS_HELIUM
-              const double AHe = _abundances.get_abundance(ELEMENT_He);
+#ifdef VARIABLE_ABUNDANCES
+              const double AHe =
+                  ionization_variables.get_abundances().get_abundance(
+                      ELEMENT_He);
+#else
+              // the helium abundance is already part of the cross section
+              const double AHe = 1.;
+#endif
 #else
               const double AHe = 0.;
 #endif
@@ -1171,9 +1298,11 @@ void TaskBasedIonizationSimulation::run(
                 for (int_fast32_t ion = 0; ion < NUMBER_OF_IONNAMES; ++ion) {
                   double sigma =
                       _cross_sections->get_cross_section(ion, new_frequency);
+#ifndef VARIABLE_ABUNDANCES
                   if (ion != ION_H_n) {
                     sigma *= _abundances.get_abundance(get_element(ion));
                   }
+#endif
                   new_photon.set_photoionization_cross_section(ion, sigma);
                 }
 
@@ -1210,16 +1339,26 @@ void TaskBasedIonizationSimulation::run(
             num_photon_done_now -= buffer.size();
             num_photon_done.pre_add(num_photon_done_now);
 
-            const size_t task_index = _tasks->get_free_element();
-            Task &new_task = (*_tasks)[task_index];
-            new_task.set_type(TASKTYPE_PHOTON_TRAVERSAL);
-            new_task.set_subgrid(task.get_subgrid());
-            new_task.set_buffer(current_buffer_index);
-            new_task.set_dependency(subgrid.get_dependency());
+            if (index > 0) {
+              // there are still photon packets left: generate a traversal
+              // task
+              const size_t task_index = _tasks->get_free_element();
+              Task &new_task = (*_tasks)[task_index];
+              new_task.set_type(TASKTYPE_PHOTON_TRAVERSAL);
+              new_task.set_subgrid(task.get_subgrid());
+              new_task.set_buffer(current_buffer_index);
+              new_task.set_dependency(subgrid.get_dependency());
 
-            queues_to_add[num_tasks_to_add] = subgrid.get_owning_thread();
-            tasks_to_add[num_tasks_to_add] = task_index;
-            ++num_tasks_to_add;
+              queues_to_add[num_tasks_to_add] = subgrid.get_owning_thread();
+              tasks_to_add[num_tasks_to_add] = task_index;
+              ++num_tasks_to_add;
+            } else {
+              // delete the original buffer, as we are done with it
+              _buffers->free_buffer(current_buffer_index);
+              cmac_assert_message(num_active_buffers.value() > 0,
+                                  "Number of active buffers < 0!");
+              num_active_buffers.pre_decrement();
+            }
 
             task.stop();
 
@@ -1423,6 +1562,11 @@ void TaskBasedIonizationSimulation::run(
           }
           task.unlock_dependency();
 
+          // we are done with the task, clean up (if we don't output it)
+          if (!_task_plot) {
+            _tasks->free_element(current_index);
+          }
+
           for (uint_fast32_t itask = 0; itask < num_tasks_to_add; ++itask) {
             if (queues_to_add[itask] < 0) {
               // general queue
@@ -1432,8 +1576,25 @@ void TaskBasedIonizationSimulation::run(
             }
           }
 
+          // we need to call task_status twice: once inside the task loop
+          // (for when thread 0 is happily working) and once outside (for
+          // when thread 0 is idling)
+          task_status(_verbose, _log, thread_id, verbose_timer, num_empty,
+                      num_empty_target, num_active_buffers, num_photon_done,
+                      _number_of_photons, verbose_last_num_empty,
+                      verbose_last_num_active_buffers,
+                      verbose_last_num_photon_done, *_shared_queue, _queues,
+                      *_tasks, *_grid_creator);
+
           current_index = get_task(thread_id);
         }
+
+        task_status(_verbose, _log, thread_id, verbose_timer, num_empty,
+                    num_empty_target, num_active_buffers, num_photon_done,
+                    _number_of_photons, verbose_last_num_empty,
+                    verbose_last_num_active_buffers,
+                    verbose_last_num_photon_done, *_shared_queue, _queues,
+                    *_tasks, *_grid_creator);
 
 #ifdef OUTPUT_STOP_CONDITION
         cmac_warning("num_empty: %" PRIuFAST32 " (%" PRIuFAST32
@@ -1460,6 +1621,10 @@ void TaskBasedIonizationSimulation::run(
     stop_parallel_timing_block();
     _time_log.end("update copies");
 
+    if (_log != nullptr) {
+      _log->write_info("Done shooting photons.");
+      _log->write_info("Starting temperature calculation...");
+    }
     _time_log.start("temperature calculation");
     {
       AtomicValue< size_t > igrid(0);
@@ -1477,6 +1642,7 @@ void TaskBasedIonizationSimulation::run(
           task.set_type(TASKTYPE_TEMPERATURE_STATE);
           task.start(get_thread_index());
 
+#ifndef VARIABLE_ABUNDANCES
           // correct the intensity counters for abundance factors
           for (auto cellit = (*gridit).begin(); cellit != (*gridit).end();
                ++cellit) {
@@ -1495,9 +1661,15 @@ void TaskBasedIonizationSimulation::run(
                                  _abundances.get_abundance(ELEMENT_He));
 #endif
           }
+#endif
           _temperature_calculator->calculate_temperature(
               iloop, _number_of_photons, *gridit);
           task.stop();
+
+          // clean up (if we don't need the task any more)
+          if (!_task_plot) {
+            _tasks->free_element(itask);
+          }
         }
       }
       stop_parallel_timing_block();
@@ -1518,12 +1690,14 @@ void TaskBasedIonizationSimulation::run(
     stop_parallel_timing_block();
     _time_log.end("copy update");
 
-    _time_log.start("task output");
-    cpucycle_tick(iteration_end);
-    _worktimer.stop();
-    output_tasks(iloop, *_tasks, iteration_start, iteration_end);
-    output_queues(iloop, _queues, *_shared_queue);
-    _time_log.end("task output");
+    if (_task_plot) {
+      _time_log.start("task output");
+      cpucycle_tick(iteration_end);
+      _worktimer.stop();
+      output_tasks(iloop, *_tasks, iteration_start, iteration_end);
+      output_queues(iloop, _queues, *_shared_queue);
+      _time_log.end("task output");
+    }
 
     _time_log.start("task reset");
     _tasks->clear();

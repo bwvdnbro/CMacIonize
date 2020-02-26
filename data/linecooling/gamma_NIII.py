@@ -30,78 +30,149 @@
 
 ## load modules
 import numpy as np
+
 # for curve_fit
 import scipy.optimize as opt
+
 # for plotting (using a backend that does not require a graphics environment)
 import matplotlib
+
 matplotlib.use("Agg")
 import pylab as pl
+
 # for the fitting curve
-from fitting_curve import fitting_curve, print_fit_variables, \
-                          initialize_data_values, append_data_values, \
-                          print_data_values, get_code, jacobian_fitting_curve, \
-                          round_parameters
+from fitting_curve import (
+    fitting_curve,
+    print_fit_variables,
+    initialize_data_values,
+    append_data_values,
+    print_data_values,
+    get_code,
+    jacobian_fitting_curve,
+    round_parameters,
+)
 
 # main function: computes fits to the data of Blum & Pradhan (1992) and plots
 # the data and fits for visual comparison
 # the fitted curve coefficients are printed to the stdout
 if __name__ == "__main__":
-  # data from Blum & Pradhan (1992), table 3, 1 to 2 transition
-  T = np.array([1000., 2000., 3000., 4000., 5000., 6000., 7000., 8000., 9000.,
-                10000., 11000., 12000., 13000., 14000., 15000., 16000., 18000.,
-                20000., 22000., 24000., 26000., 28000., 30000., 32000., 34000.,
-                36000., 38000., 40000.])
-  data = np.array([1.2896, 1.2857, 1.2871, 1.2976, 1.3163, 1.3403, 1.3667,
-                   1.3937, 1.42, 1.4454, 1.4694, 1.4922, 1.5139, 1.5345, 1.5541,
-                   1.5729, 1.6086, 1.6421, 1.674, 1.7045, 1.7339, 1.7622,
-                   1.7895, 1.8156, 1.8407, 1.8646, 1.8874, 1.909])
+    # data from Blum & Pradhan (1992), table 3, 1 to 2 transition
+    T = np.array(
+        [
+            1000.0,
+            2000.0,
+            3000.0,
+            4000.0,
+            5000.0,
+            6000.0,
+            7000.0,
+            8000.0,
+            9000.0,
+            10000.0,
+            11000.0,
+            12000.0,
+            13000.0,
+            14000.0,
+            15000.0,
+            16000.0,
+            18000.0,
+            20000.0,
+            22000.0,
+            24000.0,
+            26000.0,
+            28000.0,
+            30000.0,
+            32000.0,
+            34000.0,
+            36000.0,
+            38000.0,
+            40000.0,
+        ]
+    )
+    data = np.array(
+        [
+            1.2896,
+            1.2857,
+            1.2871,
+            1.2976,
+            1.3163,
+            1.3403,
+            1.3667,
+            1.3937,
+            1.42,
+            1.4454,
+            1.4694,
+            1.4922,
+            1.5139,
+            1.5345,
+            1.5541,
+            1.5729,
+            1.6086,
+            1.6421,
+            1.674,
+            1.7045,
+            1.7339,
+            1.7622,
+            1.7895,
+            1.8156,
+            1.8407,
+            1.8646,
+            1.8874,
+            1.909,
+        ]
+    )
 
-  # initialize the strings for code and value output
-  code = ""
-  data_values = initialize_data_values()
-  # do the curve fitting
-  imin = 0
-  imax = len(T)
-  # fit the curve
-  A,_ = opt.curve_fit(fitting_curve, T[imin:imax], data[imin:imax],
-                      maxfev = 100000,
-                      p0 = (0., 1., 10., 1., 0.01, 0.01, 0.),
-                      jac = jacobian_fitting_curve)
-  A = round_parameters(*A)
-  # compute the xi2 difference between the data values (in the fitting
-  # interval) and the curve
-  xi2 = sum( (data[imin:imax] - fitting_curve(T[imin:imax], *A))**2 )
-  # output some info
-  print "Transition: 0 to 1"
-  print_fit_variables(*A)
-  print "convergence:", xi2
-  print "validity: [", T[imin], ",", T[imax-1], "]"
-  # write the fitting code for this transition
-  code += get_code("NIII", "REMOVE_THIS_BRACKET", *A)
-  # add the values to the list strings
-  append_data_values(data_values, *A)
+    # initialize the strings for code and value output
+    code = ""
+    data_values = initialize_data_values()
+    # do the curve fitting
+    imin = 0
+    imax = len(T)
+    # fit the curve
+    A, _ = opt.curve_fit(
+        fitting_curve,
+        T[imin:imax],
+        data[imin:imax],
+        maxfev=100000,
+        p0=(0.0, 1.0, 10.0, 1.0, 0.01, 0.01, 0.0),
+        jac=jacobian_fitting_curve,
+    )
+    A = round_parameters(*A)
+    # compute the xi2 difference between the data values (in the fitting
+    # interval) and the curve
+    xi2 = sum((data[imin:imax] - fitting_curve(T[imin:imax], *A)) ** 2)
+    # output some info
+    print("Transition: 0 to 1")
+    print_fit_variables(*A)
+    print("convergence:", xi2)
+    print("validity: [", T[imin], ",", T[imax - 1], "]")
+    # write the fitting code for this transition
+    code += get_code("NIII", "REMOVE_THIS_BRACKET", *A)
+    # add the values to the list strings
+    append_data_values(data_values, *A)
 
-  # plot the data and fit for visual comparison
-  Trange = np.logspace(3., 5., 100)
-  pl.plot(T, data, "k.")
-  pl.plot(Trange, fitting_curve(Trange, *A), "r-")
-  pl.savefig("tmp/NIII_{key}.png".format(key = "G0t1"))
-  pl.close()
+    # plot the data and fit for visual comparison
+    Trange = np.logspace(3.0, 5.0, 100)
+    pl.plot(T, data, "k.")
+    pl.plot(Trange, fitting_curve(Trange, *A), "r-")
+    pl.savefig("tmp/NIII_{key}.png".format(key="G0t1"))
+    pl.close()
 
-  # save the plot values in separate files
-  dfile = open("tmp/NIII_{key}_data.txt".format(key = "G0t1"), "w")
-  for i in range(len(T)):
-    dfile.write("{T}\t{data}\n".format(T = T[i], data = data[i]))
-  dfile.close()
-  ffile = open("tmp/NIII_{key}_fit.txt".format(key = "G0t1"), "w")
-  for i in range(len(Trange)):
-    ffile.write("{T}\t{fit}\n".format(T = Trange[i],
-                                      fit = fitting_curve(Trange[i], *A)))
-  ffile.close()
+    # save the plot values in separate files
+    dfile = open("tmp/NIII_{key}_data.txt".format(key="G0t1"), "w")
+    for i in range(len(T)):
+        dfile.write("{T}\t{data}\n".format(T=T[i], data=data[i]))
+    dfile.close()
+    ffile = open("tmp/NIII_{key}_fit.txt".format(key="G0t1"), "w")
+    for i in range(len(Trange)):
+        ffile.write(
+            "{T}\t{fit}\n".format(T=Trange[i], fit=fitting_curve(Trange[i], *A))
+        )
+    ffile.close()
 
-  # output the code to put into the LineCoolingData constructor
-  print "code:"
-  print code
-  # output the values to put in atom4.dat in Kenny's code (to update the
-  # reference values for the unit tests)
-  print_data_values(data_values)
+    # output the code to put into the LineCoolingData constructor
+    print("code:")
+    print(code)
+    # output the values to put in atom4.dat in Kenny's code (to update the
+    # reference values for the unit tests)
+    print_data_values(data_values)

@@ -91,6 +91,18 @@ message(STATUS "WMBasicDataLocation.hpp: ${WMBASICDATALOCATION}")
 configure_file(${PROJECT_SOURCE_DIR}/src/WMBasicDataLocation.hpp.in
                ${PROJECT_BINARY_DIR}/src/WMBasicDataLocation.hpp @ONLY)
 
+# Pegase3DataLocation.hpp
+file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/data/Pegase3)
+set(PEGASE3_DATA ${PROJECT_BINARY_DIR}/data/Pegase3/pegase3_chab.tar.gz)
+configure_file(${PROJECT_SOURCE_DIR}/data/pegase3_chab.tar.gz
+               ${PEGASE3_DATA} COPYONLY)
+execute_process(COMMAND ${CMAKE_COMMAND} -E tar xzf ${PEGASE3_DATA}
+                WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/data/Pegase3)
+set(PEGASE3DATALOCATION ${PROJECT_BINARY_DIR}/data/Pegase3/)
+message(STATUS "Pegase3DataLocation.hpp: ${PEGASE3DATALOCATION}")
+configure_file(${PROJECT_SOURCE_DIR}/src/Pegase3DataLocation.hpp.in
+               ${PROJECT_BINARY_DIR}/src/Pegase3DataLocation.hpp @ONLY)
+
 # Configuration files
 configure_file(${PROJECT_SOURCE_DIR}/src/Configuration.hpp.in
                ${PROJECT_BINARY_DIR}/src/Configuration.hpp @ONLY)
@@ -113,6 +125,7 @@ set(LIBIONIZATIONSIMULATION_SOURCES
     FixedValueDiffuseReemissionHandler.hpp
     HeliumLymanContinuumSpectrum.cpp
     HeliumTwoPhotonContinuumSpectrum.cpp
+    Pegase3PhotonSourceSpectrum.cpp
     HydrogenLymanContinuumSpectrum.cpp
     InterpolatedDensityFunction.cpp
     IonizationSimulation.cpp
@@ -321,6 +334,7 @@ set(LIBTASKBASEDIONIZATIONSIMULATION_SOURCES
     GadgetSnapshotPhotonSourceDistribution.cpp
     HeliumLymanContinuumSpectrum.cpp
     HeliumTwoPhotonContinuumSpectrum.cpp
+    Pegase3PhotonSourceSpectrum.cpp
     HydrogenLymanContinuumSpectrum.cpp
     InterpolatedDensityFunction.cpp
     IonizationStateCalculator.cpp

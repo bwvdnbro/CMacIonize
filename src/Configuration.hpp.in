@@ -81,6 +81,13 @@
 /*! @brief Flag telling us if we are running in hydrogen only mode or not. */
 #cmakedefine HAVE_HYDROGEN_ONLY
 
+/*! @brief Flag telling us if we are using variable abundances. */
+#cmakedefine VARIABLE_ABUNDANCES
+
+/*! @brief Flag telling us to use additional coolants (not present in Kenny's
+ *  original code). */
+#cmakedefine ADDITIONAL_COOLANTS
+
 /*! @brief Maximum number of shared memory threads that can be used on this
  *  system. */
 // clang-format off

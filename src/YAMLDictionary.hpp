@@ -558,6 +558,33 @@ public:
   }
 
   /**
+   * @brief Get the value for the given key, without registering that it was
+   * accessed.
+   *
+   * This function should only be used to access values that are deprecated; it
+   * allows to retrieve them without marking them as valid parameters. The
+   * function is essentially the same as get_value(), but without keeping track
+   * of values.
+   *
+   * @param key Key to read.
+   * @param default_value Default value to use if the key is not found.
+   * @return Value of the parameter.
+   */
+  template < typename _datatype_ >
+  _datatype_ steal_value(const std::string key,
+                         const _datatype_ default_value) {
+
+    const std::string svalue = steal_value< std::string >(key, "");
+    _datatype_ dvalue;
+    if (svalue == "") {
+      dvalue = default_value;
+    } else {
+      dvalue = Utilities::convert< _datatype_ >(svalue);
+    }
+    return dvalue;
+  }
+
+  /**
    * @brief Write the state of the YAML dictionary to the given restart file.
    *
    * @param restart_writer RestartWriter to write to.
@@ -631,6 +658,34 @@ YAMLDictionary::get_value< std::string >(std::string key,
     svalue = it->second;
   }
   _used_values[key] = svalue;
+  return svalue;
+}
+
+/**
+ * @brief Get the value for the given key, without registering that it was
+ * accessed.
+ *
+ * This function should only be used to access values that are deprecated; it
+ * allows to retrieve them without marking them as valid parameters. The
+ * function is essentially the same as get_value<std::string>(), but without
+ * keeping track of values.
+ *
+ * @param key Key to read.
+ * @param default_value Default value to use if the key is not found.
+ * @return Value of the parameter.
+ */
+template <>
+inline std::string
+YAMLDictionary::steal_value< std::string >(const std::string key,
+                                           const std::string default_value) {
+
+  std::map< std::string, std::string >::iterator it = _dictionary.find(key);
+  std::string svalue;
+  if (it == _dictionary.end()) {
+    svalue = default_value;
+  } else {
+    svalue = it->second;
+  }
   return svalue;
 }
 

@@ -90,6 +90,9 @@ int main(int argc, char **argv) {
         std::make_pair(0, grid.get_number_of_cells());
     grid.initialize(block, function);
     DensityGrid::iterator cell = grid.begin();
+#ifdef VARIABLE_ABUNDANCES
+    cell.get_ionization_variables().get_abundances().set_abundances(abundances);
+#endif
 
     // test ioneng
     {
@@ -338,6 +341,12 @@ int main(int argc, char **argv) {
     std::pair< cellsize_t, cellsize_t > block =
         std::make_pair(0, grid.get_number_of_cells());
     grid.initialize(block, function);
+#ifdef VARIABLE_ABUNDANCES
+    for (auto cell = grid.begin(); cell != grid.end(); ++cell) {
+      cell.get_ionization_variables().get_abundances().set_abundances(
+          abundances);
+    }
+#endif
 
     std::ofstream ofile("test_temperaturecalculator_cr.txt");
     ofile << "# z (m)\tn (m^-3)\tT (K)\n";

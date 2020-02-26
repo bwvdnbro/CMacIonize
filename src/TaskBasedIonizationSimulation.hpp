@@ -27,6 +27,7 @@
 #ifndef TASKBASEDIONIZATIONSIMULATION_HPP
 #define TASKBASEDIONIZATIONSIMULATION_HPP
 
+#include "AbundanceModel.hpp"
 #include "Abundances.hpp"
 #include "ChargeTransferRates.hpp"
 #include "LineCoolingData.hpp"
@@ -127,6 +128,9 @@ private:
   /*! @brief Charge transfer rates. */
   const ChargeTransferRates _charge_transfer_rates;
 
+  /*! @brief Abundance model. */
+  const AbundanceModel *_abundance_model;
+
   /*! @brief Abundances. */
   const Abundances _abundances;
 
@@ -166,11 +170,23 @@ private:
   /*! @brief Time log. */
   TimeLogger _time_log;
 
+  /*! @brief Output task plot information? */
+  const bool _task_plot;
+
+  /*! @brief Output detailed diagnostic output to the standard output? */
+  const bool _verbose;
+
+  /*! @brief Output a snapshot before the initial iteration? */
+  const bool _output_initial_snapshot;
+
   uint_fast32_t get_task(const int_fast8_t thread_id);
 
 public:
   TaskBasedIonizationSimulation(const int_fast32_t num_thread,
                                 const std::string parameterfile_name,
+                                const bool task_plot = false,
+                                const bool verbose = false,
+                                const bool output_initial_snapshot = false,
                                 Log *log = nullptr);
   ~TaskBasedIonizationSimulation();
 

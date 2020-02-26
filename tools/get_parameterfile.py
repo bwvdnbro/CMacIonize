@@ -106,7 +106,7 @@ def main(args):
                 stream += indent + keygroups[j] + ":\n"
                 indent += "  "
 
-        stream += indent + keyname + ": " + attrs[key] + "\n"
+        stream += indent + keyname + ": " + attrs[key].decode("utf-8") + "\n"
 
     # open the output file
     ofile = open(output_filename, "w")

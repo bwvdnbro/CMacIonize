@@ -3,5 +3,5 @@
 mkdir tmp
 for f in gamma_*.py
 do
-  python $f
+  python3 $f
 done

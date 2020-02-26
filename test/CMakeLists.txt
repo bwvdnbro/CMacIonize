@@ -1084,6 +1084,7 @@ set(TESTMASKEDPHOTONSOURCESPECTRUM_SOURCES
     ../src/LinearPhotonSourceSpectrumMask.hpp
     ../src/MaskedPhotonSourceSpectrum.cpp
     ../src/MaskedPhotonSourceSpectrum.hpp
+    ../src/Pegase3PhotonSourceSpectrum.cpp
     ../src/PhotonSourceSpectrumMask.hpp
     ../src/PhotonSourceSpectrumMaskFactory.hpp
     ../src/PlanckPhotonSourceSpectrum.cpp
@@ -1384,6 +1385,8 @@ configure_file(
   ${PROJECT_SOURCE_DIR}/test/test_emissivitycalculationsimulation.param
   ${PROJECT_BINARY_DIR}/rundir/test/test_emissivitycalculationsimulation.param
   COPYONLY)
+configure_file(${PROJECT_SOURCE_DIR}/test/python_test.hdf5
+               ${PROJECT_BINARY_DIR}/rundir/test/python_test.hdf5 COPYONLY)
 endif(HAVE_HDF5)
 
 ## Unit test for StatisticsLogger
@@ -1703,6 +1706,29 @@ configure_file(${PROJECT_SOURCE_DIR}/test/Phantomtest.dat
 configure_file(${PROJECT_SOURCE_DIR}/test/Phantom_data.txt
                ${PROJECT_BINARY_DIR}/rundir/test/Phantom_data.txt COPYONLY)
 
+## Pegase3PhotonSourceSpectrum test
+set(TESTPEGASE3PHOTONSOURCESPECTRUM_SOURCES
+    testPegase3PhotonSourceSpectrum.cpp
+
+    ../src/Pegase3DataLocation.hpp.in
+    ../src/Pegase3PhotonSourceSpectrum.cpp
+    ../src/Pegase3PhotonSourceSpectrum.hpp
+)
+add_unit_test(NAME testPegase3PhotonSourceSpectrum
+             SOURCES ${TESTPEGASE3PHOTONSOURCESPECTRUM_SOURCES})
+
+## AbundanceModel test
+set(TESTABUNDANCEMODEL_SOURCES
+    testAbundanceModel.cpp
+
+    ../src/AbundanceModel.hpp
+    ../src/FixedValueAbundanceModel.hpp
+    ../src/ParameterFile.cpp
+    ../src/SolarMetallicityAbundanceModel.hpp
+)
+add_unit_test(NAME testAbundanceModel
+              SOURCES ${TESTABUNDANCEMODEL_SOURCES})
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)
@@ -1739,8 +1765,6 @@ add_python_unit_test(NAME test_linecoolingdata.py)
 
 ## DensityGridModule test
 if(HAVE_HDF5)
-  configure_file(${PROJECT_SOURCE_DIR}/test/python_test.hdf5
-                 ${PROJECT_BINARY_DIR}/rundir/test/python_test.hdf5 COPYONLY)
   add_python_unit_test(NAME test_densitygrid.py)
 endif(HAVE_HDF5)
 
@@ -1756,6 +1780,7 @@ endif(HAVE_PYTHON)
 
 ### Done adding unit tests. Create the 'make check' target #####################
 ### Do not touch these lines unless you know what you're doing! ################
+add_custom_target(buildTests DEPENDS ${TESTNAMES})
 add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND}
                                   --parallel ${MAX_NUMBER_OF_THREADS}
                                   --output-on-failure

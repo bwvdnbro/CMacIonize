@@ -125,7 +125,12 @@ int main(int argc, char **argv) {
       ++counts[index];
     }
 
-    double enorm = WMBasicspectrum(nuarr, earr, 1.015) / counts[0];
+    double enorm = 0.;
+    for (uint_fast32_t i = 0; i < 1000; ++i) {
+      double nu = 1. + (i + 0.5) * 0.003;
+      enorm += WMBasicspectrum(nuarr, earr, nu);
+    }
+    enorm = enorm / numsample;
     for (uint_fast32_t i = 0; i < 1000; ++i) {
       double nu = 1. + (i + 0.5) * 0.003;
       double tval = WMBasicspectrum(nuarr, earr, nu);

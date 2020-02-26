@@ -1194,6 +1194,18 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
     start_parallel_timing_block();
     grid_creator->initialize(*density_function);
     stop_parallel_timing_block();
+
+#ifdef VARIABLE_ABUNDANCES
+    for (auto gridit = grid_creator->begin();
+         gridit != grid_creator->original_end(); ++gridit) {
+      for (auto cellit = (*gridit).begin(); cellit != (*gridit).end();
+           ++cellit) {
+        cellit.get_ionization_variables().get_abundances().set_abundances(
+            abundances);
+      }
+    }
+#endif
+
     memory_logger.finalize_entry();
     if (log) {
       log->write_status("Done.");
@@ -1892,9 +1904,11 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
                          ++ion) {
                       double sigma =
                           cross_sections->get_cross_section(ion, frequency);
+#ifndef VARIABLE_ABUNDANCES
                       if (ion != ION_H_n) {
                         sigma *= abundances.get_abundance(get_element(ion));
                       }
+#endif
                       // this is the fixed cross section we use for the moment
                       photon.set_photoionization_cross_section(ion, sigma);
                     }
@@ -1998,16 +2012,26 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
                   num_photon_done_now -= buffer.size();
                   num_photon_done.pre_add(num_photon_done_now);
 
-                  const size_t task_index = tasks->get_free_element();
-                  Task &new_task = (*tasks)[task_index];
-                  new_task.set_type(TASKTYPE_PHOTON_TRAVERSAL);
-                  new_task.set_subgrid(task.get_subgrid());
-                  new_task.set_buffer(current_buffer_index);
-                  new_task.set_dependency(subgrid.get_dependency());
+                  if (index > 0) {
+                    // create a new traversal task for the leftover photons
+                    const size_t task_index = tasks->get_free_element();
+                    Task &new_task = (*tasks)[task_index];
+                    new_task.set_type(TASKTYPE_PHOTON_TRAVERSAL);
+                    new_task.set_subgrid(task.get_subgrid());
+                    new_task.set_buffer(current_buffer_index);
+                    new_task.set_dependency(subgrid.get_dependency());
 
-                  queues_to_add[num_tasks_to_add] = subgrid.get_owning_thread();
-                  tasks_to_add[num_tasks_to_add] = task_index;
-                  ++num_tasks_to_add;
+                    queues_to_add[num_tasks_to_add] =
+                        subgrid.get_owning_thread();
+                    tasks_to_add[num_tasks_to_add] = task_index;
+                    ++num_tasks_to_add;
+                  } else {
+                    // delete the buffer, as we are done with it
+                    buffers->free_buffer(current_buffer_index);
+                    cmac_assert_message(num_active_buffers.value() > 0,
+                                        "Number of active buffers < 0!");
+                    num_active_buffers.pre_decrement();
+                  }
 
                   task.stop();
 
@@ -2302,6 +2326,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
                 task.set_type(TASKTYPE_TEMPERATURE_STATE);
                 task.start(get_thread_index());
 
+#ifndef VARIABLE_ABUNDANCES
                 // correct the intensity counters for abundance factors
                 for (auto cellit = (*gridit).begin(); cellit != (*gridit).end();
                      ++cellit) {
@@ -2315,6 +2340,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
                     }
                   }
                 }
+#endif
                 temperature_calculator->calculate_temperature(iloop, numphoton,
                                                               *gridit);
                 task.stop();

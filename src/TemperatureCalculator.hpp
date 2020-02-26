@@ -29,6 +29,7 @@
 
 #include "DensityGrid.hpp"
 #include "IonizationStateCalculator.hpp"
+#include "ParameterFile.hpp"
 
 class Abundances;
 class ChargeTransferRates;
@@ -102,6 +103,9 @@ private:
   /*! @brief Number of iterations of the photoionization algorithm to perform
    *  before computing the temperature. */
   const uint_fast32_t _minimum_iteration_number;
+
+  /*! @brief Log to write logging info to. */
+  Log *_log;
 
 public:
   TemperatureCalculator(

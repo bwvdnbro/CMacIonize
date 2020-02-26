@@ -102,14 +102,19 @@ void IonizationStateCalculator::calculate_ionization_state(
     cmac_assert(alphaH >= 0.);
 
 #ifdef HAS_HELIUM
+#ifdef VARIABLE_ABUNDANCES
+    const double AHe =
+        ionization_variables.get_abundances().get_abundance(ELEMENT_He);
+#else
+    const double AHe = _abundances.get_abundance(ELEMENT_He);
+#endif
     // h0find
     double h0, he0 = 0.;
-    if (_abundances.get_abundance(ELEMENT_He) != 0.) {
+    if (AHe != 0.) {
       const double alphaHe =
           _recombination_rates.get_recombination_rate(ION_He_n, T);
-      compute_ionization_states_hydrogen_helium(
-          alphaH, alphaHe, jH, jHe, ntot, _abundances.get_abundance(ELEMENT_He),
-          T, h0, he0);
+      compute_ionization_states_hydrogen_helium(alphaH, alphaHe, jH, jHe, ntot,
+                                                AHe, T, h0, he0);
     } else {
       h0 = compute_ionization_state_hydrogen(alphaH, jH, ntot);
     }
@@ -126,8 +131,7 @@ void IonizationStateCalculator::calculate_ionization_state(
     // do the coolants
     const double nhp = ntot * (1. - h0);
 #ifdef HAS_HELIUM
-    const double ne =
-        ntot * (1. - h0 + _abundances.get_abundance(ELEMENT_He) * (1. - he0));
+    const double ne = ntot * (1. - h0 + AHe * (1. - he0));
 #else
     const double ne = nhp;
 #endif
@@ -172,7 +176,7 @@ void IonizationStateCalculator::calculate_ionization_state(
 
     const double nh0 = ntot * h0;
 #ifdef HAS_HELIUM
-    const double nhe0 = ntot * he0 * _abundances.get_abundance(ELEMENT_He);
+    const double nhe0 = ntot * he0 * AHe;
 #else
     const double nhe0 = 0.;
 #endif
