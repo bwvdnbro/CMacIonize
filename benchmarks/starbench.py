@@ -37,7 +37,7 @@ import h5py
 import matplotlib
 
 matplotlib.use("Agg")
-import pylab as pl
+import matplotlib.pyplot as pl
 import glob
 
 # set some plot options

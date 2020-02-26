@@ -34,8 +34,11 @@
 import numpy as np
 import h5py
 import scipy.stats as stats
-import pylab as pl
 import glob
+import matplotlib
+
+matplotlib.use("Agg")
+import matplotlib.pyplot as pl
 
 pl.rcParams["text.usetex"] = True
 

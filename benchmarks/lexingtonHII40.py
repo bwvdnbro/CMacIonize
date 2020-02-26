@@ -39,9 +39,12 @@
 # import some modules
 import numpy as np
 import h5py
-import pylab as pl
 import glob
 import scipy.stats as stats
+import matplotlib
+
+matplotlib.use("Agg")
+import matplotlib.pyplot as pl
 
 ##
 # @brief Bin the given quantity in the given radial bins.
