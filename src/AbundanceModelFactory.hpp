@@ -53,6 +53,38 @@ public:
    */
   static AbundanceModel *generate(ParameterFile &params, Log *log = nullptr) {
 
+    // check if we have an old parameter file
+    if (!params.has_value("Abundances:type") &&
+        (params.has_value("Abundances:helium") ||
+         params.has_value("Abundances:carbon") ||
+         params.has_value("Abundances:nitrogen") ||
+         params.has_value("Abundances:oxygen") ||
+         params.has_value("Abundances:neon") ||
+         params.has_value("Abundances:sulphur"))) {
+
+      if (log) {
+        log->write_warning("Old Abundances parameter block detected!");
+        log->write_warning(
+            "\"Abundances\" was replaced by \"AbundanceModel\".");
+        log->write_warning("To mimic the old behaviour, use "
+                           "\"AbundanceModel:type -> FixedValue\".");
+        log->write_warning("Automatically applying these changes...");
+      }
+      params.add_value("AbundanceModel:type", "FixedValue");
+      params.add_value("AbundanceModel:He", params.steal_value< std::string >(
+                                                "Abundances:helium", "0."));
+      params.add_value("AbundanceModel:C", params.steal_value< std::string >(
+                                               "Abundances:carbon", "0."));
+      params.add_value("AbundanceModel:N", params.steal_value< std::string >(
+                                               "Abundances:nitrogen", "0."));
+      params.add_value("AbundanceModel:O", params.steal_value< std::string >(
+                                               "Abundances:oxygen", "0."));
+      params.add_value("AbundanceModel:Ne", params.steal_value< std::string >(
+                                                "Abundances:neon", "0."));
+      params.add_value("AbundanceModel:S", params.steal_value< std::string >(
+                                               "Abundances:sulphur", "0."));
+    }
+
     std::string type =
         params.get_value< std::string >("AbundanceModel:type", "FixedValue");
 

@@ -55,10 +55,6 @@ HydroIntegrator:
   radiative heating: true
   radiative cooling: false
 
-# disable the diffuse field
-PhotonSource:
-  diffuse field: false
-
 # set up the source
 PhotonSourceDistribution:
   type: SingleStar

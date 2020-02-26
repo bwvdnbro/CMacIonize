@@ -64,6 +64,9 @@ DensityGridWriter:
 DensityGridWriterFields:
   NumberDensity: 0
 
+DiffuseReemissionHandler:
+  type: Physical
+
 # tell the code we want to use our own cross section values
 CrossSections:
   type: FixedValue

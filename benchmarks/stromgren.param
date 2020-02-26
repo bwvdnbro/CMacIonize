@@ -27,10 +27,6 @@ DensityFunction:
 TemperatureCalculator:
   do temperature calculation: false
 
-# disable diffuse reemission
-PhotonSource:
-  diffuse field: false
-
 # distribution of photon sources in the box
 PhotonSourceDistribution:
   # type of distribution: a single stellar source
