@@ -206,7 +206,8 @@ Pegase3PhotonSourceSpectrum::Pegase3PhotonSourceSpectrum(
         (file_frequencies[i2 + 1] - file_frequencies[i2]);
     double e2 = file_eddington_fluxes[i2] +
                 f * (file_eddington_fluxes[i2 + 1] - file_eddington_fluxes[i2]);
-    _cumulative_distribution[i] = 0.5 * (e1 / y2 + e2 / y1) * (y2 - y1);
+    _cumulative_distribution[i] =
+        0.5 * (e1 / (y2 * y2) + e2 / (y1 * y1)) * (y2 - y1);
   }
 
   // _cumulative_distribution now contains the actual ionizing spectrum

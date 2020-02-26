@@ -47,8 +47,9 @@ double Pegase3spectrum(double *nuarr, double *earr, double nu) {
   while (nu > nuarr[inu]) {
     ++inu;
   }
-  return earr[inu - 1] / nuarr[inu - 1] +
-         (earr[inu] / nuarr[inu] - earr[inu - 1] / nuarr[inu - 1]) *
+  return earr[inu - 1] / (nuarr[inu - 1] * nuarr[inu - 1]) +
+         (earr[inu] / (nuarr[inu] * nuarr[inu]) -
+          earr[inu - 1] / (nuarr[inu - 1] * nuarr[inu - 1])) *
              (nu - nuarr[inu - 1]) / (nuarr[inu] - nuarr[inu - 1]);
 }
 
@@ -74,9 +75,9 @@ int main(int argc, char **argv) {
     RandomGenerator random_generator;
 
     const std::string agefile =
-        Pegase3PhotonSourceSpectrum::get_filename(1.e10, 0.02);
+        Pegase3PhotonSourceSpectrum::get_filename(1.e6, 0.02);
     assert_condition(agefile == PEGASE3DATALOCATION
-                     "pegase3_Z02_chab_059.spec");
+                     "pegase3_Z02_chab_002.spec");
     // read in the test spectrum
     std::ifstream ifile(agefile);
     std::string line;
@@ -95,7 +96,7 @@ int main(int argc, char **argv) {
     }
 
     std::ofstream file("Pegase3.txt");
-    Pegase3PhotonSourceSpectrum spectrum(1.e10, 0.02);
+    Pegase3PhotonSourceSpectrum spectrum(1.e6, 0.02);
 
     uint_fast32_t counts[1001];
     for (uint_fast32_t i = 0; i < 1001; ++i) {
