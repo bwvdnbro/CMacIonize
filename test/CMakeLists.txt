@@ -1088,6 +1088,7 @@ set(TESTMASKEDPHOTONSOURCESPECTRUM_SOURCES
     ../src/PhotonSourceSpectrumMask.hpp
     ../src/PhotonSourceSpectrumMaskFactory.hpp
     ../src/PlanckPhotonSourceSpectrum.cpp
+    ../src/PopStarPhotonSourceSpectrum.cpp
     ../src/WMBasicPhotonSourceSpectrum.cpp
 )
 add_unit_test(NAME testMaskedPhotonSourceSpectrum

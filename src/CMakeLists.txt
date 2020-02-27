@@ -346,7 +346,6 @@ set(LIBTASKBASEDIONIZATIONSIMULATION_SOURCES
     GadgetSnapshotPhotonSourceDistribution.cpp
     HeliumLymanContinuumSpectrum.cpp
     HeliumTwoPhotonContinuumSpectrum.cpp
-    Pegase3PhotonSourceSpectrum.cpp
     HydrogenLymanContinuumSpectrum.cpp
     InterpolatedDensityFunction.cpp
     IonizationStateCalculator.cpp
@@ -354,11 +353,13 @@ set(LIBTASKBASEDIONIZATIONSIMULATION_SOURCES
     MaskedPhotonSourceSpectrum.cpp
     MemorySpace.hpp
     MultiTracker.cpp
+    Pegase3PhotonSourceSpectrum.cpp
     PhantomSnapshotDensityFunction.cpp
     PhotonBuffer.hpp
     PhotonPacket.hpp
     PhysicalDiffuseReemissionHandler.cpp
     PlanckPhotonSourceSpectrum.cpp
+    PopStarPhotonSourceSpectrum.cpp
     SPHNGSnapshotDensityFunction.cpp
     Task.hpp
     TaskBasedIonizationSimulation.cpp
