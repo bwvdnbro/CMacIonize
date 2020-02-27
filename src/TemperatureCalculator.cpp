@@ -58,6 +58,8 @@
  * heating is applied to a cell.
  * @param crscale Scale height of the cosmic ray heating term (0 for a constant
  * heating term; in m).
+ * @param minimum_ionized_temperature Temperature below which gas is assumed to
+ * be neutral (in K).
  * @param line_cooling_data LineCoolingData use to calculate cooling due to line
  * emission.
  * @param recombination_rates RecombinationRates used to calculate ionic
@@ -70,7 +72,8 @@ TemperatureCalculator::TemperatureCalculator(
     bool do_temperature_computation, uint_fast32_t minimum_iteration_number,
     double luminosity, const Abundances &abundances, double epsilon_convergence,
     uint_fast32_t maximum_number_of_iterations, double pahfac, double crfac,
-    double crlim, double crscale, const LineCoolingData &line_cooling_data,
+    double crlim, double crscale, const double minimum_ionized_temperature,
+    const LineCoolingData &line_cooling_data,
     const RecombinationRates &recombination_rates,
     const ChargeTransferRates &charge_transfer_rates, Log *log)
     : _luminosity(luminosity), _abundances(abundances), _pahfac(pahfac),
@@ -83,7 +86,8 @@ TemperatureCalculator::TemperatureCalculator(
       _do_temperature_computation(do_temperature_computation),
       _epsilon_convergence(epsilon_convergence),
       _maximum_number_of_iterations(maximum_number_of_iterations),
-      _minimum_iteration_number(minimum_iteration_number), _log(log) {
+      _minimum_iteration_number(minimum_iteration_number),
+      _minimum_ionized_temperature(minimum_ionized_temperature), _log(log) {
 
   if (_log) {
     _log->write_status("Set up TemperatureCalculator with total luminosity ",
@@ -112,6 +116,8 @@ TemperatureCalculator::TemperatureCalculator(
  *    heating is applied (default: 0.75)
  *  - cosmic ray heating scale length: Scale length of the cosmic ray heating
  *    (default: 1.33333 kpc)
+ *  - minimum ionized temperature: Temperature below which gas is assumed to be
+ *    neutral (default: 4000. K).
  *
  * @param luminosity Total ionizing luminosity of all photon sources (in s^-1).
  * @param abundances Abundances.
@@ -149,6 +155,8 @@ TemperatureCalculator::TemperatureCalculator(
           params.get_physical_value< QUANTITY_LENGTH >(
               "TemperatureCalculator:cosmic ray heating scale length",
               "1.33333 kpc"),
+          params.get_physical_value< QUANTITY_TEMPERATURE >(
+              "TemperatureCalculator:minimum ionized temperature", "4000. K"),
           line_cooling_data, recombination_rates, charge_transfer_rates, log) {}
 
 /**
@@ -791,7 +799,7 @@ void TemperatureCalculator::calculate_temperature(
       T0 = T1;
     }
 
-    if (T0 < 4000.) {
+    if (T0 < _minimum_ionized_temperature) {
       // gas is neutral, temperature is 500 K
       T0 = 500.;
       h0 = 1.;
