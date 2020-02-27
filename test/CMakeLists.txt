@@ -1717,6 +1717,17 @@ set(TESTPEGASE3PHOTONSOURCESPECTRUM_SOURCES
 add_unit_test(NAME testPegase3PhotonSourceSpectrum
              SOURCES ${TESTPEGASE3PHOTONSOURCESPECTRUM_SOURCES})
 
+## PopStarPhotonSourceSpectrum test
+set(TESTPOPSTARPHOTONSOURCESPECTRUM_SOURCES
+    testPopStarPhotonSourceSpectrum.cpp
+
+    ../src/PopStarDataLocation.hpp.in
+    ../src/PopStarPhotonSourceSpectrum.cpp
+    ../src/PopStarPhotonSourceSpectrum.hpp
+)
+add_unit_test(NAME testPopStarPhotonSourceSpectrum
+              SOURCES ${TESTPOPSTARPHOTONSOURCESPECTRUM_SOURCES})
+
 ## AbundanceModel test
 set(TESTABUNDANCEMODEL_SOURCES
     testAbundanceModel.cpp

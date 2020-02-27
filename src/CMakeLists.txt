@@ -103,6 +103,17 @@ message(STATUS "Pegase3DataLocation.hpp: ${PEGASE3DATALOCATION}")
 configure_file(${PROJECT_SOURCE_DIR}/src/Pegase3DataLocation.hpp.in
                ${PROJECT_BINARY_DIR}/src/Pegase3DataLocation.hpp @ONLY)
 
+# PopStarDataLocation.hpp
+set(POPSTAR_DATA ${PROJECT_BINARY_DIR}/data/PopStar.tar.gz)
+configure_file(${PROJECT_SOURCE_DIR}/data/PopStar.tar.gz
+               ${POPSTAR_DATA} COPYONLY)
+execute_process(COMMAND ${CMAKE_COMMAND} -E tar xzf ${POPSTAR_DATA}
+                WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/data/)
+set(POPSTARDATALOCATION ${PROJECT_BINARY_DIR}/data/PopStar/)
+message(STATUS "PopStarDataLocation.hpp: ${POPSTARDATALOCATION}")
+configure_file(${PROJECT_SOURCE_DIR}/src/PopStarDataLocation.hpp.in
+               ${PROJECT_BINARY_DIR}/src/PopStarDataLocation.hpp @ONLY)
+
 # Configuration files
 configure_file(${PROJECT_SOURCE_DIR}/src/Configuration.hpp.in
                ${PROJECT_BINARY_DIR}/src/Configuration.hpp @ONLY)
@@ -125,7 +136,6 @@ set(LIBIONIZATIONSIMULATION_SOURCES
     FixedValueDiffuseReemissionHandler.hpp
     HeliumLymanContinuumSpectrum.cpp
     HeliumTwoPhotonContinuumSpectrum.cpp
-    Pegase3PhotonSourceSpectrum.cpp
     HydrogenLymanContinuumSpectrum.cpp
     InterpolatedDensityFunction.cpp
     IonizationSimulation.cpp
@@ -139,10 +149,12 @@ set(LIBIONIZATIONSIMULATION_SOURCES
     OldVoronoiCell.cpp
     OldVoronoiGrid.cpp
     ParameterFile.cpp
+    Pegase3PhotonSourceSpectrum.cpp
     PhantomSnapshotDensityFunction.cpp
     PhotonSource.cpp
     PhysicalDiffuseReemissionHandler.cpp
     PlanckPhotonSourceSpectrum.cpp
+    PopStarPhotonSourceSpectrum.cpp
     Signals.cpp
     SPHNGSnapshotDensityFunction.cpp
     TemperatureCalculator.cpp

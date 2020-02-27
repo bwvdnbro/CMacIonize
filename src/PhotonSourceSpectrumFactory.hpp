@@ -36,6 +36,7 @@
 #include "MonochromaticPhotonSourceSpectrum.hpp"
 #include "Pegase3PhotonSourceSpectrum.hpp"
 #include "PlanckPhotonSourceSpectrum.hpp"
+#include "PopStarPhotonSourceSpectrum.hpp"
 #include "UniformPhotonSourceSpectrum.hpp"
 #include "WMBasicPhotonSourceSpectrum.hpp"
 
@@ -62,14 +63,16 @@ public:
 
     if (type == "FaucherGiguere") {
       return new FaucherGiguerePhotonSourceSpectrum(role, params, log);
-    } else if (type == "Pegase3") {
-      return new Pegase3PhotonSourceSpectrum(role, params, log);
     } else if (type == "Masked") {
       return new MaskedPhotonSourceSpectrum(role, params, log);
     } else if (type == "Monochromatic") {
       return new MonochromaticPhotonSourceSpectrum(role, params, log);
+    } else if (type == "Pegase3") {
+      return new Pegase3PhotonSourceSpectrum(role, params, log);
     } else if (type == "Planck") {
       return new PlanckPhotonSourceSpectrum(role, params, log);
+    } else if (type == "PopStar") {
+      return new PopStarPhotonSourceSpectrum(role, params, log);
     } else if (type == "Uniform") {
       return new UniformPhotonSourceSpectrum();
     } else if (type == "WMBasic") {
@@ -89,9 +92,10 @@ public:
    * Supported types are (default: Planck):
    *  - FaucherGiguere: Redshift dependent UVB spectrum of Faucher-Giguère et
    *    al. (2009)
-   *  - Pegase3: Pegase 3 stellar spectra.
    *  - Monochromatic: Monochromatic spectrum
+   *  - Pegase3: Pegase 3 stellar spectra.
    *  - Planck: Black body spectrum
+   *  - PopStar: PopStar stellar spectra.
    *  - WMBasic: Realistic stellar atmosphere spectrum of Sternberg, Hoffmann &
    *    Pauldrach (2003)
    *
