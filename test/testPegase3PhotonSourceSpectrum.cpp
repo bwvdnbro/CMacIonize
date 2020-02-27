@@ -47,9 +47,8 @@ double Pegase3spectrum(double *nuarr, double *earr, double nu) {
   while (nu > nuarr[inu]) {
     ++inu;
   }
-  return earr[inu - 1] / (nuarr[inu - 1] * nuarr[inu - 1]) +
-         (earr[inu] / (nuarr[inu] * nuarr[inu]) -
-          earr[inu - 1] / (nuarr[inu - 1] * nuarr[inu - 1])) *
+  return earr[inu - 1] / nuarr[inu - 1] +
+         (earr[inu] / nuarr[inu] - earr[inu - 1] / nuarr[inu - 1]) *
              (nu - nuarr[inu - 1]) / (nuarr[inu] - nuarr[inu - 1]);
 }
 
@@ -89,6 +88,8 @@ int main(int argc, char **argv) {
       getline(ifile, line);
       std::istringstream lstream(line);
       lstream >> nuarr[2380 - i] >> earr[2380 - i];
+      // convert from luminosity per wavelength to luminosity per frequency
+      earr[2380 - i] *= nuarr[2380 - i] * nuarr[2380 - i];
       // convert from Angstrom to Rydberg
       nuarr[2380 - i] = PhysicalConstants::get_physical_constant(
                             PHYSICALCONSTANT_LIGHTSPEED) *
