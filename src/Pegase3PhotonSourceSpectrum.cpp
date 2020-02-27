@@ -154,25 +154,28 @@ Pegase3PhotonSourceSpectrum::Pegase3PhotonSourceSpectrum(
 
   // read the data from the remainder of the file
   std::vector< double > file_frequencies;
-  std::vector< double > file_eddington_fluxes;
+  std::vector< double > file_luminosities;
   uint_fast32_t i = 0;
   const double lightspeed =
       PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_LIGHTSPEED);
   while (std::getline(file, line)) {
     std::stringstream linestream(line);
-    double file_frequency, file_flux;
-    linestream >> file_frequency >> file_flux;
+    double file_frequency, file_luminosity;
+    linestream >> file_frequency >> file_luminosity;
 
     // file contains wavelength (in Angstrom), convert to frequency
     file_frequencies.push_back(lightspeed * 1.e10 / file_frequency);
-    file_eddington_fluxes.push_back(file_flux);
+    // file constains the spectrum as a luminosity per unit wavelength,
+    // convert to luminosity per unit frequency
+    file_luminosity *= file_frequency * file_frequency;
+    file_luminosities.push_back(file_luminosity);
 
     ++i;
   }
 
   // the file contains the inverse of the spectrum
   std::reverse(file_frequencies.begin(), file_frequencies.end());
-  std::reverse(file_eddington_fluxes.begin(), file_eddington_fluxes.end());
+  std::reverse(file_luminosities.begin(), file_luminosities.end());
 
   // allocate memory for the data tables
   _frequencies.resize(PEGASE3PHOTONSOURCESPECTRUM_NUMFREQ, 0.);
@@ -197,17 +200,16 @@ Pegase3PhotonSourceSpectrum::Pegase3PhotonSourceSpectrum(
         Utilities::locate(y1, &file_frequencies[0], num_frequency);
     double f = (y1 - file_frequencies[i1]) /
                (file_frequencies[i1 + 1] - file_frequencies[i1]);
-    double e1 = file_eddington_fluxes[i1] +
-                f * (file_eddington_fluxes[i1 + 1] - file_eddington_fluxes[i1]);
+    double e1 = file_luminosities[i1] +
+                f * (file_luminosities[i1 + 1] - file_luminosities[i1]);
     double y2 = _frequencies[i];
     uint_fast32_t i2 =
         Utilities::locate(y2, &file_frequencies[0], num_frequency);
     f = (y2 - file_frequencies[i2]) /
         (file_frequencies[i2 + 1] - file_frequencies[i2]);
-    double e2 = file_eddington_fluxes[i2] +
-                f * (file_eddington_fluxes[i2 + 1] - file_eddington_fluxes[i2]);
-    _cumulative_distribution[i] =
-        0.5 * (e1 / (y2 * y2) + e2 / (y1 * y1)) * (y2 - y1);
+    double e2 = file_luminosities[i2] +
+                f * (file_luminosities[i2 + 1] - file_luminosities[i2]);
+    _cumulative_distribution[i] = 0.5 * (e1 / y2 + e2 / y1) * (y2 - y1);
   }
 
   // _cumulative_distribution now contains the actual ionizing spectrum
