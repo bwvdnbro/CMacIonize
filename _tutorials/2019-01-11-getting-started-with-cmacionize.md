@@ -86,21 +86,29 @@ Once you have *cloned* the repository, you should have a folder
 `location/CMacIonize`, which we will again call the *root folder*.
 
 By default, git clones the `master` branch of the repository. This 
-branch is generally the same as the latest stable release of the code. 
-To get a more recent version of the code that contains unreleased new 
-features, you can switch to the `stable` branch. Move to the root folder 
-and execute the following command:
+branch contains the latest version of the code minus possible changes 
+that are currently under development. The `master` branch is protected 
+(i.e. changes to it need to be approved by a moderator and need to pass 
+a number of automated test) and should therefore be reasonably stable. However,
+if you experience any problems with the `master` branch, it might be better
+to switch to one of the tagged releases, e.g.
 
 ```
-git checkout stable
+git checkout v1.0
 ```
 
-The `stable` branch is generally ahead of the `master` branch, but 
-should still be stable, i.e. not contain any untested features. An even 
-more recent code version is contained in the `development` branch. This 
-is the branch used by the main code developers, and is not guaranteed to 
-always work. Other branches are used by individual developers during 
-development and should not be used.
+To list the available stable releases, use
+
+```
+git tag --list
+```
+
+It is generally not safe to use branches other than `master`, as they 
+may contain untested features and will change rapidly. On top of that, 
+their git tags are not guaranteed to persist in the repository history, 
+making it impossible to keep track of the code version that was used for 
+a specific simulation and hence making simulations potentially not 
+reproducible.
 
 # Configuring the code
 
@@ -142,7 +150,8 @@ already run CMake, because CMake saves it in a local cache.
 Apart from changing compiler and library versions, CMake also allows you 
 to activate specific features in the code, or to change code 
 optimization levels. All these features will be covered in a future 
-advanced tutorial.
+advanced tutorial and should generally not be used unless you know what 
+you are doing.
 
 # Compilation
 
@@ -159,7 +168,11 @@ To compile with multiple threads in parallel, run
 make -j <number of parallel threads>
 ```
 
-This speeds up the compilation process quite significantly.
+This speeds up the compilation process quite significantly. Note that 
+`make` does not check if your system actually has sufficient resources 
+(most importantly: sufficient memory) to compile in parallel, so it is 
+generally advisable to use a number of threads that is close to the 
+number of available cores on your system.
 
 If compilation succeeded (`make` will tell you if something went wrong), 
 the `CMacIonize` executable will be created in `build folder/rundir/`.
@@ -171,8 +184,12 @@ the code. To compile and run these, run
 make check
 ```
 
+Note that `make check` will by default run in parallel using all 
+available cores on the system.
+
 Additional `make` options will be detailed in a future advanced 
-tuturial.
+tuturial, but should generally not be used unless you know what you are 
+doing.
 
 # Example run
 
@@ -196,8 +213,9 @@ can run the benchmark test using
 ../../CMacIonize --params stromgren.param --threads <number of parallel threads>
 ```
 
-You can omit the `--threads` parameter to run using a single thread. 
-This test should take under a minute using 4 parallel threads.
+You can omit the `--threads` parameter to run using a single thread. On 
+a fairly recent desktop or laptop, this test should take under a minute 
+using 4 parallel threads.
 
 At the end of the run, a number of additional files should have been 
 created: two snapshot files `stromgren_000.hdf5` and 
@@ -215,6 +233,20 @@ should reproduce the expected radius reasonably well.
 # Further reading
 
 Now that you have set up the code and run your first example, you can 
-start using the code for more advanced applications. Right now, there 
-are no additional tutorials to help you with this, but these will appear 
-in the future.
+start using the code for more advanced applications. Some topics are 
+covered in the next tutorials.
+
+The code also ships with an extensive in-line documentation that can be 
+turned into a documentation web page if you have 
+[Doxygen](http://www.doxygen.nl/) installed on your system. In this case,
+`CMake` should automatically detect the `doxygen` executable and will enable
+
+```
+make doc
+```
+
+This command generates the documentation web page under `build 
+folder/doc/html`. You can read this documentation by loading `build 
+folder/doc/html/index.html` in a browser. A recent but not necessarily 
+up-to-date version of the Doxygen documentation is maintained on 
+<https://users.ugent.be/~bwvdnbro/CMacIonize/>.
