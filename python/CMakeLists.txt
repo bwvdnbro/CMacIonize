@@ -61,6 +61,7 @@ if(HAVE_HDF5)
       ../src/NewVoronoiGrid.cpp
       ../src/OldVoronoiCell.cpp
       ../src/OldVoronoiGrid.cpp
+      ../src/SPHNGVoronoiGeneratorDistribution.cpp
       ../src/VoronoiDensityGrid.cpp
   )
 

@@ -575,6 +575,7 @@ set(TESTTEMPERATURECALCULATOR_SOURCES
     ../src/DensityGrid.cpp
     ../src/IonizationStateCalculator.cpp
     ../src/LineCoolingData.cpp
+    ../src/SPHNGVoronoiGeneratorDistribution.cpp
     ../src/TemperatureCalculator.cpp
     ../src/TemperatureCalculator.hpp
     ../src/VernerRecombinationRates.cpp
@@ -727,6 +728,7 @@ set(TESTHYDROINTEGRATOR_SOURCES
     ../src/NewVoronoiGrid.cpp
     ../src/OldVoronoiCell.cpp
     ../src/OldVoronoiGrid.cpp
+    ../src/SPHNGVoronoiGeneratorDistribution.cpp
     ../src/VoronoiDensityGrid.cpp
 )
 if(HAVE_HDF5)
@@ -859,6 +861,7 @@ set(TESTVORONOIDENSITYGRID_SOURCES
     ../src/OldVoronoiCell.hpp
     ../src/OldVoronoiGrid.cpp
     ../src/OldVoronoiGrid.hpp
+    ../src/SPHNGVoronoiGeneratorDistribution.cpp
     ../src/UniformRandomVoronoiGeneratorDistribution.hpp
     ../src/UniformRegularVoronoiGeneratorDistribution.hpp
     ../src/VoronoiDensityGrid.cpp
@@ -1064,6 +1067,7 @@ set(TESTGRADIENTCALCULATOR_SOURCES
     ../src/NewVoronoiGrid.cpp
     ../src/OldVoronoiCell.cpp
     ../src/OldVoronoiGrid.cpp
+    ../src/SPHNGVoronoiGeneratorDistribution.cpp
     ../src/VoronoiDensityGrid.cpp
 )
 if(HAVE_HDF5)

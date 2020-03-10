@@ -34,6 +34,7 @@
 
 // implementations
 #include "PerturbedCartesianVoronoiGeneratorDistribution.hpp"
+#include "SPHNGVoronoiGeneratorDistribution.hpp"
 #include "SPHVoronoiGeneratorDistribution.hpp"
 #include "UniformRandomVoronoiGeneratorDistribution.hpp"
 #include "UniformRegularVoronoiGeneratorDistribution.hpp"
@@ -79,6 +80,7 @@ public:
    *  - UniformRandom: Uniform random generator positions
    *  - UniformRegular: Regular Cartesian grid
    *  - SPH: Generator positions based on an input file
+   *  - SPHNG: Generator positions based on an SPHNG snapshot file
    *  - CMacIonize: Implementation hack to reconstruct a grid from a snapshot
    *
    * @param simulation_box Simulation box (in m).
@@ -105,15 +107,18 @@ public:
     if (type == "PerturbedCartesian") {
       return new PerturbedCartesianVoronoiGeneratorDistribution(simulation_box,
                                                                 params, log);
+    } else if (type == "SPH") {
+      // added by Maya
+      return new SPHVoronoiGeneratorDistribution(simulation_box, params, log);
+    } else if (type == "SPHNG") {
+      // added by Maya
+      return new SPHNGVoronoiGeneratorDistribution(params, log);
     } else if (type == "UniformRandom") {
       return new UniformRandomVoronoiGeneratorDistribution(simulation_box,
                                                            params, log);
     } else if (type == "UniformRegular") {
       return new UniformRegularVoronoiGeneratorDistribution(simulation_box,
                                                             params, log);
-    } else if (type == "SPH") {
-      // added by Maya
-      return new SPHVoronoiGeneratorDistribution(simulation_box, params, log);
 #ifdef HAVE_HDF5
     } else if (type == "CMacIonize") {
       return new CMacIonizeVoronoiGeneratorDistribution(simulation_box, params);

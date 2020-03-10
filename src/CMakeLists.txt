@@ -157,6 +157,7 @@ set(LIBIONIZATIONSIMULATION_SOURCES
     PopStarPhotonSourceSpectrum.cpp
     Signals.cpp
     SPHNGSnapshotDensityFunction.cpp
+    SPHNGVoronoiGeneratorDistribution.cpp
     TemperatureCalculator.cpp
     VernerCrossSections.cpp
     VernerRecombinationRates.cpp
@@ -361,6 +362,7 @@ set(LIBTASKBASEDIONIZATIONSIMULATION_SOURCES
     PlanckPhotonSourceSpectrum.cpp
     PopStarPhotonSourceSpectrum.cpp
     SPHNGSnapshotDensityFunction.cpp
+    SPHNGVoronoiGeneratorDistribution.cpp
     Task.hpp
     TaskBasedIonizationSimulation.cpp
     TaskBasedIonizationSimulation.hpp
