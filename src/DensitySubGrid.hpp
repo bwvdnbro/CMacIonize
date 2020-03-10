@@ -984,10 +984,9 @@ public:
     const int_fast32_t tot_num_cells =
         _number_of_cells[0] * _number_of_cells[3];
     for (int_fast32_t i = 0; i < tot_num_cells; ++i) {
-      const double vals[3] = {
-          _ionization_variables[i].get_number_density(),
-          _ionization_variables[i].get_ionic_fraction(ION_H_n),
-          _ionization_variables[i].get_mean_intensity(ION_H_n)};
+      double vals[3] = {_ionization_variables[i].get_number_density(),
+                        _ionization_variables[i].get_ionic_fraction(ION_H_n),
+                        _ionization_variables[i].get_mean_intensity(ION_H_n)};
       MPI_Pack(vals, 3, MPI_DOUBLE, buffer, buffer_size, &buffer_position,
                MPI_COMM_WORLD);
     }
