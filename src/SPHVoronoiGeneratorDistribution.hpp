@@ -49,9 +49,6 @@ private:
   /*! @brief Number of positions already generated. */
   generatornumber_t _current_number;
 
-  /*! @brief Box containing the generators (in m). */
-  const Box<> _box;
-
   /*! @brief Name of ASCII file used to import Voronoi generating sites from. */
   std::string _filename;
 
@@ -62,17 +59,15 @@ public:
   /**
    * @brief Constructor.
    *
-   * @param simulation_box Simulation box (in m).
    * @param number_of_positions Number of SPH generator positions to
    * generate.
    * @param filename Name of the ASCII text file to read.
    * @param log Log to write logging info to.
    */
-  SPHVoronoiGeneratorDistribution(const Box<> &simulation_box,
-                                  generatornumber_t number_of_positions,
+  SPHVoronoiGeneratorDistribution(generatornumber_t number_of_positions,
                                   std::string filename, Log *log = nullptr)
       : _number_of_positions(number_of_positions), _current_number(0),
-        _box(simulation_box), _filename(filename) {
+        _filename(filename) {
 
     _generator_positions.resize(number_of_positions);
 
@@ -123,14 +118,11 @@ public:
    *  - number of positions: Number of positions in the file (default: 1000)
    *  - filename: Name of the file (default: SPH.txt)
    *
-   * @param simulation_box Simulation box (in m).
    * @param params ParameterFile to read from.
    * @param log Log to write logging info to.
    */
-  SPHVoronoiGeneratorDistribution(const Box<> &simulation_box,
-                                  ParameterFile &params, Log *log = nullptr)
+  SPHVoronoiGeneratorDistribution(ParameterFile &params, Log *log = nullptr)
       : SPHVoronoiGeneratorDistribution(
-            simulation_box,
             params.get_value< generatornumber_t >(
                 "DensityGrid:VoronoiGeneratorDistribution:number of positions",
                 1000),

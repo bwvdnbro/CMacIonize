@@ -109,7 +109,7 @@ public:
                                                                 params, log);
     } else if (type == "SPH") {
       // added by Maya
-      return new SPHVoronoiGeneratorDistribution(simulation_box, params, log);
+      return new SPHVoronoiGeneratorDistribution(params, log);
     } else if (type == "SPHNG") {
       // added by Maya
       return new SPHNGVoronoiGeneratorDistribution(params, log);
