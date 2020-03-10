@@ -1,6 +1,7 @@
 /*******************************************************************************
  * This file is part of CMacIonize
  * Copyright (C) 2016 Bert Vandenbroucke (bert.vandenbroucke@gmail.com)
+ *               2020 Bert Vandenbroucke (bert.vandenbroucke@gmail.com)
  *
  * CMacIonize is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -22,10 +23,14 @@
  * @brief Unit test for the SPHNGSnapshotDensityFunction class.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
+ * @author Bert Vandenbroucke (bert.vandenbroucke@ugent.be)
  */
+
 #include "Assert.hpp"
 #include "SPHNGSnapshotDensityFunction.hpp"
+#include "SPHNGVoronoiGeneratorDistribution.hpp"
 #include "UnitConverter.hpp"
+
 #include <fstream>
 #include <sstream>
 
@@ -45,6 +50,9 @@ int main(int argc, char **argv) {
                                                   0, 0., 0., "");
     density_function.initialize();
 
+    SPHNGVoronoiGeneratorDistribution generator_distribution("SPHNGtest.dat",
+                                                             nullptr);
+
     std::ifstream file("SPHNG_data.txt");
     std::string line;
     uint_fast32_t index = 0;
@@ -61,9 +69,9 @@ int main(int argc, char **argv) {
       m = UnitConverter::to_SI< QUANTITY_MASS >(m, "g");
       h = UnitConverter::to_SI< QUANTITY_LENGTH >(h, "cm");
 
-      double tolerance = 1.e-14;
+      const double tolerance = 1.e-14;
 
-      CoordinateVector<> p = density_function.get_position(index);
+      const CoordinateVector<> p = density_function.get_position(index);
       assert_values_equal_rel(x, p.x(), tolerance);
       assert_values_equal_rel(y, p.y(), tolerance);
       assert_values_equal_rel(z, p.z(), tolerance);
@@ -71,6 +79,11 @@ int main(int argc, char **argv) {
       assert_values_equal_rel(m, density_function.get_mass(index), tolerance);
       assert_values_equal_rel(h, density_function.get_smoothing_length(index),
                               tolerance);
+
+      const CoordinateVector<> p2 = generator_distribution.get_position();
+      assert_values_equal_rel(x, p2.x(), tolerance);
+      assert_values_equal_rel(y, p2.y(), tolerance);
+      assert_values_equal_rel(z, p2.z(), tolerance);
 
       ++index;
     }
@@ -84,6 +97,9 @@ int main(int argc, char **argv) {
                                                   false, 0, 0., 0., "");
     density_function.initialize();
 
+    SPHNGVoronoiGeneratorDistribution generator_distribution(
+        "SPHNGtest_notags.dat", nullptr);
+
     std::ifstream file("SPHNG_data.txt");
     std::string line;
     uint_fast32_t index = 0;
@@ -100,9 +116,9 @@ int main(int argc, char **argv) {
       m = UnitConverter::to_SI< QUANTITY_MASS >(m, "g");
       h = UnitConverter::to_SI< QUANTITY_LENGTH >(h, "cm");
 
-      double tolerance = 1.e-14;
+      const double tolerance = 1.e-14;
 
-      CoordinateVector<> p = density_function.get_position(index);
+      const CoordinateVector<> p = density_function.get_position(index);
       assert_values_equal_rel(x, p.x(), tolerance);
       assert_values_equal_rel(y, p.y(), tolerance);
       assert_values_equal_rel(z, p.z(), tolerance);
@@ -110,6 +126,11 @@ int main(int argc, char **argv) {
       assert_values_equal_rel(m, density_function.get_mass(index), tolerance);
       assert_values_equal_rel(h, density_function.get_smoothing_length(index),
                               tolerance);
+
+      const CoordinateVector<> p2 = generator_distribution.get_position();
+      assert_values_equal_rel(x, p2.x(), tolerance);
+      assert_values_equal_rel(y, p2.y(), tolerance);
+      assert_values_equal_rel(z, p2.z(), tolerance);
 
       ++index;
     }
