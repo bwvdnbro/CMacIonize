@@ -643,6 +643,8 @@ set(TESTSPHNGSNAPSHOTDENSITYFUNCTION_SOURCES
 
     ../src/SPHNGSnapshotDensityFunction.cpp
     ../src/SPHNGSnapshotDensityFunction.hpp
+    ../src/SPHNGVoronoiGeneratorDistribution.cpp
+    ../src/SPHNGVoronoiGeneratorDistribution.hpp
 )
 add_unit_test(NAME testSPHNGSnapshotDensityFunction
               SOURCES ${TESTSPHNGSNAPSHOTDENSITYFUNCTION_SOURCES})
