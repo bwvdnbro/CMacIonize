@@ -219,7 +219,7 @@ using 4 parallel threads.
 
 At the end of the run, a number of additional files should have been 
 created: two snapshot files `stromgren_000.hdf5` and 
-`stromgren_020.hdf5`, and a file `parameters-usedvalues.param` that 
+`stromgren_020.hdf5`, and a file `stromgren.param.used-values` that 
 contains the parameter values that were actually used by the code 
 (including parameters for which default values were used).
 

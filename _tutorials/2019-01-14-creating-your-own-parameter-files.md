@@ -63,12 +63,12 @@ This will start a simulation, read in all necessary parameters and
 allocate all variables in memory, and then stop the program. This is 
 perfect to test whether your simulation actually fits on a specific 
 machine, and to check your parameters. After CMacIonize has read all 
-parameters, it will write a file called `parameters-usedvalues.param`, 
+parameters, it will write a file called `empty.param.used-values`, 
 that contains all parameters that were read during initialisation, and 
 the values that were assigned to these variables.
 
 At the moment of writing, this is what the default 
-`parameters-usedvalues.param` file looks like:
+`empty.param.used-values` file looks like:
 
 ```
 # file written on 28/02/2020, 17:38:17.
@@ -166,16 +166,16 @@ parameter file; this is true for all variables in this example). If a
 value was not used this will also be clearly indicated. When a parameter 
 specifies the name of a file in the local file system (e.g. when using a 
 module that reads a file to set up the initial conditions of the 
-simulation), the `parameters-usedvalues.param` will also include a 
+simulation), the `empty.param.used-values` will also include a 
 checksum of that file. If the checksum is provided, the code will throw 
 an error if that checksum does not match the checksum for the file with 
 that name that is present.
 
 You can now use this default parameter file to start creating your own 
-parameter file: copy the file (e.g. `cp parameters-usedvalues.param 
+parameter file: copy the file (e.g. `cp empty.param.used-values 
 my_params.param`) to make sure it is not overwritten the next time you 
 run CMacIonize, and edit it to your liking. Then re-run CMacIonize and 
-inspect the new `parameters-usedvalues.param` to check if your new 
+inspect the new `my_params.param.used-values` to check if your new 
 parameters were read correctly (or to get a new list of default values 
 if you changed a block *type*). Keep doing this until your are satisfied 
 with the result.
