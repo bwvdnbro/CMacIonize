@@ -47,6 +47,45 @@ private:
   std::vector< CoordinateVector<> > _generator_positions;
 
 public:
+  /**
+   * @brief Comparison function for two 3D positions.
+   *
+   * We will use the following rules to decide if a position
+   * @$fa=(a_x,a_y,a_z)@f$ is smaller than a position @$fb=(b_x,b_y,b_z)@f$:
+   *  - the position is smaller if @f$a_x<b_x@f$,
+   *  - if @f$a_x=b_x@f$, then it is smaller if @f$a_y<b_y@f$,
+   *  - if @f$a_y=b_y@f$, then it is smaller if @f$a_z<b_z@f$,
+   *  - if @f$a_z=b_z@f$, we assume it is larger.
+   *
+   * @param a Position @f$a@f$.
+   * @param b Position @f$b@f$.
+   * @return True if @f$a<b@f$, according to the rules above.
+   */
+  inline static bool position_smaller_than(const CoordinateVector<> &a,
+                                           const CoordinateVector<> &b) {
+    if (a.x() < b.x()) {
+      return true;
+    } else {
+      if (a.x() == b.x()) {
+        if (a.y() < b.y()) {
+          return true;
+        } else {
+          if (a.y() == b.y()) {
+            if (a.z() < b.z()) {
+              return true;
+            } else {
+              return false;
+            }
+          } else {
+            return false;
+          }
+        }
+      } else {
+        return false;
+      }
+    }
+  }
+
   SPHNGVoronoiGeneratorDistribution(std::string filename, Log *log = nullptr);
 
   /**

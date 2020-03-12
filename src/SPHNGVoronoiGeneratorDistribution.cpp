@@ -303,6 +303,13 @@ SPHNGVoronoiGeneratorDistribution::SPHNGVoronoiGeneratorDistribution(
     }
   }
 
+  // filter out duplicate positions
+  std::sort(_generator_positions.begin(), _generator_positions.end(),
+            position_smaller_than);
+  auto last =
+      std::unique(_generator_positions.begin(), _generator_positions.end());
+  _generator_positions.erase(last, _generator_positions.end());
+
   if (log) {
     log->write_info("position size: ", _generator_positions.size());
     log->write_info("number of particles: ", numpart);
