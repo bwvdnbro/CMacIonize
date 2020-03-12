@@ -216,12 +216,12 @@ IonizationSimulation::IonizationSimulation(const bool write_output,
   // now output all parameters (also those for which default values were used)
   // to a reference parameter file (only rank 0 does this)
   if (write_output) {
-    std::ofstream pfile(output_folder + "/parameters-usedvalues.param");
+    const std::string usedvaluename = parameterfile + ".used-values";
+    std::ofstream pfile(usedvaluename);
     _parameter_file.print_contents(pfile);
     pfile.close();
     if (_log) {
-      _log->write_status("Wrote used parameters to ", output_folder,
-                         "/parameters-usedvalues.param.");
+      _log->write_status("Wrote used parameters to ", usedvaluename, ".");
     }
   }
 
