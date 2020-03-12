@@ -50,9 +50,7 @@ int main(int argc, char **argv) {
                                                   0, 0., 0., "");
     density_function.initialize();
 
-    SPHNGVoronoiGeneratorDistribution generator_distribution("SPHNGtest.dat",
-                                                             nullptr);
-
+    std::vector< CoordinateVector<> > positions;
     std::ifstream file("SPHNG_data.txt");
     std::string line;
     uint_fast32_t index = 0;
@@ -80,12 +78,20 @@ int main(int argc, char **argv) {
       assert_values_equal_rel(h, density_function.get_smoothing_length(index),
                               tolerance);
 
-      const CoordinateVector<> p2 = generator_distribution.get_position();
-      assert_values_equal_rel(x, p2.x(), tolerance);
-      assert_values_equal_rel(y, p2.y(), tolerance);
-      assert_values_equal_rel(z, p2.z(), tolerance);
+      positions.push_back(p);
 
       ++index;
+    }
+
+    std::sort(positions.begin(), positions.end(),
+              SPHNGVoronoiGeneratorDistribution::position_smaller_than);
+    SPHNGVoronoiGeneratorDistribution generator_distribution("SPHNGtest.dat",
+                                                             nullptr);
+    for (uint_fast32_t i = 0; i < positions.size(); ++i) {
+      const CoordinateVector<> p = generator_distribution.get_position();
+      assert_condition(positions[i].x() == p.x());
+      assert_condition(positions[i].y() == p.y());
+      assert_condition(positions[i].z() == p.z());
     }
     cmac_status("Done reading tagged file.");
   }
@@ -97,9 +103,7 @@ int main(int argc, char **argv) {
                                                   false, 0, 0., 0., "");
     density_function.initialize();
 
-    SPHNGVoronoiGeneratorDistribution generator_distribution(
-        "SPHNGtest_notags.dat", nullptr);
-
+    std::vector< CoordinateVector<> > positions;
     std::ifstream file("SPHNG_data.txt");
     std::string line;
     uint_fast32_t index = 0;
@@ -127,12 +131,20 @@ int main(int argc, char **argv) {
       assert_values_equal_rel(h, density_function.get_smoothing_length(index),
                               tolerance);
 
-      const CoordinateVector<> p2 = generator_distribution.get_position();
-      assert_values_equal_rel(x, p2.x(), tolerance);
-      assert_values_equal_rel(y, p2.y(), tolerance);
-      assert_values_equal_rel(z, p2.z(), tolerance);
+      positions.push_back(p);
 
       ++index;
+    }
+
+    std::sort(positions.begin(), positions.end(),
+              SPHNGVoronoiGeneratorDistribution::position_smaller_than);
+    SPHNGVoronoiGeneratorDistribution generator_distribution(
+        "SPHNGtest_notags.dat", nullptr);
+    for (uint_fast32_t i = 0; i < positions.size(); ++i) {
+      const CoordinateVector<> p = generator_distribution.get_position();
+      assert_condition(positions[i].x() == p.x());
+      assert_condition(positions[i].y() == p.y());
+      assert_condition(positions[i].z() == p.z());
     }
     cmac_status("Done reading untagged file.");
   }
