@@ -32,12 +32,13 @@
 /**
  * @brief Constructor.
  *
+ * @param simulation_box Simulation box (in m).
  * @param filename Name of the SPHNG snapshot file to read.
  * @param log Log to write logging info to.
  */
 SPHNGVoronoiGeneratorDistribution::SPHNGVoronoiGeneratorDistribution(
-    const std::string filename, Log *log)
-    : _current_number(0) {
+    const Box<> &simulation_box, const std::string filename, Log *log)
+    : _box(simulation_box), _current_number(0) {
 
   std::ifstream file(filename, std::ios::binary | std::ios::in);
 
@@ -308,6 +309,12 @@ SPHNGVoronoiGeneratorDistribution::SPHNGVoronoiGeneratorDistribution(
             position_smaller_than);
   auto last =
       std::unique(_generator_positions.begin(), _generator_positions.end());
+  _generator_positions.erase(last, _generator_positions.end());
+
+  // filter out positions that are not inside the box
+  BoxFilter box_filter(_box);
+  last = std::remove_if(_generator_positions.begin(),
+                        _generator_positions.end(), box_filter);
   _generator_positions.erase(last, _generator_positions.end());
 
   if (log) {

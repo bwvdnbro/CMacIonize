@@ -83,10 +83,11 @@ int main(int argc, char **argv) {
       ++index;
     }
 
+    const Box<> box(0., 1.);
     std::sort(positions.begin(), positions.end(),
               SPHNGVoronoiGeneratorDistribution::position_smaller_than);
-    SPHNGVoronoiGeneratorDistribution generator_distribution("SPHNGtest.dat",
-                                                             nullptr);
+    SPHNGVoronoiGeneratorDistribution generator_distribution(
+        box, "SPHNGtest.dat", nullptr);
     for (uint_fast32_t i = 0; i < positions.size(); ++i) {
       const CoordinateVector<> p = generator_distribution.get_position();
       assert_condition(positions[i].x() == p.x());
@@ -136,10 +137,11 @@ int main(int argc, char **argv) {
       ++index;
     }
 
+    const Box<> box(0., 1.);
     std::sort(positions.begin(), positions.end(),
               SPHNGVoronoiGeneratorDistribution::position_smaller_than);
     SPHNGVoronoiGeneratorDistribution generator_distribution(
-        "SPHNGtest_notags.dat", nullptr);
+        box, "SPHNGtest_notags.dat", nullptr);
     for (uint_fast32_t i = 0; i < positions.size(); ++i) {
       const CoordinateVector<> p = generator_distribution.get_position();
       assert_condition(positions[i].x() == p.x());

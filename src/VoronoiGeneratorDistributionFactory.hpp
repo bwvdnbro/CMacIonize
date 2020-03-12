@@ -112,7 +112,7 @@ public:
       return new SPHVoronoiGeneratorDistribution(params, log);
     } else if (type == "SPHNG") {
       // added by Maya
-      return new SPHNGVoronoiGeneratorDistribution(params, log);
+      return new SPHNGVoronoiGeneratorDistribution(simulation_box, params, log);
     } else if (type == "UniformRandom") {
       return new UniformRandomVoronoiGeneratorDistribution(simulation_box,
                                                            params, log);
