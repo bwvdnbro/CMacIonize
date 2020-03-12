@@ -40,6 +40,37 @@
  */
 class SPHNGVoronoiGeneratorDistribution : public VoronoiGeneratorDistribution {
 private:
+  /**
+   * @brief Functor used to filter out positions that are not inside the
+   * simulation box.
+   */
+  class BoxFilter {
+  private:
+    /*! @brief Underlying box (in m). */
+    const Box<> &_box;
+
+  public:
+    /**
+     * @brief Constructor.
+     *
+     * @param box Underlying box (in m).
+     */
+    inline BoxFilter(const Box<> &box) : _box(box) {}
+
+    /**
+     * @brief Return false if the given position is inside the box.
+     *
+     * @param p Position (in m).
+     * @return True if the position is outside the box.
+     */
+    inline bool operator()(const CoordinateVector<> &p) const {
+      return !_box.inside(p);
+    }
+  };
+
+  /*! @brief Box containing the generators (in m). */
+  const Box<> _box;
+
   /*! @brief Number of positions already generated. */
   generatornumber_t _current_number;
 
@@ -86,7 +117,8 @@ public:
     }
   }
 
-  SPHNGVoronoiGeneratorDistribution(std::string filename, Log *log = nullptr);
+  SPHNGVoronoiGeneratorDistribution(const Box<> &simulation_box,
+                                    std::string filename, Log *log = nullptr);
 
   /**
    * @brief ParameterFile constructor.
@@ -94,11 +126,14 @@ public:
    * Parameters are:
    *  - filename: Name of the file (required)
    *
+   * @param simulation_box Simulation box (in m).
    * @param params ParameterFile to read from.
    * @param log Log to write logging info to.
    */
-  SPHNGVoronoiGeneratorDistribution(ParameterFile &params, Log *log = nullptr)
+  SPHNGVoronoiGeneratorDistribution(const Box<> &simulation_box,
+                                    ParameterFile &params, Log *log = nullptr)
       : SPHNGVoronoiGeneratorDistribution(
+            simulation_box,
             params.get_filename(
                 "DensityGrid:VoronoiGeneratorDistribution:filename"),
             log) {}
