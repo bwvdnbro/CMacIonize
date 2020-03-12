@@ -376,12 +376,13 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
   // now output all parameters (also those for which default values were used)
   // to a reference parameter file (only rank 0 does this)
   if (write_output && restart_reader == nullptr) {
-    std::ofstream pfile(output_folder + "/parameters-usedvalues.param");
+    const std::string usedvaluename =
+        parser.get_value< std::string >("params") + ".used-values";
+    std::ofstream pfile(usedvaluename);
     params->print_contents(pfile);
     pfile.close();
     if (log) {
-      log->write_status("Wrote used parameters to ", output_folder,
-                        "/parameters-usedvalues.param.");
+      log->write_status("Wrote used parameters to ", usedvaluename, ".");
     }
   }
 

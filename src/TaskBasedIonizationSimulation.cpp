@@ -458,12 +458,12 @@ TaskBasedIonizationSimulation::TaskBasedIonizationSimulation(
 
   // we are done reading the parameter file
   // now output all parameters (also those for which default values were used)
-  std::ofstream pfile(output_folder + "/parameters-usedvalues.param");
+  const std::string usedvaluename = parameterfile_name + ".used-values";
+  std::ofstream pfile(usedvaluename);
   _parameter_file.print_contents(pfile);
   pfile.close();
   if (_log) {
-    _log->write_status("Wrote used parameters to ", output_folder,
-                       "/parameters-usedvalues.param.");
+    _log->write_status("Wrote used parameters to ", usedvaluename, ".");
   }
 
   _memory_log.add_entry("parameters done");
