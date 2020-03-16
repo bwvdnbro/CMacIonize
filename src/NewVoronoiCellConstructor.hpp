@@ -97,7 +97,7 @@ private:
     }
     _tetrahedra_size = new_size;
 
-    if (_tetrahedra_size == _tetrahedra.size()) {
+    if (_tetrahedra_size >= _tetrahedra.size()) {
       _tetrahedra.resize(_tetrahedra_size + NEWVORONOICELL_TETRAHEDRA_SIZE);
     }
   }
@@ -126,7 +126,7 @@ private:
     }
     _tetrahedra_size = new_size;
 
-    if (_tetrahedra_size == _tetrahedra.size()) {
+    if (_tetrahedra_size >= _tetrahedra.size()) {
       _tetrahedra.resize(_tetrahedra_size + NEWVORONOICELL_TETRAHEDRA_SIZE);
     }
   }
