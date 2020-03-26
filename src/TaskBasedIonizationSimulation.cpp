@@ -44,6 +44,7 @@
 #include "SimulationBox.hpp"
 #include "TaskQueue.hpp"
 #include "TemperatureCalculator.hpp"
+#include "ThreadStats.hpp"
 #include "TrackerManager.hpp"
 
 #include <fstream>
@@ -665,6 +666,9 @@ void TaskBasedIonizationSimulation::run(
     number_of_discrete_photons = _number_of_photons;
   }
 
+  // per thread execution statistics
+  std::vector< ThreadStats > thread_stats(_queues.size());
+
   const uint_fast32_t number_of_continuous_blocks = _queues.size();
   std::vector< ThreadLock > continuous_source_lock(number_of_continuous_blocks);
   AtomicValue< uint_fast32_t > number_of_continuous_photons(0);
@@ -977,6 +981,7 @@ void TaskBasedIonizationSimulation::run(
           int_fast32_t queues_to_add[TRAVELDIRECTION_NUMBER];
 
           Task &task = (*_tasks)[current_index];
+          thread_stats[thread_id].start(task.get_type());
 
           if (task.get_type() == TASKTYPE_SOURCE_DISCRETE_PHOTON) {
 
@@ -1365,6 +1370,8 @@ void TaskBasedIonizationSimulation::run(
           } else if (task.get_type() == TASKTYPE_PHOTON_TRAVERSAL) {
 
             task.start(thread_id);
+            uint_fast64_t task_start, task_stop;
+            cpucycle_tick(task_start);
 
             const uint_fast32_t current_buffer_index = task.get_buffer();
             PhotonBuffer &photon_buffer = (*_buffers)[current_buffer_index];
@@ -1559,8 +1566,11 @@ void TaskBasedIonizationSimulation::run(
             num_active_buffers.pre_decrement();
             // log the end time of the task
             task.stop();
+            cpucycle_tick(task_stop);
+            this_grid.add_computational_cost(task_stop - task_start);
           }
           task.unlock_dependency();
+          thread_stats[thread_id].stop(task.get_type());
 
           // we are done with the task, clean up (if we don't output it)
           if (!_task_plot) {
@@ -1641,6 +1651,7 @@ void TaskBasedIonizationSimulation::run(
           Task &task = (*_tasks)[itask];
           task.set_type(TASKTYPE_TEMPERATURE_STATE);
           task.start(get_thread_index());
+          thread_stats[get_thread_index()].start(TASKTYPE_TEMPERATURE_STATE);
 
 #ifndef VARIABLE_ABUNDANCES
           // correct the intensity counters for abundance factors
@@ -1665,6 +1676,7 @@ void TaskBasedIonizationSimulation::run(
           _temperature_calculator->calculate_temperature(
               iloop, _number_of_photons, *gridit);
           task.stop();
+          thread_stats[get_thread_index()].stop(TASKTYPE_TEMPERATURE_STATE);
 
           // clean up (if we don't need the task any more)
           if (!_task_plot) {
@@ -1675,6 +1687,68 @@ void TaskBasedIonizationSimulation::run(
       stop_parallel_timing_block();
     }
     _time_log.end("temperature calculation");
+
+    // output diagnostic information
+    {
+      uint_fast64_t early_iteration_end;
+      cpucycle_tick(early_iteration_end);
+      // compose the file name
+      std::stringstream filename;
+      filename << "diagnostics_";
+      filename.fill('0');
+      filename.width(2);
+      filename << iloop;
+      filename << ".txt";
+
+      // now open the file
+      std::ofstream ofile(filename.str(), std::ofstream::trunc);
+      ofile << "iteration:\n";
+      ofile << "  start: " << iteration_start << "\n";
+      ofile << "  end: " << early_iteration_end << "\n";
+      ofile << "buffers:\n";
+      ofile << "  total: " << _buffers->get_total_number_elements() << "\n";
+      _buffers->reset_total_number_elements();
+      ofile << "  max: " << _buffers->get_max_number_elements() << "\n";
+      _buffers->reset_max_number_elements();
+      ofile << "tasks:\n";
+      ofile << "  total: " << _tasks->get_total_number_taken() << "\n";
+      _tasks->reset_total_number_taken();
+      ofile << "  max: " << _tasks->get_max_number_taken() << "\n";
+      _tasks->reset_max_number_taken();
+      ofile << "queues:\n";
+      ofile << "  shared:\n";
+      ofile << "    total: " << _shared_queue->get_total_queue_size() << "\n";
+      _shared_queue->reset_total_queue_size();
+      ofile << "    max: " << _shared_queue->get_max_queue_size() << "\n";
+      _shared_queue->reset_max_queue_size();
+      for (uint_fast32_t i = 0; i < _queues.size(); ++i) {
+        ofile << "  thread " << i << ":\n";
+        ofile << "    total: " << _queues[i]->get_total_queue_size() << "\n";
+        _queues[i]->reset_total_queue_size();
+        ofile << "    max: " << _queues[i]->get_max_queue_size() << "\n";
+        _queues[i]->reset_max_queue_size();
+      }
+      ofile << "threads:\n";
+      for (uint_fast32_t i = 0; i < thread_stats.size(); ++i) {
+        ofile << "  thread " << i << ":\n";
+        for (int_fast32_t j = 0; j < TASKTYPE_NUMBER; ++j) {
+          ofile << "    task " << j << ":\n";
+          ofile << "      number: "
+                << thread_stats[i].get_number_of_tasks_executed(j) << "\n";
+          ofile << "      time: " << thread_stats[i].get_total_time(j) << "\n";
+          ofile << "      squared time: "
+                << thread_stats[i].get_total_time_squared(j) << "\n";
+        }
+        thread_stats[i].reset();
+      }
+      ofile << "subgrids:\n";
+      for (auto it = _grid_creator->begin(); it != _grid_creator->all_end();
+           ++it) {
+        ofile << "  subgrid " << it.get_index() << ": "
+              << (*it).get_computational_cost() << "\n";
+        (*it).reset_computational_cost();
+      }
+    }
 
     _time_log.start("buffer reset");
     _buffers->reset();

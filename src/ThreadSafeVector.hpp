@@ -31,6 +31,9 @@
 
 #include <string>
 
+/*! @brief Activate diagnostic information. */
+#define THREADSAFEVECTOR_STATS
+
 /*! @brief Total size of the variables whose size is known at compile time. */
 #define THREADSAFEVECTOR_FIXED_SIZE sizeof(ThreadSafeVector< _datatype_ >)
 
@@ -63,6 +66,10 @@ private:
   /*! @brief Maximum number of elements taken simultaneously at any given point
    * in time. */
   AtomicValue< size_t > _max_number_taken;
+
+  /*! @brief Total number of elements taken (including reuses) since the last
+   *  call to clear() or an alternative clearing method. */
+  AtomicValue< size_t > _total_number_taken;
 #endif
 
   /*! @brief Label appended to error messages. */
@@ -109,6 +116,7 @@ public:
 
 #ifdef THREADSAFEVECTOR_STATS
     _max_number_taken.set(0);
+    _total_number_taken.set(0);
 #endif
   }
 
@@ -118,6 +126,11 @@ public:
   inline void clear_fast() {
     cmac_assert(_number_taken.value() == 0);
     _current_index.set(0);
+
+#ifdef THREADSAFEVECTOR_STATS
+    _max_number_taken.set(0);
+    _total_number_taken.set(0);
+#endif
   }
 
   /**
@@ -142,6 +155,7 @@ public:
 
 #ifdef THREADSAFEVECTOR_STATS
     _max_number_taken.max(_number_taken.value());
+    _total_number_taken.pre_add(size);
 #endif
   }
 
@@ -164,6 +178,7 @@ public:
 
 #ifdef THREADSAFEVECTOR_STATS
     _max_number_taken.set(offset);
+    _total_number_taken.set(offset);
 #endif
   }
 
@@ -218,6 +233,7 @@ public:
 #ifdef THREADSAFEVECTOR_STATS
     const size_t number_taken = _number_taken.pre_increment();
     _max_number_taken.max(number_taken);
+    _total_number_taken.pre_increment();
 #else
     _number_taken.pre_increment();
 #endif
@@ -269,6 +285,7 @@ public:
 #ifdef THREADSAFEVECTOR_STATS
       const size_t number_taken = _number_taken.pre_increment();
       _max_number_taken.max(number_taken);
+      _total_number_taken.pre_increment();
 #else
       _number_taken.pre_increment();
 #endif
@@ -353,11 +370,30 @@ public:
   }
 #endif
 
+  /**
+   * @brief Get the total number of elements (including reuses) that was taken
+   * since the last call to clear() or an alternative clearing method.
+   *
+   * @return Total number of elements taken (including reuses).
+   */
+#ifdef THREADSAFEVECTOR_STATS
+  inline size_t get_total_number_taken() const {
+    return _total_number_taken.value();
+  }
+#endif
+
 /**
  * @brief Reset the counter for the maximum number of elements that was taken.
  */
 #ifdef THREADSAFEVECTOR_STATS
   inline void reset_max_number_taken() { _max_number_taken.set(0); }
+#endif
+
+  /**
+   * @brief Reset the counter for the total number of elements that was taken.
+   */
+#ifdef THREADSAFEVECTOR_STATS
+  inline void reset_total_number_taken() { _total_number_taken.set(0); }
 #endif
 };
 

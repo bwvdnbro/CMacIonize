@@ -166,11 +166,29 @@ public:
   }
 
   /**
+   * @brief Get the total number of elements (including reuses) that was taken
+   * since the last call to reset().
+   *
+   * @return Total number of elements taken (including reuses).
+   */
+  inline size_t get_total_number_elements() const {
+    return _memory_space.get_total_number_taken();
+  }
+
+  /**
    * @brief Reset the counter for the maximum number of elements in the memory
    * space.
    */
   inline void reset_max_number_elements() {
     _memory_space.reset_max_number_taken();
+  }
+
+  /**
+   * @brief Reset the counter for the total number of elements in the memory
+   * space (including reuses).
+   */
+  inline void reset_total_number_elements() {
+    _memory_space.reset_total_number_taken();
   }
 #endif
 };
