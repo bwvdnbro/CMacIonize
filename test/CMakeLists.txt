@@ -1568,6 +1568,8 @@ set(TESTTASKBASEDIONIZATIONSIMULATION_SOURCES
     ${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
     ${PROJECT_BINARY_DIR}/src/ConfigurationInfo.cpp
 )
+set_source_files_properties(${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
+                            PROPERTIES GENERATED TRUE)
 add_unit_test(NAME testTaskBasedIonizationSimulation
               SOURCES ${TESTTASKBASEDIONIZATIONSIMULATION_SOURCES}
               LIBS TaskBasedIonizationSimulation)

@@ -65,6 +65,9 @@ private:
 #ifdef QUEUE_STATS
   /*! @brief Maximum size of the queue at any given time. */
   size_t _max_queue_size;
+
+  /*! @brief Total number of tasks stored in the queue. */
+  size_t _total_queue_size;
 #endif
 
   /*! @brief Label to identify this queue in error messages. */
@@ -82,6 +85,7 @@ public:
     _queue = new size_t[size];
 #ifdef QUEUE_STATS
     _max_queue_size = 0;
+    _total_queue_size = 0;
 #endif
   }
 
@@ -104,6 +108,7 @@ public:
     ++_current_queue_size;
 #ifdef QUEUE_STATS
     _max_queue_size = std::max(_max_queue_size, _current_queue_size);
+    ++_total_queue_size;
 #endif
     _queue_lock.unlock();
   }
@@ -130,6 +135,7 @@ public:
     _current_queue_size += (task_end - task_start);
 #ifdef QUEUE_STATS
     _max_queue_size = std::max(_max_queue_size, _current_queue_size);
+    _total_queue_size += (task_end - task_start);
 #endif
     _queue_lock.unlock();
   }
@@ -241,10 +247,26 @@ public:
 #endif
 
 /**
+ * @brief Get the total number of tasks that was stored in the queue.
+ *
+ * @return Total number of tasks stored in the queue.
+ */
+#ifdef QUEUE_STATS
+  inline size_t get_total_queue_size() const { return _total_queue_size; }
+#endif
+
+/**
  * @brief Reset the maximum size of the queue counter.
  */
 #ifdef QUEUE_STATS
   inline void reset_max_queue_size() { _max_queue_size = 0; }
+#endif
+
+/**
+ * @brief Reset the counter for the total number of tasks in the queue.
+ */
+#ifdef QUEUE_STATS
+  inline void reset_total_queue_size() { _total_queue_size = 0; }
 #endif
 };
 
