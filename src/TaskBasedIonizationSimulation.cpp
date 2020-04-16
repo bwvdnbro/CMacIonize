@@ -563,6 +563,17 @@ void TaskBasedIonizationSimulation::initialize(
   _grid_creator->initialize(*density_function);
   stop_parallel_timing_block();
 
+  if (_log) {
+    _log->write_status("Task-based structure sizes:");
+    _log->write_status("DensitySubGrid: ",
+                       Utilities::human_readable_bytes(
+                           (*_grid_creator->begin()).get_memory_size()));
+    _log->write_status("Single cell: ", Utilities::human_readable_bytes(
+                                            sizeof(IonizationVariables)));
+    _log->write_status("PhotonBuffer: ",
+                       Utilities::human_readable_bytes(sizeof(PhotonBuffer)));
+  }
+
 #ifdef VARIABLE_ABUNDANCES
   for (auto gridit = _grid_creator->begin();
        gridit != _grid_creator->original_end(); ++gridit) {
