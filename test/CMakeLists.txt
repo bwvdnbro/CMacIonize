@@ -1561,13 +1561,16 @@ set(TESTTASKBASEDIONIZATIONSIMULATION_SOURCES
     testTaskBasedIonizationSimulation.cpp
 
     ../src/AsciiFileDensityGridWriter.cpp
-    ../src/GadgetDensityGridWriter.cpp
     ../src/ParameterFile.cpp
     ../src/Signals.cpp
 
     ${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
     ${PROJECT_BINARY_DIR}/src/ConfigurationInfo.cpp
 )
+if(HAVE_HDF5)
+  list(APPEND TESTTASKBASEDIONIZATIONSIMULATION_SOURCES
+       ../src/GadgetDensityGridWriter.cpp)
+endif(HAVE_HDF5)
 set_source_files_properties(${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
                             PROPERTIES GENERATED TRUE)
 add_unit_test(NAME testTaskBasedIonizationSimulation

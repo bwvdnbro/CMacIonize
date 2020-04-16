@@ -180,7 +180,9 @@ int main(int argc, char **argv) {
 
   // add simulation type specific parameters
   RadiationHydrodynamicsSimulation::add_command_line_parameters(parser);
+#ifdef HAVE_HDF5
   EmissivityCalculationSimulation::add_command_line_parameters(parser);
+#endif
   TaskBasedRadiationHydrodynamicsSimulation::add_command_line_parameters(
       parser);
 
@@ -285,11 +287,20 @@ int main(int argc, char **argv) {
                                                            programtimer, log);
   } else if (parser.get_value< bool >("emission")) {
 
+#ifdef HAVE_HDF5
+
     if (comm.get_size() > 1) {
       cmac_error("MPI emission calculation is not supported!");
     }
     return EmissivityCalculationSimulation::do_simulation(parser, write_output,
                                                           programtimer, log);
+
+#else
+    cmac_error("Code was not compiled with HDF5 support, emissivity calculator "
+               "will not work!");
+    return 1;
+#endif
+
   } else if (parser.get_value< bool >("task-based")) {
 
     if (comm.get_size() > 1) {
