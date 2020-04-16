@@ -123,7 +123,6 @@ configure_file(${PROJECT_SOURCE_DIR}/src/ConfigurationInfo.hpp.in
                ${PROJECT_BINARY_DIR}/src/ConfigurationInfo.hpp @ONLY)
 
 set(LIBIONIZATIONSIMULATION_SOURCES
-    AmunSnapshotDensityFunction.cpp
     AsciiFileDensityFunction.cpp
     AsciiFileDensityGridWriter.cpp
     AsciiFileTablePhotonSourceDistribution.cpp
@@ -169,6 +168,7 @@ set(LIBIONIZATIONSIMULATION_SOURCES
 )
 if(HAVE_HDF5)
   list(APPEND LIBIONIZATIONSIMULATION_SOURCES
+       ../src/AmunSnapshotDensityFunction.cpp
        ../src/CMacIonizeSnapshotDensityFunction.cpp
        ../src/CMacIonizeVoronoiGeneratorDistribution.cpp
        ../src/FLASHSnapshotDensityFunction.cpp
@@ -187,7 +187,6 @@ set(CMACIONIZE_SOURCES
     DeRijckeRadiativeCooling.cpp
     DustScattering.cpp
     DustSimulation.cpp
-    EmissivityCalculationSimulation.cpp
     EmissivityCalculator.cpp
     RadiationHydrodynamicsSimulation.cpp
     Signals.cpp
@@ -196,7 +195,6 @@ set(CMACIONIZE_SOURCES
     Abundances.hpp
     AMRRefinementScheme.hpp
     AMRRefinementSchemeFactory.hpp
-    AmunSnapshotDensityFunction.cpp
     AsciiFileDensityFunction.hpp
     AsciiFileDensityGridWriter.hpp
     AsciiFileTablePhotonSourceDistribution.hpp
@@ -204,8 +202,6 @@ set(CMACIONIZE_SOURCES
     BondiProfileDensityFunction.hpp
     CartesianDensityGrid.hpp
     ChargeTransferRates.hpp
-    CMacIonizeSnapshotDensityFunction.hpp
-    CMacIonizeVoronoiGeneratorDistribution.hpp
     Configuration.hpp.in
     ConfigurationInfo.hpp.in
     ContinuousPhotonSourceFactory.hpp
@@ -296,11 +292,7 @@ set_source_files_properties(${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
 # add HDF5 dependent sources, if we have found HDF5
 if(HAVE_HDF5)
     list(APPEND CMACIONIZE_SOURCES
-        FLASHSnapshotDensityFunction.hpp
-        GadgetDensityGridWriter.hpp
-        GadgetSnapshotDensityFunction.hpp
-        GadgetSnapshotPhotonSourceDistribution.hpp
-        HDF5Tools.hpp)
+         EmissivityCalculationSimulation.cpp)
 endif(HAVE_HDF5)
 
 if(HAVE_WINDOWS)
@@ -333,18 +325,13 @@ endif(HAVE_MPI)
 
 set(LIBTASKBASEDIONIZATIONSIMULATION_SOURCES
 
-    AmunSnapshotDensityFunction.cpp
     AsciiFileDensityFunction.cpp
     AsciiFileTablePhotonSourceDistribution.cpp
     AtomicValue.hpp
     ChargeTransferRates.cpp
-    CMacIonizeSnapshotDensityFunction.cpp
     CPUCycle.hpp
     DensitySubGrid.hpp
     FaucherGiguerePhotonSourceSpectrum.cpp
-    FLASHSnapshotDensityFunction.cpp
-    GadgetSnapshotDensityFunction.cpp
-    GadgetSnapshotPhotonSourceDistribution.cpp
     HeliumLymanContinuumSpectrum.cpp
     HeliumTwoPhotonContinuumSpectrum.cpp
     HydrogenLymanContinuumSpectrum.cpp
@@ -375,6 +362,17 @@ set(LIBTASKBASEDIONIZATIONSIMULATION_SOURCES
     VernerRecombinationRates.cpp
     WMBasicPhotonSourceSpectrum.cpp
 )
+
+# add HDF5 dependent sources, if we have found HDF5
+if(HAVE_HDF5)
+    list(APPEND LIBTASKBASEDIONIZATIONSIMULATION_SOURCES
+        AmunSnapshotDensityFunction.cpp
+        CMacIonizeSnapshotDensityFunction.cpp
+        FLASHSnapshotDensityFunction.cpp
+        GadgetSnapshotDensityFunction.cpp
+        GadgetSnapshotPhotonSourceDistribution.cpp
+        HDF5Tools.hpp)
+endif(HAVE_HDF5)
 
 add_library(TaskBasedIonizationSimulation ${LIBTASKBASEDIONIZATIONSIMULATION_SOURCES})
 add_dependencies(TaskBasedIonizationSimulation CompilerInfo)
