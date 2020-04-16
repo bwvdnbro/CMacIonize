@@ -193,7 +193,6 @@ int main(int argc, char **argv) {
     cmac_status("Brute force search time: %g s", bf_timer.value());
 
     assert_condition(smart_ngb_count == bf_ngb_count);
-    assert_condition(smart_timer.value() < bf_timer.value());
   }
 
   /// Test a limit search whereby the search radius is so large all positions
@@ -283,7 +282,6 @@ int main(int argc, char **argv) {
     cmac_status("Brute force search time: %g s", bf_timer.value());
 
     assert_condition(smart_index == bf_index);
-    assert_condition(smart_timer.value() < bf_timer.value());
   }
 
   /// Test a number of closest neighbour searches for arbitrary positions

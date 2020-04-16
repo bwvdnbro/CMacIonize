@@ -123,9 +123,8 @@ class DensityValues;
  *  time. */
 #define DENSITYSUBGRID_FIXED_SIZE sizeof(DensitySubGrid)
 
-/*! @brief Number of variables stored in each cell of the DensitySubGrid
- *  (excluding potential lock variables). */
-#define DENSITYSUBGRID_ELEMENT_SIZE (3 + 40) * sizeof(double)
+/*! @brief Size of a single cell of the subgrid. */
+#define DENSITYSUBGRID_ELEMENT_SIZE sizeof(IonizationVariables)
 
 /**
  * @brief Small fraction of a density grid that acts as an individual density
