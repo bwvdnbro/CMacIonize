@@ -1732,12 +1732,18 @@ void TaskBasedIonizationSimulation::run(
       _shared_queue->reset_total_queue_size();
       ofile << "    max: " << _shared_queue->get_max_queue_size() << "\n";
       _shared_queue->reset_max_queue_size();
+      ofile << "    average: " << _shared_queue->get_average_queue_size()
+            << "\n";
+      _shared_queue->reset_average_queue_size();
       for (uint_fast32_t i = 0; i < _queues.size(); ++i) {
         ofile << "  thread " << i << ":\n";
         ofile << "    total: " << _queues[i]->get_total_queue_size() << "\n";
         _queues[i]->reset_total_queue_size();
         ofile << "    max: " << _queues[i]->get_max_queue_size() << "\n";
         _queues[i]->reset_max_queue_size();
+        ofile << "    average: " << _queues[i]->get_average_queue_size()
+              << "\n";
+        _queues[i]->reset_average_queue_size();
       }
       ofile << "threads:\n";
       for (uint_fast32_t i = 0; i < thread_stats.size(); ++i) {
