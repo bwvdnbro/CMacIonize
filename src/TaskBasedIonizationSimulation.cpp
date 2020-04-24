@@ -1781,10 +1781,11 @@ void TaskBasedIonizationSimulation::run(
     stop_parallel_timing_block();
     _time_log.end("copy update");
 
+    _worktimer.stop();
+
     if (_task_plot) {
       _time_log.start("task output");
       cpucycle_tick(iteration_end);
-      _worktimer.stop();
       output_tasks(iloop, *_tasks, iteration_start, iteration_end);
       output_queues(iloop, _queues, *_shared_queue);
       _time_log.end("task output");
