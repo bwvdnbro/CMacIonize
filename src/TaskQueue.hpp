@@ -68,6 +68,12 @@ private:
 
   /*! @brief Total number of tasks stored in the queue. */
   size_t _total_queue_size;
+
+  /*! @brief Average queue size accumulator. */
+  double _avg_queue_size;
+
+  /*! @brief Average queue size evaluation counter. */
+  double _avg_queue_size_count;
 #endif
 
   /*! @brief Label to identify this queue in error messages. */
@@ -86,6 +92,8 @@ public:
 #ifdef QUEUE_STATS
     _max_queue_size = 0;
     _total_queue_size = 0;
+    _avg_queue_size = 0;
+    _avg_queue_size_count = 0;
 #endif
   }
 
@@ -109,6 +117,8 @@ public:
 #ifdef QUEUE_STATS
     _max_queue_size = std::max(_max_queue_size, _current_queue_size);
     ++_total_queue_size;
+    _avg_queue_size += _current_queue_size;
+    ++_avg_queue_size_count;
 #endif
     _queue_lock.unlock();
   }
@@ -126,16 +136,20 @@ public:
                         _size, _label.c_str());
 
     _queue_lock.lock();
+    const size_t new_task_count = task_end - task_start;
 #ifdef HAVE_OPENMP
 #pragma omp parallel for
 #endif
-    for (size_t itask = 0; itask < (task_end - task_start); ++itask) {
+    for (size_t itask = 0; itask < new_task_count; ++itask) {
       _queue[_current_queue_size + itask] = task_start + itask;
     }
-    _current_queue_size += (task_end - task_start);
+    _current_queue_size += new_task_count;
 #ifdef QUEUE_STATS
     _max_queue_size = std::max(_max_queue_size, _current_queue_size);
-    _total_queue_size += (task_end - task_start);
+    _total_queue_size += new_task_count;
+    _avg_queue_size +=
+        (2 * _current_queue_size - new_task_count) * new_task_count / 2;
+    _avg_queue_size_count += new_task_count;
 #endif
     _queue_lock.unlock();
   }
@@ -171,6 +185,11 @@ public:
         _queue[index] = _queue[index + 1];
       }
     }
+
+#ifdef QUEUE_STATS
+    _avg_queue_size += _current_queue_size;
+    ++_avg_queue_size_count;
+#endif
 
     // we're done: unlock the queue
     _queue_lock.unlock();
@@ -212,6 +231,11 @@ public:
           _queue[index] = _queue[index + 1];
         }
       }
+
+#ifdef QUEUE_STATS
+      _avg_queue_size += _current_queue_size;
+      ++_avg_queue_size_count;
+#endif
 
       // we're done: unlock the queue
       _queue_lock.unlock();
@@ -255,6 +279,17 @@ public:
   inline size_t get_total_queue_size() const { return _total_queue_size; }
 #endif
 
+  /**
+   * @brief Get the average size of the queue over all queue interaction events.
+   *
+   * @return Average size of the queue
+   */
+#ifdef QUEUE_STATS
+  inline double get_average_queue_size() const {
+    return _avg_queue_size / _avg_queue_size_count;
+  }
+#endif
+
 /**
  * @brief Reset the maximum size of the queue counter.
  */
@@ -267,6 +302,16 @@ public:
  */
 #ifdef QUEUE_STATS
   inline void reset_total_queue_size() { _total_queue_size = 0; }
+#endif
+
+/**
+ * @brief Reset the counters for the average queue size.
+ */
+#ifdef QUEUE_STATS
+  inline void reset_average_queue_size() {
+    _avg_queue_size = 0;
+    _avg_queue_size_count = 0;
+  }
 #endif
 };
 

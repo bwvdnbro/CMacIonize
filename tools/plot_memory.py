@@ -52,14 +52,17 @@ data = np.loadtxt(
 memsum = data["virtual size"].sum()
 data = data[data["virtual size"] > 0.01 * memsum]
 
+labels = []
 # convert sizes to MB
 for row in data:
-    row["label"] += " ({0:.0f} MB)".format(float(row["virtual size"]) / MB)
+    labels.append(
+        "{0} ({1:.0f} MB)".format(
+            row["label"].decode("utf-8"), float(row["virtual size"]) / MB
+        )
+    )
 
 # create the pie chart
-pl.pie(
-    data["virtual size"], explode=np.ones(len(data)) * 0.1, labels=data["label"]
-)
+pl.pie(data["virtual size"], explode=np.ones(len(data)) * 0.1, labels=labels)
 
 # put the total memory usage in the title
 pl.title("Total memory: {0:.0f} MB".format(memsum / MB))
