@@ -55,6 +55,14 @@ IonizationSimulation:
   number of photons: 1e8
   random seed: 42
 
+TaskBasedIonizationSimulation:
+  number of iterations: 20
+  number of photons: 1e8
+  random seed: 42
+  diffuse field: true
+  shared queue size: 1000000
+  number of tasks: 5000000
+
 TemperatureCalculator:
   do temperature calculation: true
   PAH heating factor: 0.

@@ -5,7 +5,8 @@ source at the centre. The radiation from the star will ionize a spherical region
 surrounding the star, that will grow over time as the hydrodynamics reacts to
 the energy input from the source.
 
-This particular version uses a co-moving Voronoi grid.
+This particular version uses a co-moving Voronoi grid. This test does not work
+with the task-based algorithm.
 
 There are several approximate analytic expressions for the radius of the ionized
 region as a function of time.

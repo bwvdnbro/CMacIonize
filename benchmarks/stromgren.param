@@ -51,6 +51,14 @@ IonizationSimulation:
   # maximum number of iterations
   number of iterations: 20
 
+# Same as above, but for the task-based algorithm
+TaskBasedIonizationSimulation:
+  # number of photons to use
+  number of photons: 1e6
+
+  # maximum number of iterations
+  number of iterations: 20
+
 # output options
 DensityGridWriter:
   # type of output files to write
