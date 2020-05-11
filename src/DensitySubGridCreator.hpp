@@ -33,6 +33,7 @@
 #include "Error.hpp"
 #include "OpenMP.hpp"
 #include "ParameterFile.hpp"
+#include "PseudoDensitySubGrid.hpp"
 
 #include <cinttypes>
 #include <vector>
@@ -771,6 +772,16 @@ public:
    */
   inline iterator get_subgrid(const size_t index) {
     return iterator(index, *this);
+  }
+
+  /**
+   * @brief Dummy PseudoDensitySubGrid getter.
+   *
+   * @param index Index of a pseudo subgrid.
+   * @return Corresponding PseudoDensitySubGrid.
+   */
+  inline PseudoDensitySubGrid *get_pseudo_subgrid(const size_t index) const {
+    return nullptr;
   }
 
   /**

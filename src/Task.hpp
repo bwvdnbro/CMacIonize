@@ -49,6 +49,9 @@ enum TaskType {
   TASKTYPE_PHOTON_REEMIT,
   /*! @brief Compute the temperature/ionization state. */
   TASKTYPE_TEMPERATURE_STATE,
+  /*! @brief Refine an incoming photon buffer for propagation on a more refined
+   *  AMR level. */
+  TASKTYPE_REFINE_BUFFER,
   /*! @brief Send a buffer to another process. */
   TASKTYPE_SEND,
   /*! @brief Receive a buffer from another process. */

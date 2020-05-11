@@ -39,6 +39,7 @@
 #include "ParameterFile.hpp"
 #include "PhotonSourceDistributionFactory.hpp"
 #include "PhotonSourceSpectrumFactory.hpp"
+#include "PseudoDensitySubGrid.hpp"
 #include "RecombinationRatesFactory.hpp"
 #include "Signals.hpp"
 #include "SimulationBox.hpp"
@@ -1579,7 +1580,35 @@ void TaskBasedIonizationSimulation::run(
             task.stop();
             cpucycle_tick(task_stop);
             this_grid.add_computational_cost(task_stop - task_start);
+          } else if (task.get_type() == TASKTYPE_REFINE_BUFFER) {
+
+            task.start(thread_id);
+
+            const uint_fast32_t current_buffer_index = task.get_buffer();
+            PhotonBuffer &photon_buffer = (*_buffers)[current_buffer_index];
+            const int_fast32_t input_direction = photon_buffer.get_direction();
+            const uint_fast32_t igrid = photon_buffer.get_subgrid_index();
+            PseudoDensitySubGrid &this_grid =
+                *_grid_creator->get_pseudo_subgrid(igrid);
+
+            for (uint_fast32_t i = 0; i < photon_buffer.size(); ++i) {
+              // active photon
+              PhotonPacket &photon = photon_buffer[i];
+
+              const uint_fast32_t child_index = this_grid.get_child_index(
+                  photon.get_position(), input_direction);
+              const uint_fast32_t child = this_grid.get_child(child_index);
+              const uint_fast32_t new_index =
+                  this_grid.get_active_buffer(child_index);
+
+              (void)child;
+              (void)new_index;
+              // continue here
+            }
+
+            task.stop();
           }
+
           task.unlock_dependency();
           thread_stats[thread_id].stop(task.get_type());
 

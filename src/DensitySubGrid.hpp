@@ -893,8 +893,6 @@ public:
   /**
    * @brief Set the active buffer for the given direction.
    *
-   * This method will also argsort the active buffers.
-   *
    * @param direction TravelDirection.
    * @param index Index of the corresponding active buffer.
    */

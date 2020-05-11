@@ -59,6 +59,7 @@ task_names = [
     "photon traversal",
     "reemission",
     "temperature/ionization state",
+    "refine",
     "send",
     "receive",
     "gradsweep internal",
