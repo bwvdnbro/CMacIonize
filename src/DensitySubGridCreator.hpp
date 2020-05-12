@@ -785,6 +785,16 @@ public:
   }
 
   /**
+   * @brief Does the given index correspond to a pseudo subgrid?
+   *
+   * @param index Index of a subgrid.
+   * @return True if the corresponding subgrid is a pseudo subgrid (this version
+   * returns false regardless of the index, since the default implementation
+   * does not have pseudo subgrids).
+   */
+  inline bool is_pseudo_subgrid(const size_t index) const { return false; }
+
+  /**
    * @brief Dump the subgrids to the given restart file.
    *
    * @param restart_writer RestartWriter to write to.
