@@ -1598,13 +1598,66 @@ void TaskBasedIonizationSimulation::run(
               const uint_fast32_t child_index = this_grid.get_child_index(
                   photon.get_position(), input_direction);
               const uint_fast32_t child = this_grid.get_child(child_index);
-              const uint_fast32_t new_index =
+              uint_fast32_t new_index =
                   this_grid.get_active_buffer(child_index);
 
-              (void)child;
-              (void)new_index;
-              // continue here
+              if (new_index == NEIGHBOUR_OUTSIDE) {
+                // buffer does not exist, create it
+                new_index = _buffers->get_free_buffer();
+                PhotonBuffer &buffer = (*_buffers)[new_index];
+                buffer.set_subgrid_index(child);
+                buffer.set_direction(input_direction);
+                this_grid.set_active_buffer(child_index, new_index);
+                // we are adding photons to an empty buffer
+                num_empty.pre_decrement();
+              }
+
+              PhotonBuffer &buffer = (*_buffers)[new_index];
+              buffer[buffer.get_next_free_photon()] = photon;
+              if (buffer.size() == PHOTONBUFFER_SIZE) {
+                // buffer is full, launch it
+                this_grid.set_active_buffer(child_index, NEIGHBOUR_OUTSIDE);
+                num_empty.pre_increment();
+                // a new active buffer will be created
+                num_active_buffers.pre_increment();
+                // create task (we need to check for the possiblity that the
+                // subgrid is another pseudo subgrid...)
+                DensitySubGrid &subgrid = *_grid_creator->get_subgrid(child);
+                const size_t task_index = _tasks->get_free_element();
+                Task &new_task = (*_tasks)[task_index];
+                new_task.set_subgrid(child);
+                new_task.set_buffer(new_index);
+                new_task.set_type(TASKTYPE_PHOTON_TRAVERSAL);
+
+                // add dependencies for task:
+                //  - subgrid
+                new_task.set_dependency(subgrid.get_dependency());
+
+                // add the task to the queue of the corresponding thread
+                const int_fast32_t queue_index = subgrid.get_owning_thread();
+                queues_to_add[num_tasks_to_add] = queue_index;
+                tasks_to_add[num_tasks_to_add] = task_index;
+                ++num_tasks_to_add;
+              }
             }
+
+            // get rid of the original buffer
+            _buffers->free_buffer(current_buffer_index);
+
+            uint_fast32_t largest_size = 0;
+            uint_fast32_t largest_index = 0;
+            for (uint_fast32_t i = 0; i < this_grid.get_number_of_children();
+                 ++i) {
+              // update largest buffer variables
+              uint_fast32_t new_index = this_grid.get_active_buffer(i);
+              if (new_index != NEIGHBOUR_OUTSIDE &&
+                  (*_buffers)[new_index].size() > largest_size) {
+                largest_index = i;
+                largest_size = (*_buffers)[new_index].size();
+              }
+            }
+
+            this_grid.set_largest_buffer(largest_index, largest_size);
 
             task.stop();
           }

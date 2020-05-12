@@ -335,6 +335,15 @@ public:
   }
 
   /**
+   * @brief Get the number of children of this pseudo subgrid.
+   *
+   * @return Number of children.
+   */
+  inline uint_fast32_t get_number_of_children() const {
+    return _children.size();
+  }
+
+  /**
    * @brief Get the active buffer for the given child.
    *
    * @param child Child index.
