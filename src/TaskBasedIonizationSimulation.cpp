@@ -43,6 +43,7 @@
 #include "RecombinationRatesFactory.hpp"
 #include "Signals.hpp"
 #include "SimulationBox.hpp"
+#include "SourceContinuousPhotonTaskContext.hpp"
 #include "SourceDiscretePhotonTaskContext.hpp"
 #include "TaskQueue.hpp"
 #include "TemperatureCalculator.hpp"
@@ -603,8 +604,7 @@ void TaskBasedIonizationSimulation::run(
 
   const uint_fast32_t number_of_continuous_blocks = _queues.size();
   std::vector< ThreadLock > continuous_source_lock(number_of_continuous_blocks);
-  AtomicValue< uint_fast32_t > number_of_continuous_photons(0);
-  AtomicValue< uint_fast32_t > continuous_photons_flushed(0);
+  uint_fast32_t number_of_continuous_photons = 0;
   std::vector< std::vector< PhotonBuffer > > continuous_buffers(
       number_of_continuous_blocks);
   if (_continuous_photon_source != nullptr) {
@@ -612,16 +612,15 @@ void TaskBasedIonizationSimulation::run(
       continuous_buffers[i].resize(
           _grid_creator->number_of_original_subgrids());
     }
-    number_of_continuous_photons.set(_number_of_photons);
+    number_of_continuous_photons = _number_of_photons;
   }
 
   double discrete_photon_weight = 1.;
   double continuous_photon_weight = 1.;
-  if (number_of_discrete_photons > 0 &&
-      number_of_continuous_photons.value() > 0) {
+  if (number_of_discrete_photons > 0 && number_of_continuous_photons > 0) {
     number_of_discrete_photons >>= 1;
-    number_of_continuous_photons.set(_number_of_photons -
-                                     number_of_discrete_photons);
+    number_of_continuous_photons =
+        _number_of_photons - number_of_discrete_photons;
     const double luminosity_ratio =
         _total_luminosity /
             _photon_source_distribution->get_total_luminosity() -
@@ -631,7 +630,7 @@ void TaskBasedIonizationSimulation::run(
   }
 
   const uint_fast32_t fixed_number_of_continuous_photons =
-      number_of_continuous_photons.value();
+      number_of_continuous_photons;
 
   if (_photon_source_distribution != nullptr) {
     photon_source = new DistributedPhotonSource< DensitySubGrid >(
@@ -757,11 +756,11 @@ void TaskBasedIonizationSimulation::run(
       }
     }
     if (_continuous_photon_source) {
-      number_of_continuous_photons.set(fixed_number_of_continuous_photons);
+      number_of_continuous_photons = fixed_number_of_continuous_photons;
       const uint_fast32_t batch_size = PHOTONBUFFER_SIZE;
       uint_fast32_t block_index = 0;
       const uint_fast32_t num_batches =
-          number_of_continuous_photons.value() / batch_size;
+          number_of_continuous_photons / batch_size;
       for (uint_fast32_t ibatch = 0; ibatch < num_batches; ++ibatch) {
         const size_t new_task = _tasks->get_free_element();
         (*_tasks)[new_task].set_type(TASKTYPE_SOURCE_CONTINUOUS_PHOTON);
@@ -775,7 +774,7 @@ void TaskBasedIonizationSimulation::run(
         number_of_photons_done += batch_size;
       }
       const uint_fast32_t num_last_batch =
-          number_of_continuous_photons.value() % batch_size;
+          number_of_continuous_photons % batch_size;
       if (num_last_batch > 0) {
         const size_t new_task = _tasks->get_free_element();
         (*_tasks)[new_task].set_type(TASKTYPE_SOURCE_CONTINUOUS_PHOTON);
@@ -788,8 +787,7 @@ void TaskBasedIonizationSimulation::run(
         _shared_queue->add_task(new_task);
         number_of_photons_done += num_last_batch;
       }
-      number_of_continuous_photons.set(fixed_number_of_continuous_photons);
-      continuous_photons_flushed.set(0);
+      number_of_continuous_photons = fixed_number_of_continuous_photons;
     }
     cmac_assert_message(number_of_photons_done == _number_of_photons,
                         "%zu =/= %zu", number_of_photons_done,
@@ -800,10 +798,23 @@ void TaskBasedIonizationSimulation::run(
     bool global_run_flag = true;
     AtomicValue< uint_fast32_t > num_photon_done(0);
 
-    SourceDiscretePhotonTaskContext source_discrete_photon_task(
-        *photon_source, *_buffers, _random_generators, discrete_photon_weight,
-        *_photon_source_spectrum, _abundances, *_cross_sections, *_grid_creator,
-        *_tasks);
+    SourceDiscretePhotonTaskContext *source_discrete_photon_task = nullptr;
+    if (photon_source) {
+      source_discrete_photon_task = new SourceDiscretePhotonTaskContext(
+          *photon_source, *_buffers, _random_generators, discrete_photon_weight,
+          *_photon_source_spectrum, _abundances, *_cross_sections,
+          *_grid_creator, *_tasks);
+    }
+
+    SourceContinuousPhotonTaskContext *source_continuous_photon_task = nullptr;
+    if (_continuous_photon_source) {
+      source_continuous_photon_task = new SourceContinuousPhotonTaskContext(
+          *_continuous_photon_source, *_buffers, _random_generators,
+          continuous_photon_weight, *_continuous_photon_source_spectrum,
+          _abundances, *_cross_sections, *_grid_creator, *_tasks,
+          continuous_buffers, _queues, *_shared_queue,
+          number_of_continuous_photons, continuous_source_lock);
+    }
 
     start_parallel_timing_block();
 #ifdef HAVE_OPENMP
@@ -915,7 +926,7 @@ void TaskBasedIonizationSimulation::run(
 
             task.start(thread_id);
 
-            num_tasks_to_add = source_discrete_photon_task.execute(
+            num_tasks_to_add = source_discrete_photon_task->execute(
                 thread_id, tasks_to_add, queues_to_add, task);
 
             // log the end time of the task
@@ -925,123 +936,8 @@ void TaskBasedIonizationSimulation::run(
 
             task.start(thread_id);
 
-            const uint_fast32_t source_copy = task.get_subgrid();
-            const size_t num_photon_this_loop = task.get_buffer();
-
-            // draw random photons and store them in the continuous buffers
-            for (uint_fast32_t i = 0; i < num_photon_this_loop; ++i) {
-
-              auto posdir =
-                  _continuous_photon_source->get_random_incoming_direction(
-                      _random_generators[thread_id]);
-
-              const size_t subgrid_index =
-                  _grid_creator->get_subgrid(posdir.first).get_index();
-
-              PhotonBuffer &active_buffer =
-                  continuous_buffers[source_copy][subgrid_index];
-              const uint_fast32_t active_index =
-                  active_buffer.get_next_free_photon();
-
-              PhotonPacket &photon = active_buffer[active_index];
-
-              photon.set_type(PHOTONTYPE_PRIMARY);
-              photon.set_scatter_counter(0);
-
-              // initial position: we currently assume a single source at the
-              // origin
-              photon.set_position(posdir.first);
-              photon.set_direction(posdir.second);
-
-              // we currently assume equal weight for all photons
-              photon.set_weight(continuous_photon_weight);
-
-              // target optical depth (exponential distribution)
-              photon.set_target_optical_depth(-std::log(
-                  _random_generators[thread_id].get_uniform_random_double()));
-
-              const double frequency =
-                  _continuous_photon_source_spectrum->get_random_frequency(
-                      _random_generators[thread_id]);
-              photon.set_energy(frequency);
-              for (int_fast32_t ion = 0; ion < NUMBER_OF_IONNAMES; ++ion) {
-                double sigma =
-                    _cross_sections->get_cross_section(ion, frequency);
-#ifndef VARIABLE_ABUNDANCES
-                if (ion != ION_H_n) {
-                  sigma *= _abundances.get_abundance(get_element(ion));
-                }
-#endif
-                photon.set_photoionization_cross_section(ion, sigma);
-              }
-
-              // did the photon make the buffer overflow?
-              if (active_buffer.size() == PHOTONBUFFER_SIZE) {
-                // yes: send the buffer off!
-                uint_fast32_t buffer_index = (*_buffers).get_free_buffer();
-                PhotonBuffer &input_buffer = (*_buffers)[buffer_index];
-
-                // set general buffer information
-                input_buffer.grow(PHOTONBUFFER_SIZE);
-                input_buffer.set_subgrid_index(subgrid_index);
-                input_buffer.set_direction(TRAVELDIRECTION_INSIDE);
-
-                // copy over the photons
-                for (uint_fast32_t iphoton = 0; iphoton < PHOTONBUFFER_SIZE;
-                     ++iphoton) {
-                  input_buffer[iphoton] = active_buffer[iphoton];
-                }
-
-                // reset the active buffer
-                active_buffer.reset();
-
-                // add to the queue of the corresponding thread
-                DensitySubGrid &subgrid =
-                    *_grid_creator->get_subgrid(subgrid_index);
-                const size_t task_index = _tasks->get_free_element();
-                Task &new_task = (*_tasks)[task_index];
-                new_task.set_type(TASKTYPE_PHOTON_TRAVERSAL);
-                new_task.set_subgrid(subgrid_index);
-                new_task.set_buffer(buffer_index);
-
-                // add dependency for task:
-                //  - subgrid
-                // (the output buffers belong to the subgrid and do not count
-                // as a dependency)
-                new_task.set_dependency(subgrid.get_dependency());
-
-                _queues[subgrid.get_owning_thread()]->add_task(task_index);
-              }
-            }
-
-            cmac_assert(number_of_continuous_photons.value() >=
-                        num_photon_this_loop);
-            number_of_continuous_photons.pre_subtract(num_photon_this_loop);
-
-            // are we done with all photons?
-            if (number_of_continuous_photons.value() == 0) {
-              const uint_fast32_t flush =
-                  continuous_photons_flushed.pre_increment();
-              if (flush == 1) {
-                // yes: add tasks to flush all buffers
-                for (uint_fast32_t other_copy = 0;
-                     other_copy < number_of_continuous_blocks; ++other_copy) {
-                  const size_t task_index = _tasks->get_free_element();
-                  Task &new_task = (*_tasks)[task_index];
-                  new_task.set_type(TASKTYPE_FLUSH_CONTINUOUS_PHOTON_BUFFERS);
-                  new_task.set_subgrid(other_copy);
-                  new_task.set_buffer(0);
-
-                  // add dependency for task:
-                  //  - subgrid
-                  // (the output buffers belong to the subgrid and do not
-                  // count as a dependency)
-                  new_task.set_dependency(&continuous_source_lock[other_copy]);
-
-                  _shared_queue->add_task(task_index);
-                }
-              }
-            }
+            num_tasks_to_add = source_continuous_photon_task->execute(
+                thread_id, tasks_to_add, queues_to_add, task);
 
             // log the end time of the task
             task.stop();
