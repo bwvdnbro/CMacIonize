@@ -43,6 +43,7 @@
 #include "RecombinationRatesFactory.hpp"
 #include "Signals.hpp"
 #include "SimulationBox.hpp"
+#include "SourceDiscretePhotonTaskContext.hpp"
 #include "TaskQueue.hpp"
 #include "TemperatureCalculator.hpp"
 #include "ThreadStats.hpp"
@@ -895,6 +896,12 @@ void TaskBasedIonizationSimulation::run(
     uint_fast32_t verbose_last_num_empty = 0;
     uint_fast32_t verbose_last_num_active_buffers = 0;
     uint_fast32_t verbose_last_num_photon_done = 0;
+
+    SourceDiscretePhotonTaskContext source_discrete_photon_task(
+        num_active_buffers, *photon_source, *_buffers, _random_generators,
+        discrete_photon_weight, *_photon_source_spectrum, _abundances,
+        *_cross_sections, *_grid_creator, *_tasks);
+
     start_parallel_timing_block();
 #ifdef HAVE_OPENMP
 #pragma omp parallel default(shared)
@@ -1008,97 +1015,9 @@ void TaskBasedIonizationSimulation::run(
           if (task.get_type() == TASKTYPE_SOURCE_DISCRETE_PHOTON) {
 
             task.start(thread_id);
-            num_active_buffers.pre_increment();
-            const size_t source_index = task.get_subgrid();
 
-            const size_t num_photon_this_loop = task.get_buffer();
-            const size_t subgrid_index =
-                photon_source->get_subgrid(source_index);
-
-            // get a free photon buffer in the central queue
-            uint_fast32_t buffer_index = (*_buffers).get_free_buffer();
-            PhotonBuffer &input_buffer = (*_buffers)[buffer_index];
-
-            // set general buffer information
-            input_buffer.grow(num_photon_this_loop);
-            input_buffer.set_subgrid_index(subgrid_index);
-            input_buffer.set_direction(TRAVELDIRECTION_INSIDE);
-
-            const CoordinateVector<> source_position =
-                photon_source->get_position(source_index);
-
-            // draw random photons and store them in the buffer
-            for (uint_fast32_t i = 0; i < num_photon_this_loop; ++i) {
-
-              PhotonPacket &photon = input_buffer[i];
-
-              photon.set_type(PHOTONTYPE_PRIMARY);
-              photon.set_scatter_counter(0);
-
-              // initial position: we currently assume a single source at the
-              // origin
-              photon.set_position(source_position);
-
-              // draw two pseudo random numbers
-              const double cost = 2. * _random_generators[thread_id]
-                                           .get_uniform_random_double() -
-                                  1.;
-              const double phi =
-                  2. * M_PI *
-                  _random_generators[thread_id].get_uniform_random_double();
-
-              // now use them to get all directional angles
-              const double sint = std::sqrt(std::max(1. - cost * cost, 0.));
-              const double cosp = std::cos(phi);
-              const double sinp = std::sin(phi);
-
-              // set the direction...
-              const CoordinateVector<> direction(sint * cosp, sint * sinp,
-                                                 cost);
-
-              photon.set_direction(direction);
-
-              // we currently assume equal weight for all photons
-              photon.set_weight(discrete_photon_weight);
-
-              // target optical depth (exponential distribution)
-              photon.set_target_optical_depth(-std::log(
-                  _random_generators[thread_id].get_uniform_random_double()));
-
-              const double frequency =
-                  _photon_source_spectrum->get_random_frequency(
-                      _random_generators[thread_id]);
-              photon.set_energy(frequency);
-              for (int_fast32_t ion = 0; ion < NUMBER_OF_IONNAMES; ++ion) {
-                double sigma =
-                    _cross_sections->get_cross_section(ion, frequency);
-#ifndef VARIABLE_ABUNDANCES
-                if (ion != ION_H_n) {
-                  sigma *= _abundances.get_abundance(get_element(ion));
-                }
-#endif
-                photon.set_photoionization_cross_section(ion, sigma);
-              }
-            }
-
-            // add to the queue of the corresponding thread
-            DensitySubGrid &subgrid =
-                *_grid_creator->get_subgrid(subgrid_index);
-            const size_t task_index = _tasks->get_free_element();
-            Task &new_task = (*_tasks)[task_index];
-            new_task.set_type(TASKTYPE_PHOTON_TRAVERSAL);
-            new_task.set_subgrid(subgrid_index);
-            new_task.set_buffer(buffer_index);
-
-            // add dependency for task:
-            //  - subgrid
-            // (the output buffers belong to the subgrid and do not count as a
-            // dependency)
-            new_task.set_dependency(subgrid.get_dependency());
-
-            queues_to_add[num_tasks_to_add] = subgrid.get_owning_thread();
-            tasks_to_add[num_tasks_to_add] = task_index;
-            ++num_tasks_to_add;
+            num_tasks_to_add = source_discrete_photon_task.execute(
+                thread_id, tasks_to_add, queues_to_add, task);
 
             // log the end time of the task
             task.stop();
