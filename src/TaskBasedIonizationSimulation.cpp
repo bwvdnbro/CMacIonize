@@ -202,94 +202,6 @@ TaskBasedIonizationSimulation::get_task(const int_fast8_t thread_id) {
 }
 
 /**
- * @brief Output diagnostic information about the task execution (if activated).
- *
- * @param verbose Is verbose output activated?
- * @param log Log to write logging info to.
- * @param thread_id Thread ID (only thread 0 writes diagnostic info).
- * @param verbose_timer Timer used to regulate diagnostic output (output is
- * written every minute).
- * @param num_empty Atomic counter for the number of inactive subgrid buffers.
- * @param num_empty_target Target number of inactive subgrid buffers.
- * @param num_active_buffers Number of active buffers not related to any
- * subgrid.
- * @param num_photon_done Total number of photon packets that has been
- * processed.
- * @param num_photon_target Target number of photon packets to process.
- * @param verbose_last_num_empty Number of empty photon buffers last time
- * around (to detect if we are stuck).
- * @param verbose_last_num_active_buffers Number of active buffers last time
- * around (to detect if we are stuck).
- * @param verbose_last_num_photon_done Number of processed photon packets last
- * time around (to detect if we are stuck).
- * @param shared_queue Shared queue (to output its statistics).
- * @param queues Thread queues (to output their statistics).
- * @param tasks Tasks (to output the unfinished ones).
- * @param grid_creator Subgrids (to access their photon buffers).
- */
-inline void task_status(const bool verbose, Log *log,
-                        const int_fast32_t thread_id, Timer &verbose_timer,
-                        AtomicValue< uint_fast32_t > &num_empty,
-                        const uint_fast32_t num_empty_target,
-                        AtomicValue< uint_fast32_t > &num_active_buffers,
-                        AtomicValue< uint_fast32_t > &num_photon_done,
-                        const uint_fast32_t num_photon_target,
-                        uint_fast32_t &verbose_last_num_empty,
-                        uint_fast32_t &verbose_last_num_active_buffers,
-                        uint_fast32_t &verbose_last_num_photon_done,
-                        TaskQueue &shared_queue,
-                        std::vector< TaskQueue * > &queues,
-                        ThreadSafeVector< Task > &tasks,
-                        DensitySubGridCreator< DensitySubGrid > &grid_creator) {
-
-  if (verbose && log != nullptr && thread_id == 0) {
-    if (verbose_timer.interval() > 60.) {
-      const uint_fast32_t current_num_empty = num_empty.value();
-      const uint_fast32_t current_num_active_buffers =
-          num_active_buffers.value();
-      const uint_fast32_t current_num_photon_done = num_photon_done.value();
-      log->write_info("num_empty: ", current_num_empty, " (", num_empty_target,
-                      "), num_active_buffers: ", current_num_active_buffers,
-                      ", num_photon_done: ", current_num_photon_done, " (",
-                      num_photon_target, ")");
-      if (current_num_empty == verbose_last_num_empty &&
-          current_num_active_buffers == verbose_last_num_active_buffers &&
-          current_num_photon_done == verbose_last_num_photon_done) {
-        // This is curious. We might be deadlocked. Output additional
-        // information.
-        log->write_info("Shared queue size: ", shared_queue.size());
-        log->write_info("Thread queue sizes:");
-        for (uint_fast32_t ithread = 0; ithread < queues.size(); ++ithread) {
-          log->write_info("queue[", ithread, "]: ", queues[ithread]->size());
-        }
-        const size_t current_num_tasks = tasks.get_number_of_active_elements();
-        log->write_info("Number of unfinished tasks: ", current_num_tasks);
-        Task **current_tasks = new Task *[current_num_tasks];
-        const size_t number_of_tasks_retrieved =
-            tasks.get_active_elements(current_num_tasks, current_tasks);
-        for (size_t itask = 0; itask < number_of_tasks_retrieved; ++itask) {
-          log->write_info("task[", itask,
-                          "]: ", current_tasks[itask]->get_type());
-        }
-        delete[] current_tasks;
-        log->write_info("Subgrid buffers:");
-        for (auto gridit = grid_creator.begin();
-             gridit != grid_creator.all_end(); ++gridit) {
-          DensitySubGrid &this_subgrid = *gridit;
-          log->write_info("subgrid[", gridit.get_index(),
-                          "]: ", this_subgrid.get_largest_buffer_size());
-        }
-      }
-      verbose_last_num_empty = current_num_empty;
-      verbose_last_num_active_buffers = current_num_active_buffers;
-      verbose_last_num_photon_done = current_num_photon_done;
-      // reset the timer
-      verbose_timer.start();
-    }
-  }
-}
-
-/**
  * @brief Constructor.
  *
  * This method will read the following parameters from the parameter file:
@@ -886,21 +798,12 @@ void TaskBasedIonizationSimulation::run(
 
     _time_log.start("photon propagation");
     bool global_run_flag = true;
-    const uint_fast32_t num_empty_target =
-        TRAVELDIRECTION_NUMBER * _grid_creator->number_of_actual_subgrids();
-    AtomicValue< uint_fast32_t > num_empty(num_empty_target);
-    AtomicValue< uint_fast32_t > num_active_buffers(0);
     AtomicValue< uint_fast32_t > num_photon_done(0);
-    Timer verbose_timer;
-    verbose_timer.start();
-    uint_fast32_t verbose_last_num_empty = 0;
-    uint_fast32_t verbose_last_num_active_buffers = 0;
-    uint_fast32_t verbose_last_num_photon_done = 0;
 
     SourceDiscretePhotonTaskContext source_discrete_photon_task(
-        num_active_buffers, *photon_source, *_buffers, _random_generators,
-        discrete_photon_weight, *_photon_source_spectrum, _abundances,
-        *_cross_sections, *_grid_creator, *_tasks);
+        *photon_source, *_buffers, _random_generators, discrete_photon_weight,
+        *_photon_source_spectrum, _abundances, *_cross_sections, *_grid_creator,
+        *_tasks);
 
     start_parallel_timing_block();
 #ifdef HAVE_OPENMP
@@ -940,10 +843,6 @@ void TaskBasedIonizationSimulation::run(
                       this_subgrid.get_active_buffer(largest_index);
                   this_subgrid.set_active_buffer(largest_index,
                                                  NEIGHBOUR_OUTSIDE);
-                  // we are creating a new active photon buffer
-                  num_active_buffers.pre_increment();
-                  // we created a new empty buffer
-                  num_empty.pre_increment();
 
                   const size_t task_index = _tasks->get_free_element();
                   Task &new_task = (*_tasks)[task_index];
@@ -1082,8 +981,6 @@ void TaskBasedIonizationSimulation::run(
                 uint_fast32_t buffer_index = (*_buffers).get_free_buffer();
                 PhotonBuffer &input_buffer = (*_buffers)[buffer_index];
 
-                num_active_buffers.pre_increment();
-
                 // set general buffer information
                 input_buffer.grow(PHOTONBUFFER_SIZE);
                 input_buffer.set_subgrid_index(subgrid_index);
@@ -1161,8 +1058,6 @@ void TaskBasedIonizationSimulation::run(
                 // yes: send the buffer off!
                 uint_fast32_t buffer_index = (*_buffers).get_free_buffer();
                 PhotonBuffer &input_buffer = (*_buffers)[buffer_index];
-
-                num_active_buffers.pre_increment();
 
                 // set general buffer information
                 input_buffer.grow(continuous_buffers[source_copy][i].size());
@@ -1307,9 +1202,6 @@ void TaskBasedIonizationSimulation::run(
             } else {
               // delete the original buffer, as we are done with it
               _buffers->free_buffer(current_buffer_index);
-              cmac_assert_message(num_active_buffers.value() > 0,
-                                  "Number of active buffers < 0!");
-              num_active_buffers.pre_decrement();
             }
 
             task.stop();
@@ -1415,18 +1307,11 @@ void TaskBasedIonizationSimulation::run(
                   this_grid.set_active_buffer(i, new_index);
                 }
 
-                if ((*_buffers)[new_index].size() == 0) {
-                  // we are adding photons to an empty buffer
-                  num_empty.pre_decrement();
-                }
                 uint_fast32_t add_index =
                     _buffers->add_photons(new_index, local_buffers[i]);
 
                 // check if the original buffer is full
                 if (add_index != new_index) {
-
-                  // a new active buffer was created
-                  num_active_buffers.pre_increment();
 
                   // new_buffers.add_photons already created a new empty
                   // buffer, set it as the active buffer for this output
@@ -1434,8 +1319,6 @@ void TaskBasedIonizationSimulation::run(
                   if ((*_buffers)[add_index].size() == 0) {
                     _buffers->free_buffer(add_index);
                     this_grid.set_active_buffer(i, NEIGHBOUR_OUTSIDE);
-                    // we have created a new empty buffer
-                    num_empty.pre_increment();
                   } else {
                     this_grid.set_active_buffer(i, add_index);
 
@@ -1514,9 +1397,6 @@ void TaskBasedIonizationSimulation::run(
             // delete the original buffer, as we are done with it
             _buffers->free_buffer(current_buffer_index);
 
-            cmac_assert_message(num_active_buffers.value() > 0,
-                                "Number of active buffers < 0!");
-            num_active_buffers.pre_decrement();
             // log the end time of the task
             task.stop();
             cpucycle_tick(task_stop);
@@ -1539,35 +1419,10 @@ void TaskBasedIonizationSimulation::run(
             }
           }
 
-          // we need to call task_status twice: once inside the task loop
-          // (for when thread 0 is happily working) and once outside (for
-          // when thread 0 is idling)
-          task_status(_verbose, _log, thread_id, verbose_timer, num_empty,
-                      num_empty_target, num_active_buffers, num_photon_done,
-                      _number_of_photons, verbose_last_num_empty,
-                      verbose_last_num_active_buffers,
-                      verbose_last_num_photon_done, *_shared_queue, _queues,
-                      *_tasks, *_grid_creator);
-
           current_index = get_task(thread_id);
         }
 
-        task_status(_verbose, _log, thread_id, verbose_timer, num_empty,
-                    num_empty_target, num_active_buffers, num_photon_done,
-                    _number_of_photons, verbose_last_num_empty,
-                    verbose_last_num_active_buffers,
-                    verbose_last_num_photon_done, *_shared_queue, _queues,
-                    *_tasks, *_grid_creator);
-
-#ifdef OUTPUT_STOP_CONDITION
-        cmac_warning("num_empty: %" PRIuFAST32 " (%" PRIuFAST32
-                     "), num_active_buffers: %" PRIuFAST32
-                     ", num_photon_done: %" PRIuFAST32,
-                     num_empty.value(), num_empty_target,
-                     num_active_buffers.value(), num_photon_done.value());
-#endif
-        if (num_empty.value() == num_empty_target &&
-            num_active_buffers.value() == 0 &&
+        if (_buffers->is_empty() &&
             num_photon_done.value() == _number_of_photons) {
           global_run_flag = false;
         } else {

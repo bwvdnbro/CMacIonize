@@ -39,10 +39,6 @@
  */
 class SourceDiscretePhotonTaskContext {
 private:
-  /*! @brief Control variable that counts the number of actively used photon
-   *  buffers. */
-  AtomicValue< uint_fast32_t > &_num_active_buffers;
-
   /*! @brief Discrete photon source. */
   DistributedPhotonSource< DensitySubGrid > &_photon_source;
 
@@ -74,8 +70,6 @@ public:
   /**
    * @brief Constructor.
    *
-   * @param num_active_buffers Control variable that counts the number of
-   * actively used photon buffers.
    * @param photon_source Discrete photon source.
    * @param buffers Photon buffer array.
    * @param random_generators Per thread random generator.
@@ -88,7 +82,6 @@ public:
    * @param tasks Task space.
    */
   inline SourceDiscretePhotonTaskContext(
-      AtomicValue< uint_fast32_t > &num_active_buffers,
       DistributedPhotonSource< DensitySubGrid > &photon_source,
       MemorySpace &buffers, std::vector< RandomGenerator > &random_generators,
       const double discrete_photon_weight,
@@ -96,8 +89,8 @@ public:
       const Abundances &abundances, CrossSections &cross_sections,
       DensitySubGridCreator< DensitySubGrid > &grid_creator,
       ThreadSafeVector< Task > &tasks)
-      : _num_active_buffers(num_active_buffers), _photon_source(photon_source),
-        _buffers(buffers), _random_generators(random_generators),
+      : _photon_source(photon_source), _buffers(buffers),
+        _random_generators(random_generators),
         _discrete_photon_weight(discrete_photon_weight),
         _photon_source_spectrum(photon_source_spectrum),
         _abundances(abundances), _cross_sections(cross_sections),
@@ -117,7 +110,6 @@ public:
                                uint_fast32_t *tasks_to_add,
                                int_fast32_t *queues_to_add, Task &task) {
 
-    _num_active_buffers.pre_increment();
     const size_t source_index = task.get_subgrid();
 
     const size_t num_photon_this_loop = task.get_buffer();
