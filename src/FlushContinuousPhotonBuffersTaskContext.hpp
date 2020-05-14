@@ -27,13 +27,8 @@
 #ifndef FLUSHCONTINUOUSPHOTONBUFFERSTASKCONTEXT_HPP
 #define FLUSHCONTINUOUSPHOTONBUFFERSTASKCONTEXT_HPP
 
-#include "Abundances.hpp"
-#include "ContinuousPhotonSource.hpp"
-#include "CrossSections.hpp"
 #include "DensitySubGridCreator.hpp"
 #include "MemorySpace.hpp"
-#include "PhotonSourceSpectrum.hpp"
-#include "RandomGenerator.hpp"
 #include "Task.hpp"
 #include "TaskQueue.hpp"
 
@@ -78,7 +73,7 @@ public:
         _continuous_buffers(continuous_buffers), _queues(queues) {}
 
   /**
-   * @brief Execute a continuous photon source task.
+   * @brief Execute a continuous photon buffer flush task.
    *
    * @param thread_id ID of the thread that executes the task.
    * @param tasks_to_add Array with indices of newly created tasks.

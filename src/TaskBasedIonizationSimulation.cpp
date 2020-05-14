@@ -39,6 +39,7 @@
 #include "OpenMP.hpp"
 #include "ParameterFile.hpp"
 #include "PhotonPacketStatistics.hpp"
+#include "PhotonReemitTaskContext.hpp"
 #include "PhotonSourceDistributionFactory.hpp"
 #include "PhotonSourceSpectrumFactory.hpp"
 #include "RecombinationRatesFactory.hpp"
@@ -822,6 +823,13 @@ void TaskBasedIonizationSimulation::run(
               *_buffers, *_grid_creator, *_tasks, continuous_buffers, _queues);
     }
 
+    PhotonReemitTaskContext *photon_reemit_task = nullptr;
+    if (_reemission_handler) {
+      photon_reemit_task = new PhotonReemitTaskContext(
+          *_buffers, _random_generators, *_reemission_handler, _abundances,
+          *_cross_sections, *_grid_creator, *_tasks, num_photon_done);
+    }
+
     start_parallel_timing_block();
 #ifdef HAVE_OPENMP
 #pragma omp parallel default(shared)
@@ -963,109 +971,8 @@ void TaskBasedIonizationSimulation::run(
 
             task.start(thread_id);
 
-            const size_t current_buffer_index = task.get_buffer();
-            PhotonBuffer &buffer = (*_buffers)[current_buffer_index];
-
-            uint_fast32_t num_photon_done_now = buffer.size();
-            DensitySubGrid &subgrid =
-                *_grid_creator->get_subgrid(task.get_subgrid());
-
-            // reemission
-            uint_fast32_t index = 0;
-            for (uint_fast32_t iphoton = 0; iphoton < buffer.size();
-                 ++iphoton) {
-              PhotonPacket &old_photon = buffer[iphoton];
-              const IonizationVariables &ionization_variables =
-                  subgrid.get_cell(old_photon.get_position())
-                      .get_ionization_variables();
-#ifdef HAS_HELIUM
-#ifdef VARIABLE_ABUNDANCES
-              const double AHe =
-                  ionization_variables.get_abundances().get_abundance(
-                      ELEMENT_He);
-#else
-              // the helium abundance is already part of the cross section
-              const double AHe = 1.;
-#endif
-#else
-              const double AHe = 0.;
-#endif
-              PhotonType new_type;
-              const double new_frequency = _reemission_handler->reemit(
-                  old_photon, AHe, ionization_variables,
-                  _random_generators[thread_id], new_type);
-              if (new_frequency > 0.) {
-                PhotonPacket &new_photon = buffer[index];
-                new_photon.set_type(new_type);
-                new_photon.set_scatter_counter(
-                    old_photon.get_scatter_counter() + 1);
-                new_photon.set_position(old_photon.get_position());
-                new_photon.set_weight(old_photon.get_weight());
-
-                new_photon.set_energy(new_frequency);
-                for (int_fast32_t ion = 0; ion < NUMBER_OF_IONNAMES; ++ion) {
-                  double sigma =
-                      _cross_sections->get_cross_section(ion, new_frequency);
-#ifndef VARIABLE_ABUNDANCES
-                  if (ion != ION_H_n) {
-                    sigma *= _abundances.get_abundance(get_element(ion));
-                  }
-#endif
-                  new_photon.set_photoionization_cross_section(ion, sigma);
-                }
-
-                // draw two pseudo random numbers
-                const double cost = 2. * _random_generators[thread_id]
-                                             .get_uniform_random_double() -
-                                    1.;
-                const double phi =
-                    2. * M_PI *
-                    _random_generators[thread_id].get_uniform_random_double();
-
-                // now use them to get all directional angles
-                const double sint = std::sqrt(std::max(1. - cost * cost, 0.));
-                const double cosp = std::cos(phi);
-                const double sinp = std::sin(phi);
-
-                // set the direction...
-                const CoordinateVector<> direction(sint * cosp, sint * sinp,
-                                                   cost);
-
-                new_photon.set_direction(direction);
-
-                // target optical depth (exponential distribution)
-                new_photon.set_target_optical_depth(-std::log(
-                    _random_generators[thread_id].get_uniform_random_double()));
-
-                ++index;
-              } else {
-                statistics.absorb_photon(old_photon);
-              }
-            }
-            // update the size of the buffer to account for photons that were
-            // not reemitted
-            buffer.grow(index);
-
-            num_photon_done_now -= buffer.size();
-            num_photon_done.pre_add(num_photon_done_now);
-
-            if (index > 0) {
-              // there are still photon packets left: generate a traversal
-              // task
-              const size_t task_index = _tasks->get_free_element();
-              Task &new_task = (*_tasks)[task_index];
-              new_task.set_type(TASKTYPE_PHOTON_TRAVERSAL);
-              new_task.set_subgrid(task.get_subgrid());
-              new_task.set_buffer(current_buffer_index);
-              new_task.set_dependency(subgrid.get_dependency());
-
-              queues_to_add[num_tasks_to_add] = subgrid.get_owning_thread();
-              tasks_to_add[num_tasks_to_add] = task_index;
-              ++num_tasks_to_add;
-            } else {
-              // delete the original buffer, as we are done with it
-              _buffers->free_buffer(current_buffer_index);
-            }
+            num_tasks_to_add = photon_reemit_task->execute(
+                thread_id, tasks_to_add, queues_to_add, task);
 
             task.stop();
 
