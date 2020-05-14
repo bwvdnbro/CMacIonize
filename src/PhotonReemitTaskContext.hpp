@@ -38,8 +38,7 @@
 #include "TaskQueue.hpp"
 
 /**
- * @brief Task context responsible for flushing the continuous source photon
- * buffers.
+ * @brief Task context responsible for reemitting photon packets.
  */
 class PhotonReemitTaskContext {
 private:
@@ -137,8 +136,7 @@ public:
       if (new_frequency > 0.) {
         PhotonPacket &new_photon = buffer[index];
         new_photon.set_type(new_type);
-        new_photon.set_scatter_counter(
-            old_photon.get_scatter_counter() + 1);
+        new_photon.set_scatter_counter(old_photon.get_scatter_counter() + 1);
         new_photon.set_position(old_photon.get_position());
         new_photon.set_weight(old_photon.get_weight());
 

@@ -24,6 +24,8 @@
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
+#ifndef PHOTONPACKETSTATISTICS_HPP
+#define PHOTONPACKETSTATISTICS_HPP
 
 #include "AtomicValue.hpp"
 #include "ParameterFile.hpp"
@@ -93,3 +95,5 @@ public:
     }
   }
 };
+
+#endif // PHOTONPACKETSTATISTICS_HPP
