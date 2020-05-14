@@ -34,6 +34,7 @@
 #include "DensitySubGridCreator.hpp"
 #include "DiffuseReemissionHandlerFactory.hpp"
 #include "DistributedPhotonSource.hpp"
+#include "FlushContinuousPhotonBuffersTaskContext.hpp"
 #include "MemorySpace.hpp"
 #include "OpenMP.hpp"
 #include "ParameterFile.hpp"
@@ -807,6 +808,8 @@ void TaskBasedIonizationSimulation::run(
     }
 
     SourceContinuousPhotonTaskContext *source_continuous_photon_task = nullptr;
+    FlushContinuousPhotonBuffersTaskContext *flush_continuous_buffers_task =
+        nullptr;
     if (_continuous_photon_source) {
       source_continuous_photon_task = new SourceContinuousPhotonTaskContext(
           *_continuous_photon_source, *_buffers, _random_generators,
@@ -814,6 +817,9 @@ void TaskBasedIonizationSimulation::run(
           _abundances, *_cross_sections, *_grid_creator, *_tasks,
           continuous_buffers, _queues, *_shared_queue,
           number_of_continuous_photons, continuous_source_lock);
+      flush_continuous_buffers_task =
+          new FlushContinuousPhotonBuffersTaskContext(
+              *_buffers, *_grid_creator, *_tasks, continuous_buffers, _queues);
     }
 
     start_parallel_timing_block();
@@ -947,47 +953,8 @@ void TaskBasedIonizationSimulation::run(
 
             task.start(thread_id);
 
-            const uint_fast32_t source_copy = task.get_subgrid();
-            for (uint_fast32_t i = 0;
-                 i < continuous_buffers[source_copy].size(); ++i) {
-              if (continuous_buffers[source_copy][i].size() > 0) {
-                // yes: send the buffer off!
-                uint_fast32_t buffer_index = (*_buffers).get_free_buffer();
-                PhotonBuffer &input_buffer = (*_buffers)[buffer_index];
-
-                // set general buffer information
-                input_buffer.grow(continuous_buffers[source_copy][i].size());
-                input_buffer.set_subgrid_index(i);
-                input_buffer.set_direction(TRAVELDIRECTION_INSIDE);
-
-                // copy over the photons
-                for (uint_fast32_t iphoton = 0;
-                     iphoton < continuous_buffers[source_copy][i].size();
-                     ++iphoton) {
-                  input_buffer[iphoton] =
-                      continuous_buffers[source_copy][i][iphoton];
-                }
-
-                // reset the active buffer
-                continuous_buffers[source_copy][i].reset();
-
-                // add to the queue of the corresponding thread
-                DensitySubGrid &subgrid = *_grid_creator->get_subgrid(i);
-                const size_t task_index = _tasks->get_free_element();
-                Task &new_task = (*_tasks)[task_index];
-                new_task.set_type(TASKTYPE_PHOTON_TRAVERSAL);
-                new_task.set_subgrid(i);
-                new_task.set_buffer(buffer_index);
-
-                // add dependency for task:
-                //  - subgrid
-                // (the output buffers belong to the subgrid and do not count
-                // as a dependency)
-                new_task.set_dependency(subgrid.get_dependency());
-
-                _queues[subgrid.get_owning_thread()]->add_task(task_index);
-              }
-            }
+            num_tasks_to_add = flush_continuous_buffers_task->execute(
+                thread_id, tasks_to_add, queues_to_add, task);
 
             // log the end time of the task
             task.stop();
