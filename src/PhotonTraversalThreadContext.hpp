@@ -29,13 +29,14 @@
 
 #include "DensitySubGrid.hpp"
 #include "PhotonBuffer.hpp"
+#include "ThreadContext.hpp"
 #include "TravelDirections.hpp"
 
 /**
  * @brief Thread context responsible for storing thread-local data structures
  * used by the photon propagation task.
  */
-class PhotonTraversalThreadContext {
+class PhotonTraversalThreadContext : public ThreadContext {
 private:
   /*! @brief Buffers used to store outgoing photon packets during grid
    *  traversal. */
@@ -56,20 +57,6 @@ public:
       _local_buffer_flags[i] = true;
     }
   }
-
-  /**
-   * @brief Get a pointer to the local buffer array.
-   *
-   * @return Pointer to the local buffer array.
-   */
-  inline PhotonBuffer *get_local_buffers() { return _local_buffers; }
-
-  /**
-   * @brief Get a pointer to the local buffer flag array.
-   *
-   * @return Pointer to the local buffer flag array.
-   */
-  inline bool *get_local_buffer_flags() { return _local_buffer_flags; }
 
   /**
    * @brief Initialize the context for traversal of the given subgrid.

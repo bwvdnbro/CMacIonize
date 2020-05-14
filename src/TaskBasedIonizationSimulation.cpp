@@ -802,40 +802,39 @@ void TaskBasedIonizationSimulation::run(
     bool global_run_flag = true;
     AtomicValue< uint_fast32_t > num_photon_done(0);
 
-    SourceDiscretePhotonTaskContext *source_discrete_photon_task = nullptr;
+    // create task contexts
+    TaskContext *task_contexts[TASKTYPE_NUMBER] = {nullptr};
+
     if (photon_source) {
-      source_discrete_photon_task = new SourceDiscretePhotonTaskContext(
-          *photon_source, *_buffers, _random_generators, discrete_photon_weight,
-          *_photon_source_spectrum, _abundances, *_cross_sections,
-          *_grid_creator, *_tasks);
+      task_contexts[TASKTYPE_SOURCE_DISCRETE_PHOTON] =
+          new SourceDiscretePhotonTaskContext(
+              *photon_source, *_buffers, _random_generators,
+              discrete_photon_weight, *_photon_source_spectrum, _abundances,
+              *_cross_sections, *_grid_creator, *_tasks);
     }
 
-    SourceContinuousPhotonTaskContext *source_continuous_photon_task = nullptr;
-    FlushContinuousPhotonBuffersTaskContext *flush_continuous_buffers_task =
-        nullptr;
     if (_continuous_photon_source) {
-      source_continuous_photon_task = new SourceContinuousPhotonTaskContext(
-          *_continuous_photon_source, *_buffers, _random_generators,
-          continuous_photon_weight, *_continuous_photon_source_spectrum,
-          _abundances, *_cross_sections, *_grid_creator, *_tasks,
-          continuous_buffers, _queues, *_shared_queue,
-          number_of_continuous_photons, continuous_source_lock);
-      flush_continuous_buffers_task =
+      task_contexts[TASKTYPE_SOURCE_CONTINUOUS_PHOTON] =
+          new SourceContinuousPhotonTaskContext(
+              *_continuous_photon_source, *_buffers, _random_generators,
+              continuous_photon_weight, *_continuous_photon_source_spectrum,
+              _abundances, *_cross_sections, *_grid_creator, *_tasks,
+              continuous_buffers, _queues, *_shared_queue,
+              number_of_continuous_photons, continuous_source_lock);
+      task_contexts[TASKTYPE_FLUSH_CONTINUOUS_PHOTON_BUFFERS] =
           new FlushContinuousPhotonBuffersTaskContext(
               *_buffers, *_grid_creator, *_tasks, continuous_buffers, _queues);
     }
 
-    PhotonReemitTaskContext *photon_reemit_task = nullptr;
     if (_reemission_handler) {
-      photon_reemit_task = new PhotonReemitTaskContext(
+      task_contexts[TASKTYPE_PHOTON_REEMIT] = new PhotonReemitTaskContext(
           *_buffers, _random_generators, *_reemission_handler, _abundances,
           *_cross_sections, *_grid_creator, *_tasks, num_photon_done);
     }
 
-    PhotonTraversalTaskContext *photon_traversal_task =
-        new PhotonTraversalTaskContext(*_buffers, *_grid_creator, *_tasks,
-                                       num_photon_done, statistics,
-                                       _reemission_handler != nullptr);
+    task_contexts[TASKTYPE_PHOTON_TRAVERSAL] = new PhotonTraversalTaskContext(
+        *_buffers, *_grid_creator, *_tasks, num_photon_done, statistics,
+        _reemission_handler != nullptr);
 
     start_parallel_timing_block();
 #ifdef HAVE_OPENMP
@@ -844,16 +843,12 @@ void TaskBasedIonizationSimulation::run(
     {
       // thread initialisation
       const int_fast8_t thread_id = get_thread_index();
-      //      PhotonBuffer local_buffers[TRAVELDIRECTION_NUMBER];
-      //      bool local_buffer_flags[TRAVELDIRECTION_NUMBER];
-      //      for (int_fast8_t i = 0; i < TRAVELDIRECTION_NUMBER; ++i) {
-      //        local_buffers[i].set_direction(
-      //            TravelDirections::output_to_input_direction(i));
-      //        local_buffers[i].reset();
-      //        local_buffer_flags[i] = true;
-      //      }
-      PhotonTraversalThreadContext *photon_traversal_thread_context =
-          new PhotonTraversalThreadContext();
+      ThreadContext *thread_contexts[TASKTYPE_NUMBER] = {nullptr};
+      for (int_fast32_t itask = 0; itask < TASKTYPE_NUMBER; ++itask) {
+        if (task_contexts[itask]) {
+          thread_contexts[itask] = task_contexts[itask]->get_thread_context();
+        }
+      }
 
       // actual run flag
       uint_fast32_t current_index = _shared_queue->get_task(*_tasks);
@@ -945,57 +940,15 @@ void TaskBasedIonizationSimulation::run(
           Task &task = (*_tasks)[current_index];
           thread_stats[thread_id].start(task.get_type());
 
-          if (task.get_type() == TASKTYPE_SOURCE_DISCRETE_PHOTON) {
+          task.start(thread_id);
 
-            task.start(thread_id);
+          num_tasks_to_add = task_contexts[task.get_type()]->execute(
+              thread_id, thread_contexts[task.get_type()], tasks_to_add,
+              queues_to_add, task);
 
-            num_tasks_to_add = source_discrete_photon_task->execute(
-                thread_id, tasks_to_add, queues_to_add, task);
+          // log the end time of the task
+          task.stop();
 
-            // log the end time of the task
-            task.stop();
-
-          } else if (task.get_type() == TASKTYPE_SOURCE_CONTINUOUS_PHOTON) {
-
-            task.start(thread_id);
-
-            num_tasks_to_add = source_continuous_photon_task->execute(
-                thread_id, tasks_to_add, queues_to_add, task);
-
-            // log the end time of the task
-            task.stop();
-
-          } else if (task.get_type() ==
-                     TASKTYPE_FLUSH_CONTINUOUS_PHOTON_BUFFERS) {
-
-            task.start(thread_id);
-
-            num_tasks_to_add = flush_continuous_buffers_task->execute(
-                thread_id, tasks_to_add, queues_to_add, task);
-
-            // log the end time of the task
-            task.stop();
-
-          } else if (task.get_type() == TASKTYPE_PHOTON_REEMIT) {
-
-            task.start(thread_id);
-
-            num_tasks_to_add = photon_reemit_task->execute(
-                thread_id, tasks_to_add, queues_to_add, task);
-
-            task.stop();
-
-          } else if (task.get_type() == TASKTYPE_PHOTON_TRAVERSAL) {
-
-            task.start(thread_id);
-
-            num_tasks_to_add = photon_traversal_task->execute(
-                thread_id, *photon_traversal_thread_context, tasks_to_add,
-                queues_to_add, task);
-
-            // log the end time of the task
-            task.stop();
-          }
           task.unlock_dependency();
           thread_stats[thread_id].stop(task.get_type());
 
@@ -1024,7 +977,9 @@ void TaskBasedIonizationSimulation::run(
         }
       } // while(global_run_flag)
 
-      delete photon_traversal_thread_context;
+      for (int_fast32_t itask = 0; itask < TASKTYPE_NUMBER; ++itask) {
+        delete thread_contexts[itask];
+      }
     } // parallel region
     stop_parallel_timing_block();
     _time_log.end("photon propagation");
@@ -1199,11 +1154,9 @@ void TaskBasedIonizationSimulation::run(
 
     _time_log.end(iloopstr.str());
 
-    delete source_discrete_photon_task;
-    delete source_continuous_photon_task;
-    delete flush_continuous_buffers_task;
-    delete photon_reemit_task;
-    delete photon_traversal_task;
+    for (int_fast32_t itask = 0; itask < TASKTYPE_NUMBER; ++itask) {
+      delete task_contexts[itask];
+    }
 
   } // photoionization loop
   _time_log.end("photoionization loop");

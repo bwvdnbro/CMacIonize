@@ -30,13 +30,14 @@
 #include "DensitySubGridCreator.hpp"
 #include "MemorySpace.hpp"
 #include "Task.hpp"
+#include "TaskContext.hpp"
 #include "TaskQueue.hpp"
 
 /**
  * @brief Task context responsible for flushing the continuous source photon
  * buffers.
  */
-class FlushContinuousPhotonBuffersTaskContext {
+class FlushContinuousPhotonBuffersTaskContext : public TaskContext {
 private:
   /*! @brief Photon buffer array. */
   MemorySpace &_buffers;
@@ -76,13 +77,15 @@ public:
    * @brief Execute a continuous photon buffer flush task.
    *
    * @param thread_id ID of the thread that executes the task.
+   * @param thread_context Thread specific context for the task.
    * @param tasks_to_add Array with indices of newly created tasks.
    * @param queues_to_add Array with target queue indices for the newly created
    * tasks.
    * @param task Task to execute.
    * @return Number of new tasks created by the task.
    */
-  inline uint_fast32_t execute(const int_fast8_t thread_id,
+  inline uint_fast32_t execute(const int_fast32_t thread_id,
+                               ThreadContext *thread_context,
                                uint_fast32_t *tasks_to_add,
                                int_fast32_t *queues_to_add, Task &task) {
 

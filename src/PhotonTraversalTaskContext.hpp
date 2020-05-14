@@ -37,12 +37,13 @@
 #include "PhotonTraversalThreadContext.hpp"
 #include "RandomGenerator.hpp"
 #include "Task.hpp"
+#include "TaskContext.hpp"
 #include "TaskQueue.hpp"
 
 /**
  * @brief Task context responsible for propagating photon packets.
  */
-class PhotonTraversalTaskContext {
+class PhotonTraversalTaskContext : public TaskContext {
 private:
   /*! @brief Photon buffer array. */
   MemorySpace &_buffers;
@@ -95,10 +96,13 @@ public:
    * @param task Task to execute.
    * @return Number of new tasks created by the task.
    */
-  inline uint_fast32_t execute(const int_fast8_t thread_id,
-                               PhotonTraversalThreadContext &thread_context,
-                               uint_fast32_t *tasks_to_add,
-                               int_fast32_t *queues_to_add, Task &task) {
+  virtual uint_fast32_t execute(const int_fast32_t thread_id,
+                                ThreadContext *thread_context,
+                                uint_fast32_t *tasks_to_add,
+                                int_fast32_t *queues_to_add, Task &task) {
+
+    PhotonTraversalThreadContext &traversal_thread_context =
+        *static_cast< PhotonTraversalThreadContext * >(thread_context);
 
     uint_fast64_t task_start, task_stop;
     cpucycle_tick(task_start);
@@ -108,7 +112,7 @@ public:
     const uint_fast32_t igrid = photon_buffer.get_subgrid_index();
     DensitySubGrid &this_grid = *_grid_creator.get_subgrid(igrid);
 
-    thread_context.initialize(this_grid, _do_reemission);
+    traversal_thread_context.initialize(this_grid, _do_reemission);
 
     // keep track of the original number of photons
     uint_fast32_t num_photon_done_now = photon_buffer.size();
@@ -135,7 +139,7 @@ public:
                           "fail");
 
       // add the photon to an output buffer, if it still exists
-      if (!thread_context.store_photon(result, photon)) {
+      if (!traversal_thread_context.store_photon(result, photon)) {
         if (result == 0) {
           _statistics.absorb_photon(photon);
         } else {
@@ -151,10 +155,10 @@ public:
     for (int_fast32_t i = 0; i < TRAVELDIRECTION_NUMBER; ++i) {
 
       // only process enabled, non-empty output buffers
-      if (thread_context.has_outgoing_photons(i)) {
+      if (traversal_thread_context.has_outgoing_photons(i)) {
 
         const PhotonBuffer &local_buffer =
-            thread_context.get_outgoing_buffer(i);
+            traversal_thread_context.get_outgoing_buffer(i);
 
         // photon packets that are still present in an output buffer
         // are not done yet
@@ -265,6 +269,16 @@ public:
     this_grid.add_computational_cost(task_stop - task_start);
 
     return num_tasks_to_add;
+  }
+
+  /**
+   * @brief Get a thread local context for this task.
+   *
+   * @return Pointer to a newly created PhotonTraversalThreadContext instance.
+   * Memory management for the pointer is transferred to the caller.
+   */
+  virtual ThreadContext *get_thread_context() {
+    return new PhotonTraversalThreadContext();
   }
 };
 
