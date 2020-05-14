@@ -43,6 +43,7 @@
 #include "PhotonSourceDistributionFactory.hpp"
 #include "PhotonSourceSpectrumFactory.hpp"
 #include "PhotonTraversalTaskContext.hpp"
+#include "PhotonTraversalThreadContext.hpp"
 #include "RecombinationRatesFactory.hpp"
 #include "Signals.hpp"
 #include "SimulationBox.hpp"
@@ -843,14 +844,16 @@ void TaskBasedIonizationSimulation::run(
     {
       // thread initialisation
       const int_fast8_t thread_id = get_thread_index();
-      PhotonBuffer local_buffers[TRAVELDIRECTION_NUMBER];
-      bool local_buffer_flags[TRAVELDIRECTION_NUMBER];
-      for (int_fast8_t i = 0; i < TRAVELDIRECTION_NUMBER; ++i) {
-        local_buffers[i].set_direction(
-            TravelDirections::output_to_input_direction(i));
-        local_buffers[i].reset();
-        local_buffer_flags[i] = true;
-      }
+      //      PhotonBuffer local_buffers[TRAVELDIRECTION_NUMBER];
+      //      bool local_buffer_flags[TRAVELDIRECTION_NUMBER];
+      //      for (int_fast8_t i = 0; i < TRAVELDIRECTION_NUMBER; ++i) {
+      //        local_buffers[i].set_direction(
+      //            TravelDirections::output_to_input_direction(i));
+      //        local_buffers[i].reset();
+      //        local_buffer_flags[i] = true;
+      //      }
+      PhotonTraversalThreadContext *photon_traversal_thread_context =
+          new PhotonTraversalThreadContext();
 
       // actual run flag
       uint_fast32_t current_index = _shared_queue->get_task(*_tasks);
@@ -987,7 +990,7 @@ void TaskBasedIonizationSimulation::run(
             task.start(thread_id);
 
             num_tasks_to_add = photon_traversal_task->execute(
-                thread_id, local_buffers, local_buffer_flags, tasks_to_add,
+                thread_id, *photon_traversal_thread_context, tasks_to_add,
                 queues_to_add, task);
 
             // log the end time of the task
@@ -1020,7 +1023,9 @@ void TaskBasedIonizationSimulation::run(
           current_index = get_task(thread_id);
         }
       } // while(global_run_flag)
-    }   // parallel region
+
+      delete photon_traversal_thread_context;
+    } // parallel region
     stop_parallel_timing_block();
     _time_log.end("photon propagation");
 

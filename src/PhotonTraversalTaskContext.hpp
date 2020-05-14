@@ -34,6 +34,7 @@
 #include "MemorySpace.hpp"
 #include "PhotonPacketStatistics.hpp"
 #include "PhotonSourceSpectrum.hpp"
+#include "PhotonTraversalThreadContext.hpp"
 #include "RandomGenerator.hpp"
 #include "Task.hpp"
 #include "TaskQueue.hpp"
@@ -87,8 +88,7 @@ public:
    * @brief Execute a photon traversal task.
    *
    * @param thread_id ID of the thread that executes the task.
-   * @param local_buffers Local temporary buffers.
-   * @param local_buffer_flags Flags showing which local buffers are in use.
+   * @param thread_context Task specific thread dependent execution context.
    * @param tasks_to_add Array with indices of newly created tasks.
    * @param queues_to_add Array with target queue indices for the newly created
    * tasks.
@@ -96,8 +96,7 @@ public:
    * @return Number of new tasks created by the task.
    */
   inline uint_fast32_t execute(const int_fast8_t thread_id,
-                               PhotonBuffer *local_buffers,
-                               bool *local_buffer_flags,
+                               PhotonTraversalThreadContext &thread_context,
                                uint_fast32_t *tasks_to_add,
                                int_fast32_t *queues_to_add, Task &task) {
 
@@ -109,23 +108,7 @@ public:
     const uint_fast32_t igrid = photon_buffer.get_subgrid_index();
     DensitySubGrid &this_grid = *_grid_creator.get_subgrid(igrid);
 
-    // prepare output buffers: make sure they are empty and that buffers
-    // corresponding to directions outside the simulation box are
-    // disabled
-    for (int_fast8_t i = 0; i < TRAVELDIRECTION_NUMBER; ++i) {
-      const uint_fast32_t ngb = this_grid.get_neighbour(i);
-      if (ngb != NEIGHBOUR_OUTSIDE) {
-        local_buffer_flags[i] = true;
-        local_buffers[i].reset();
-      } else {
-        local_buffer_flags[i] = false;
-      }
-    }
-
-    // if reemission is disabled, disable output to the internal buffer
-    if (!_do_reemission) {
-      local_buffer_flags[TRAVELDIRECTION_INSIDE] = false;
-    }
+    thread_context.initialize(this_grid, _do_reemission);
 
     // keep track of the original number of photons
     uint_fast32_t num_photon_done_now = photon_buffer.size();
@@ -151,17 +134,8 @@ public:
       cmac_assert_message(result >= 0 && result < TRAVELDIRECTION_NUMBER,
                           "fail");
 
-      // add the photon to an output buffer, if it still exists (if the
-      // corresponding output buffer does not exist, this means the
-      // photon left the simulation box)
-      if (local_buffer_flags[result]) {
-        // get the correct output buffer
-        PhotonBuffer &output_buffer = local_buffers[result];
-
-        // add the photon
-        const uint_fast32_t index = output_buffer.get_next_free_photon();
-        output_buffer[index] = photon;
-      } else {
+      // add the photon to an output buffer, if it still exists
+      if (!thread_context.store_photon(result, photon)) {
         if (result == 0) {
           _statistics.absorb_photon(photon);
         } else {
@@ -177,11 +151,14 @@ public:
     for (int_fast32_t i = 0; i < TRAVELDIRECTION_NUMBER; ++i) {
 
       // only process enabled, non-empty output buffers
-      if (local_buffer_flags[i] && local_buffers[i].size() > 0) {
+      if (thread_context.has_outgoing_photons(i)) {
+
+        const PhotonBuffer &local_buffer =
+            thread_context.get_outgoing_buffer(i);
 
         // photon packets that are still present in an output buffer
         // are not done yet
-        num_photon_done_now -= local_buffers[i].size();
+        num_photon_done_now -= local_buffer.size();
 
         // move photon packets from the local temporary buffer (that is
         // guaranteed to be large enough) to the actual output buffer
@@ -198,8 +175,7 @@ public:
           this_grid.set_active_buffer(i, new_index);
         }
 
-        uint_fast32_t add_index =
-            _buffers.add_photons(new_index, local_buffers[i]);
+        uint_fast32_t add_index = _buffers.add_photons(new_index, local_buffer);
 
         // check if the original buffer is full
         if (add_index != new_index) {
@@ -260,12 +236,11 @@ public:
 
         } // if (add_index != new_index)
 
-      } // if (local_buffer_flags[i] &&
-      //     local_buffers[i]._actual_size > 0)
+      } // if (thread_context.has_outgoing_photons(i))
 
       // we have to do this outside the other condition, as buffers to
       // which nothing was added can still be non-empty...
-      if (local_buffer_flags[i]) {
+      if (this_grid.get_neighbour(i) != NEIGHBOUR_OUTSIDE) {
         uint_fast32_t new_index = this_grid.get_active_buffer(i);
         if (new_index != NEIGHBOUR_OUTSIDE &&
             _buffers[new_index].size() > largest_size) {
