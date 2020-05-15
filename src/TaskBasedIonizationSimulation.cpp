@@ -808,7 +808,7 @@ void TaskBasedIonizationSimulation::run(
 
     if (photon_source) {
       task_contexts[TASKTYPE_SOURCE_DISCRETE_PHOTON] =
-          new SourceDiscretePhotonTaskContext(
+          new SourceDiscretePhotonTaskContext< DensitySubGrid >(
               *photon_source, *_buffers, _random_generators,
               discrete_photon_weight, *_photon_source_spectrum, _abundances,
               *_cross_sections, *_grid_creator, *_tasks);
@@ -828,9 +828,10 @@ void TaskBasedIonizationSimulation::run(
     }
 
     if (_reemission_handler) {
-      task_contexts[TASKTYPE_PHOTON_REEMIT] = new PhotonReemitTaskContext(
-          *_buffers, _random_generators, *_reemission_handler, _abundances,
-          *_cross_sections, *_grid_creator, *_tasks, num_photon_done);
+      task_contexts[TASKTYPE_PHOTON_REEMIT] =
+          new PhotonReemitTaskContext< DensitySubGrid >(
+              *_buffers, _random_generators, *_reemission_handler, _abundances,
+              *_cross_sections, *_grid_creator, *_tasks, num_photon_done);
     }
 
     task_contexts[TASKTYPE_PHOTON_TRAVERSAL] = new PhotonTraversalTaskContext(

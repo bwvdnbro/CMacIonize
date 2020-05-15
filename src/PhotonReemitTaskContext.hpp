@@ -41,6 +41,7 @@
 /**
  * @brief Task context responsible for reemitting photon packets.
  */
+template < typename _subgrid_type_ >
 class PhotonReemitTaskContext : public TaskContext {
 private:
   /*! @brief Photon buffer array. */
@@ -59,7 +60,7 @@ private:
   const CrossSections &_cross_sections;
 
   /*! @brief Grid creator. */
-  DensitySubGridCreator< DensitySubGrid > &_grid_creator;
+  DensitySubGridCreator< _subgrid_type_ > &_grid_creator;
 
   /*! @brief Task space. */
   ThreadSafeVector< Task > &_tasks;
@@ -84,7 +85,7 @@ public:
       MemorySpace &buffers, std::vector< RandomGenerator > &random_generators,
       DiffuseReemissionHandler &reemission_handler,
       const Abundances &abundances, const CrossSections &cross_sections,
-      DensitySubGridCreator< DensitySubGrid > &grid_creator,
+      DensitySubGridCreator< _subgrid_type_ > &grid_creator,
       ThreadSafeVector< Task > &tasks,
       AtomicValue< uint_fast32_t > &num_photon_done)
       : _buffers(buffers), _random_generators(random_generators),

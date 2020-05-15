@@ -38,10 +38,11 @@
  * @brief Task context responsible for generating new photon packets that
  * originate from discrete sources.
  */
+template < typename _subgrid_type_ >
 class SourceDiscretePhotonTaskContext : public TaskContext {
 private:
   /*! @brief Discrete photon source. */
-  DistributedPhotonSource< DensitySubGrid > &_photon_source;
+  DistributedPhotonSource< _subgrid_type_ > &_photon_source;
 
   /*! @brief Photon buffer array. */
   MemorySpace &_buffers;
@@ -62,7 +63,7 @@ private:
   const CrossSections &_cross_sections;
 
   /*! @brief Grid creator. */
-  DensitySubGridCreator< DensitySubGrid > &_grid_creator;
+  DensitySubGridCreator< _subgrid_type_ > &_grid_creator;
 
   /*! @brief Task space. */
   ThreadSafeVector< Task > &_tasks;
@@ -83,12 +84,12 @@ public:
    * @param tasks Task space.
    */
   inline SourceDiscretePhotonTaskContext(
-      DistributedPhotonSource< DensitySubGrid > &photon_source,
+      DistributedPhotonSource< _subgrid_type_ > &photon_source,
       MemorySpace &buffers, std::vector< RandomGenerator > &random_generators,
       const double discrete_photon_weight,
       PhotonSourceSpectrum &photon_source_spectrum,
       const Abundances &abundances, CrossSections &cross_sections,
-      DensitySubGridCreator< DensitySubGrid > &grid_creator,
+      DensitySubGridCreator< _subgrid_type_ > &grid_creator,
       ThreadSafeVector< Task > &tasks)
       : _photon_source(photon_source), _buffers(buffers),
         _random_generators(random_generators),
