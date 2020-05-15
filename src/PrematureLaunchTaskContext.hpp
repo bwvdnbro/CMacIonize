@@ -34,13 +34,13 @@
 /**
  * @brief Task context responsible for prematurely launching photon buffers.
  */
-class PrematureLaunchTaskContext {
+template < typename _subgrid_type_ > class PrematureLaunchTaskContext {
 private:
   /*! @brief Photon buffer array. */
   MemorySpace &_buffers;
 
   /*! @brief Grid creator. */
-  DensitySubGridCreator< DensitySubGrid > &_grid_creator;
+  DensitySubGridCreator< _subgrid_type_ > &_grid_creator;
 
   /*! @brief Task space. */
   ThreadSafeVector< Task > &_tasks;
@@ -63,7 +63,7 @@ public:
    */
   inline PrematureLaunchTaskContext(
       MemorySpace &buffers,
-      DensitySubGridCreator< DensitySubGrid > &grid_creator,
+      DensitySubGridCreator< _subgrid_type_ > &grid_creator,
       ThreadSafeVector< Task > &tasks, std::vector< TaskQueue * > &queues,
       TaskQueue &shared_queue)
       : _buffers(buffers), _grid_creator(grid_creator), _tasks(tasks),

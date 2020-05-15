@@ -834,11 +834,12 @@ void TaskBasedIonizationSimulation::run(
               *_cross_sections, *_grid_creator, *_tasks, num_photon_done);
     }
 
-    task_contexts[TASKTYPE_PHOTON_TRAVERSAL] = new PhotonTraversalTaskContext(
-        *_buffers, *_grid_creator, *_tasks, num_photon_done, statistics,
-        _reemission_handler != nullptr);
+    task_contexts[TASKTYPE_PHOTON_TRAVERSAL] =
+        new PhotonTraversalTaskContext< DensitySubGrid >(
+            *_buffers, *_grid_creator, *_tasks, num_photon_done, &statistics,
+            _reemission_handler != nullptr);
 
-    PrematureLaunchTaskContext premature_launch(
+    PrematureLaunchTaskContext< DensitySubGrid > premature_launch(
         *_buffers, *_grid_creator, *_tasks, _queues, *_shared_queue);
 
     start_parallel_timing_block();

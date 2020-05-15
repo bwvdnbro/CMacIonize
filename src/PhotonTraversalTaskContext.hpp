@@ -43,13 +43,14 @@
 /**
  * @brief Task context responsible for propagating photon packets.
  */
+template < typename _subgrid_type_ >
 class PhotonTraversalTaskContext : public TaskContext {
 private:
   /*! @brief Photon buffer array. */
   MemorySpace &_buffers;
 
   /*! @brief Grid creator. */
-  DensitySubGridCreator< DensitySubGrid > &_grid_creator;
+  DensitySubGridCreator< _subgrid_type_ > &_grid_creator;
 
   /*! @brief Task space. */
   ThreadSafeVector< Task > &_tasks;
@@ -58,7 +59,7 @@ private:
   AtomicValue< uint_fast32_t > &_num_photon_done;
 
   /*! @brief Statistical information about photon packets. */
-  PhotonPacketStatistics &_statistics;
+  PhotonPacketStatistics *_statistics;
 
   /*! @brief Whether or not to store absorbed photon packets for reemission. */
   const bool _do_reemission;
@@ -77,10 +78,10 @@ public:
    */
   inline PhotonTraversalTaskContext(
       MemorySpace &buffers,
-      DensitySubGridCreator< DensitySubGrid > &grid_creator,
+      DensitySubGridCreator< _subgrid_type_ > &grid_creator,
       ThreadSafeVector< Task > &tasks,
       AtomicValue< uint_fast32_t > &num_photon_done,
-      PhotonPacketStatistics &statistics, const bool do_reemission)
+      PhotonPacketStatistics *statistics, const bool do_reemission)
       : _buffers(buffers), _grid_creator(grid_creator), _tasks(tasks),
         _num_photon_done(num_photon_done), _statistics(statistics),
         _do_reemission(do_reemission) {}
@@ -139,11 +140,12 @@ public:
                           "fail");
 
       // add the photon to an output buffer, if it still exists
-      if (!traversal_thread_context.store_photon(result, photon)) {
+      if (!traversal_thread_context.store_photon(result, photon) &&
+          _statistics != nullptr) {
         if (result == 0) {
-          _statistics.absorb_photon(photon);
+          _statistics->absorb_photon(photon);
         } else {
-          _statistics.escape_photon(photon);
+          _statistics->escape_photon(photon);
         }
       }
     }
