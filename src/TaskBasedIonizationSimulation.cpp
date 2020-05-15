@@ -44,6 +44,7 @@
 #include "PhotonSourceSpectrumFactory.hpp"
 #include "PhotonTraversalTaskContext.hpp"
 #include "PhotonTraversalThreadContext.hpp"
+#include "PrematureLaunchTaskContext.hpp"
 #include "RecombinationRatesFactory.hpp"
 #include "Signals.hpp"
 #include "SimulationBox.hpp"
@@ -836,6 +837,9 @@ void TaskBasedIonizationSimulation::run(
         *_buffers, *_grid_creator, *_tasks, num_photon_done, statistics,
         _reemission_handler != nullptr);
 
+    PrematureLaunchTaskContext premature_launch(
+        *_buffers, *_grid_creator, *_tasks, _queues, *_shared_queue);
+
     start_parallel_timing_block();
 #ifdef HAVE_OPENMP
 #pragma omp parallel default(shared)
@@ -855,78 +859,7 @@ void TaskBasedIonizationSimulation::run(
       while (global_run_flag) {
 
         if (current_index == NO_TASK) {
-          uint_fast32_t threshold_size = PHOTONBUFFER_SIZE;
-          while (threshold_size > 0) {
-            threshold_size >>= 1;
-            for (auto gridit = _grid_creator->begin();
-                 gridit != _grid_creator->all_end(); ++gridit) {
-              DensitySubGrid &this_subgrid = *gridit;
-              if (this_subgrid.get_largest_buffer_size() > threshold_size &&
-                  this_subgrid.get_dependency()->try_lock()) {
-
-                const uint_fast8_t largest_index =
-                    this_subgrid.get_largest_buffer_index();
-                if (largest_index != TRAVELDIRECTION_NUMBER) {
-
-                  const uint_fast32_t non_full_index =
-                      this_subgrid.get_active_buffer(largest_index);
-                  this_subgrid.set_active_buffer(largest_index,
-                                                 NEIGHBOUR_OUTSIDE);
-
-                  const size_t task_index = _tasks->get_free_element();
-                  Task &new_task = (*_tasks)[task_index];
-                  new_task.set_subgrid(
-                      (*_buffers)[non_full_index].get_subgrid_index());
-                  new_task.set_buffer(non_full_index);
-                  if (largest_index > 0) {
-                    DensitySubGrid &subgrid = *_grid_creator->get_subgrid(
-                        (*_buffers)[non_full_index].get_subgrid_index());
-                    new_task.set_type(TASKTYPE_PHOTON_TRAVERSAL);
-
-                    // add dependency
-                    new_task.set_dependency(subgrid.get_dependency());
-
-                    const uint_fast32_t queue_index =
-                        subgrid.get_owning_thread();
-                    _queues[queue_index]->add_task(task_index);
-                  } else {
-                    new_task.set_type(TASKTYPE_PHOTON_REEMIT);
-                    // a reemit task has no dependencies
-                    _shared_queue->add_task(task_index);
-                  }
-
-                  // set the new largest index
-                  uint_fast8_t new_largest_index = TRAVELDIRECTION_NUMBER;
-                  uint_fast32_t new_largest_size = 0;
-                  for (uint_fast8_t ibuffer = 0;
-                       ibuffer < TRAVELDIRECTION_NUMBER; ++ibuffer) {
-                    if (this_subgrid.get_active_buffer(ibuffer) !=
-                            NEIGHBOUR_OUTSIDE &&
-                        (*_buffers)[this_subgrid.get_active_buffer(ibuffer)]
-                                .size() > new_largest_size) {
-                      new_largest_index = ibuffer;
-                      new_largest_size =
-                          (*_buffers)[this_subgrid.get_active_buffer(ibuffer)]
-                              .size();
-                    }
-                  }
-                  this_subgrid.set_largest_buffer(new_largest_index,
-                                                  new_largest_size);
-
-                  // unlock the subgrid, we are done with it
-                  this_subgrid.get_dependency()->unlock();
-
-                  // we managed to activate a buffer, we are done
-                  threshold_size = 0;
-                  break;
-                } else {
-                  // no semi-full buffers for this subgrid: release the lock
-                  // again
-                  this_subgrid.get_dependency()->unlock();
-                }
-              }
-            }
-          }
+          premature_launch.execute();
           current_index = get_task(thread_id);
         }
 
