@@ -53,6 +53,7 @@
 #include "PrematureLaunchTaskContext.hpp"
 #include "RecombinationRatesFactory.hpp"
 #include "RestartManager.hpp"
+#include "Scheduler.hpp"
 #include "SimulationBox.hpp"
 #include "SourceDiscretePhotonTaskContext.hpp"
 #include "TaskQueue.hpp"
@@ -1746,6 +1747,8 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
           PrematureLaunchTaskContext< HydroDensitySubGrid > premature_launch(
               *buffers, *grid_creator, *tasks, queues, *shared_queue);
 
+          Scheduler scheduler(*tasks, queues, *shared_queue);
+
           start_parallel_timing_block();
 #ifdef HAVE_OPENMP
 #pragma omp parallel default(shared)
@@ -1767,14 +1770,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
 
               if (current_index == NO_TASK) {
                 premature_launch.execute();
-                current_index = queues[thread_id]->get_task(*tasks);
-                if (current_index == NO_TASK) {
-                  current_index = steal_task(thread_id, num_thread, queues,
-                                             *tasks, *grid_creator);
-                  if (current_index == NO_TASK) {
-                    current_index = shared_queue->get_task(*tasks);
-                  }
-                }
+                current_index = scheduler.get_task(thread_id);
               }
 
               while (current_index != NO_TASK) {
@@ -1816,27 +1812,13 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
                   }
                 }
 
-                current_index = queues[thread_id]->get_task(*tasks);
-                if (current_index == NO_TASK) {
-                  current_index = steal_task(thread_id, num_thread, queues,
-                                             *tasks, *grid_creator);
-                  if (current_index == NO_TASK) {
-                    current_index = shared_queue->get_task(*tasks);
-                  }
-                }
+                current_index = scheduler.get_task(thread_id);
               }
 
               if (buffers->is_empty() && num_photon_done.value() == numphoton) {
                 global_run_flag = false;
               } else {
-                current_index = queues[thread_id]->get_task(*tasks);
-                if (current_index == NO_TASK) {
-                  current_index = steal_task(thread_id, num_thread, queues,
-                                             *tasks, *grid_creator);
-                  if (current_index == NO_TASK) {
-                    current_index = shared_queue->get_task(*tasks);
-                  }
-                }
+                current_index = scheduler.get_task(thread_id);
               }
             } // while(global_run_flag)
 

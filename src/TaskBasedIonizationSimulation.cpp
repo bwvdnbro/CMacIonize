@@ -46,6 +46,7 @@
 #include "PhotonTraversalThreadContext.hpp"
 #include "PrematureLaunchTaskContext.hpp"
 #include "RecombinationRatesFactory.hpp"
+#include "Scheduler.hpp"
 #include "Signals.hpp"
 #include "SimulationBox.hpp"
 #include "SourceContinuousPhotonTaskContext.hpp"
@@ -154,57 +155,6 @@ inline void output_queues(const unsigned int iloop,
     ofile << "0\t" << i << "\t" << queue.get_max_queue_size() << "\n";
     queue.reset_max_queue_size();
   }
-}
-
-/**
- * @brief Get the next task for the given thread.
- *
- * We try to get a task in different stages:
- *  - first, we try to get a task from the thread's own queue
- *  - next, we try to steal a task from another thread's queue
- *  - if all else fails, we try to get a task from the shared queue
- * If this doesn't yield a task, we give up and assume there are no more tasks
- * available to this thread.
- *
- * @param thread_id Thread id of this thread.
- * @return Index of a task or NO_TASK if no tasks are available.
- */
-uint_fast32_t
-TaskBasedIonizationSimulation::get_task(const int_fast8_t thread_id) {
-
-  uint_fast32_t task_index = _queues[thread_id]->get_task(*_tasks);
-  if (task_index == NO_TASK) {
-
-    // try to steal a task from another thread's queue
-
-    // sort the queues by size
-    std::vector< size_t > queue_sizes(_queues.size(), 0);
-    for (size_t i = 0; i < _queues.size(); ++i) {
-      queue_sizes[i] = _queues[i]->size();
-    }
-    std::vector< uint_fast32_t > sorti = Utilities::argsort(queue_sizes);
-
-    // now try to steal from the largest queue first
-    uint_fast32_t i = 0;
-    while (task_index == NO_TASK && i < queue_sizes.size() &&
-           queue_sizes[sorti[queue_sizes.size() - i - 1]] > 0) {
-      task_index =
-          _queues[sorti[queue_sizes.size() - i - 1]]->try_get_task(*_tasks);
-      ++i;
-    }
-    if (task_index != NO_TASK) {
-      // stealing means transferring ownership...
-      if ((*_tasks)[task_index].get_type() == TASKTYPE_PHOTON_TRAVERSAL) {
-        (*_grid_creator->get_subgrid((*_tasks)[task_index].get_subgrid()))
-            .set_owning_thread(thread_id);
-      }
-    } else {
-      // get a task from the shared queue
-      task_index = _shared_queue->get_task(*_tasks);
-    }
-  }
-
-  return task_index;
 }
 
 /**
@@ -842,6 +792,8 @@ void TaskBasedIonizationSimulation::run(
     PrematureLaunchTaskContext< DensitySubGrid > premature_launch(
         *_buffers, *_grid_creator, *_tasks, _queues, *_shared_queue);
 
+    Scheduler scheduler(*_tasks, _queues, *_shared_queue);
+
     start_parallel_timing_block();
 #ifdef HAVE_OPENMP
 #pragma omp parallel default(shared)
@@ -862,7 +814,7 @@ void TaskBasedIonizationSimulation::run(
 
         if (current_index == NO_TASK) {
           premature_launch.execute();
-          current_index = get_task(thread_id);
+          current_index = scheduler.get_task(thread_id);
         }
 
         while (current_index != NO_TASK) {
@@ -901,14 +853,14 @@ void TaskBasedIonizationSimulation::run(
             }
           }
 
-          current_index = get_task(thread_id);
+          current_index = scheduler.get_task(thread_id);
         }
 
         if (_buffers->is_empty() &&
             num_photon_done.value() == _number_of_photons) {
           global_run_flag = false;
         } else {
-          current_index = get_task(thread_id);
+          current_index = scheduler.get_task(thread_id);
         }
       } // while(global_run_flag)
 

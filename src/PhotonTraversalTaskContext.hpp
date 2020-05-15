@@ -113,6 +113,10 @@ public:
     const uint_fast32_t igrid = photon_buffer.get_subgrid_index();
     DensitySubGrid &this_grid = *_grid_creator.get_subgrid(igrid);
 
+    // set the ownership of this grid to the current thread (in case this task
+    // was stolen)
+    this_grid.set_owning_thread(thread_id);
+
     traversal_thread_context.initialize(this_grid, _do_reemission);
 
     // keep track of the original number of photons
