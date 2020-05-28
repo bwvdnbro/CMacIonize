@@ -988,7 +988,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
     } else {
       hydro_mask = HydroMaskFactory::restart(*restart_reader, log);
     }
-    if (mask == nullptr) {
+    if (hydro_mask == nullptr) {
       cmac_error("Hydro mask requested, but no hydro mask was found!");
     }
   }
