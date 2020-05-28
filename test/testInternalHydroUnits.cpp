@@ -35,19 +35,41 @@
  */
 int main(int argc, char **argv) {
 
-  InternalHydroUnits hydro_units(2., 2., 2.);
+  /// first make sure we can disable the internal units if we want
+  {
+    InternalHydroUnits hydro_units(1., 1., 1.);
 
-  assert_values_equal(
-      hydro_units.convert_to_internal_units< QUANTITY_DENSITY >(2.), 1.);
-  assert_values_equal(
-      hydro_units.convert_to_internal_units< QUANTITY_VELOCITY >(1.), 1.);
-  assert_values_equal(
-      hydro_units.convert_to_internal_units< QUANTITY_PRESSURE >(2.), 1.);
+    assert_values_equal(
+        hydro_units.convert_to_internal_units< QUANTITY_DENSITY >(2.), 2.);
+    assert_values_equal(
+        hydro_units.convert_to_internal_units< QUANTITY_VELOCITY >(1.), 1.);
+    assert_values_equal(
+        hydro_units.convert_to_internal_units< QUANTITY_PRESSURE >(2.), 2.);
 
-  assert_values_equal(
-      hydro_units.convert_to_internal_units< QUANTITY_MASS >(1.), 0.0625);
-  assert_values_equal(
-      hydro_units.convert_to_internal_units< QUANTITY_MOMENTUM >(1.), 0.0625);
-  assert_values_equal(
-      hydro_units.convert_to_internal_units< QUANTITY_ENERGY >(1.), 0.0625);
+    assert_values_equal(
+        hydro_units.convert_to_internal_units< QUANTITY_MASS >(1.), 1.);
+    assert_values_equal(
+        hydro_units.convert_to_internal_units< QUANTITY_MOMENTUM >(1.), 1.);
+    assert_values_equal(
+        hydro_units.convert_to_internal_units< QUANTITY_ENERGY >(1.), 1.);
+  }
+
+  /// now check that the conversions are done correctly
+  {
+    InternalHydroUnits hydro_units(2., 2., 2.);
+
+    assert_values_equal(
+        hydro_units.convert_to_internal_units< QUANTITY_DENSITY >(2.), 1.);
+    assert_values_equal(
+        hydro_units.convert_to_internal_units< QUANTITY_VELOCITY >(1.), 1.);
+    assert_values_equal(
+        hydro_units.convert_to_internal_units< QUANTITY_PRESSURE >(2.), 1.);
+
+    assert_values_equal(
+        hydro_units.convert_to_internal_units< QUANTITY_MASS >(1.), 0.0625);
+    assert_values_equal(
+        hydro_units.convert_to_internal_units< QUANTITY_MOMENTUM >(1.), 0.0625);
+    assert_values_equal(
+        hydro_units.convert_to_internal_units< QUANTITY_ENERGY >(1.), 0.0625);
+  }
 }
