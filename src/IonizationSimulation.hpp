@@ -174,8 +174,11 @@ private:
 
   /// internal timers
 
-  /*! @brief Timer to quantify time spent in ray tracing. */
-  Timer _work_timer;
+  /*! @brief Timer for the time spent in photon propagations. */
+  Timer _photon_propagation_timer;
+
+  /*! @brief Timer for the time spent in cell updates. */
+  Timer _cell_update_timer;
 
   /*! @brief Timer to quantify time spent in serial parts of the code .*/
   Timer _serial_timer;

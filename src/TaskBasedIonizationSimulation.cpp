@@ -493,8 +493,12 @@ TaskBasedIonizationSimulation::~TaskBasedIonizationSimulation() {
     _log->write_status("Total overall time: ",
                        Utilities::human_readable_time(_total_timer.value()),
                        ".");
-    _log->write_status("Total photon shooting time: ",
-                       Utilities::human_readable_time(_worktimer.value()), ".");
+    _log->write_status(
+        "Total photon shooting time: ",
+        Utilities::human_readable_time(_photon_propagation_timer.value()), ".");
+    _log->write_status(
+        "Total cell update time: ",
+        Utilities::human_readable_time(_cell_update_timer.value()), ".");
   }
 
   if (_task_plot) {
@@ -753,7 +757,7 @@ void TaskBasedIonizationSimulation::run(
 
     uint_fast64_t iteration_start, iteration_end;
     cpucycle_tick(iteration_start);
-    _worktimer.start();
+    _photon_propagation_timer.start();
 
     // reset the photon source information
     if (photon_source) {
@@ -1642,10 +1646,13 @@ void TaskBasedIonizationSimulation::run(
     stop_parallel_timing_block();
     _time_log.end("update copies");
 
+    _photon_propagation_timer.stop();
+
     if (_log != nullptr) {
       _log->write_info("Done shooting photons.");
       _log->write_info("Starting temperature calculation...");
     }
+    _cell_update_timer.start();
     _time_log.start("temperature calculation");
     {
       AtomicValue< size_t > igrid(0);
@@ -1698,6 +1705,8 @@ void TaskBasedIonizationSimulation::run(
       stop_parallel_timing_block();
     }
     _time_log.end("temperature calculation");
+
+    _cell_update_timer.stop();
 
     // output diagnostic information
     {
@@ -1780,8 +1789,6 @@ void TaskBasedIonizationSimulation::run(
     _grid_creator->update_copy_properties();
     stop_parallel_timing_block();
     _time_log.end("copy update");
-
-    _worktimer.stop();
 
     if (_task_plot) {
       _time_log.start("task output");
