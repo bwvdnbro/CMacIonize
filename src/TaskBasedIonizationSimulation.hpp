@@ -158,8 +158,11 @@ private:
   /*! @brief Timer for parallel simulation time. */
   Timer _parallel_timer;
 
-  /*! @brief Timer for Monte Carlo simulation time. */
-  Timer _worktimer;
+  /*! @brief Timer for the time spent in photon propagations. */
+  Timer _photon_propagation_timer;
+
+  /*! @brief Timer for the time spent in cell updates. */
+  Timer _cell_update_timer;
 
   /*! @brief Start time of the program (in CPU cycles). */
   uint_fast64_t _program_start;

@@ -407,11 +407,11 @@ void IonizationSimulation::run(DensityGridWriter *density_grid_writer) {
     }
 
     _ionization_photon_shoot_job_market->set_numphoton(local_numphoton);
-    _work_timer.start();
+    _photon_propagation_timer.start();
     start_parallel_timing_block();
     _work_distributor.do_in_parallel(*_ionization_photon_shoot_job_market);
     stop_parallel_timing_block();
-    _work_timer.stop();
+    _photon_propagation_timer.stop();
 
     _ionization_photon_shoot_job_market->update_counters(totweight, typecount);
 
@@ -538,10 +538,10 @@ void IonizationSimulation::run(DensityGridWriter *density_grid_writer) {
 #endif
     }
 
-    _work_timer.start();
+    _cell_update_timer.start();
     _temperature_calculator->calculate_temperature(loop, totweight,
                                                    *_density_grid, block);
-    _work_timer.stop();
+    _cell_update_timer.stop();
 
     // the calculation above will have changed the ionic fractions, and might
     // have changed the temperatures
@@ -671,9 +671,12 @@ void IonizationSimulation::run(DensityGridWriter *density_grid_writer) {
   }
 
   if (_log) {
-    _log->write_status("Total photon shooting time: ",
-                       Utilities::human_readable_time(_work_timer.value()),
-                       ".");
+    _log->write_status(
+        "Total photon shooting time: ",
+        Utilities::human_readable_time(_photon_propagation_timer.value()), ".");
+    _log->write_status(
+        "Total cell update time: ",
+        Utilities::human_readable_time(_cell_update_timer.value()), ".");
   }
 
   _time_log.end("IonizationSimulation:run()");
