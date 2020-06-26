@@ -454,6 +454,7 @@ public:
       _heating[i] = restart_reader.read< double >();
     }
     _cosmic_ray_factor = restart_reader.read< double >();
+    _tracker = nullptr;
   }
 
   /**
