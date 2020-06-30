@@ -286,10 +286,11 @@ public:
     const double frequency = photon.get_energy();
     const uint_fast32_t index =
         (frequency - _minimum_frequency) * _inverse_frequency_width;
-    cmac_assert(index < _number_counts[0].size());
-    const double weight = get_projected_area(photon.get_direction()) *
-                          _side_length * _side_length;
-    _number_counts[photon.get_type()][index] += 1. / weight;
+    if (index < _number_counts[0].size()) {
+      const double weight = get_projected_area(photon.get_direction()) *
+                            _side_length * _side_length;
+      _number_counts[photon.get_type()][index] += 1. / weight;
+    }
   }
 
   /**
@@ -304,10 +305,11 @@ public:
     const double frequency = photon.get_energy();
     const uint_fast32_t index =
         (frequency - _minimum_frequency) * _inverse_frequency_width;
-    cmac_assert(index < _number_counts[0].size());
-    const double weight = get_projected_area(photon.get_direction()) *
-                          _side_length * _side_length;
-    _number_counts[photon.get_type()][index] += 1. / weight;
+    if (index < _number_counts[0].size()) {
+      const double weight = get_projected_area(photon.get_direction()) *
+                            _side_length * _side_length;
+      _number_counts[photon.get_type()][index] += 1. / weight;
+    }
   }
 
   /**
