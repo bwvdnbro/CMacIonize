@@ -629,6 +629,10 @@ void IonizationSimulation::run(DensityGridWriter *density_grid_writer) {
 
     stop_parallel_timing_block();
 
+    if (_trackers != nullptr) {
+      _trackers->normalize(_photon_source->get_total_luminosity() / totweight);
+    }
+
     if (_log) {
       _log->write_status("Done calculating ionization state.");
     }

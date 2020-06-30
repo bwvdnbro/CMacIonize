@@ -141,11 +141,12 @@ public:
       if (!grid.get_box().inside(_tracker_positions[i])) {
         cmac_error("Tracker is not inside grid!");
       }
-      IonizationVariables &ionization_variables =
-          grid.get_cell(_tracker_positions[i]).get_ionization_variables();
+      auto it = grid.get_cell(_tracker_positions[i]);
+      IonizationVariables &ionization_variables = it.get_ionization_variables();
       if (ionization_variables.get_tracker() != nullptr) {
         cmac_error("Cell already has a tracker!");
       }
+      _trackers[i]->normalize_for_cell(it);
       ionization_variables.add_tracker(_trackers[i]);
     }
   }
@@ -169,6 +170,7 @@ public:
         if (ionization_variables.get_tracker() != nullptr) {
           cmac_error("Cell already has a tracker!");
         }
+        _trackers[i]->normalize_for_cell(cellit);
         ionization_variables.add_tracker(_trackers[i]);
       }
       auto copies = gridit.get_copies();
@@ -194,9 +196,15 @@ public:
   }
 
   /**
-   * @brief Output the tracker information.
+   * @brief Normalize the trackers based on the actual physical weight of each
+   * photon packet.
+   *
+   * This function also merges copies made by add_trackers().
+   *
+   * @param luminosity_per_weight Ionizing luminosity per unit photon packet
+   * weight used to normalize photon packet contributions (in s^-1).
    */
-  inline void output_trackers() const {
+  inline void normalize(const double luminosity_per_weight) {
     for (uint_fast32_t i = 0; i < _tracker_positions.size(); ++i) {
       if (_copies[i] != 0xffffffff) {
         size_t copy = _copies[i] - _tracker_positions.size();
@@ -205,6 +213,15 @@ public:
           ++copy;
         }
       }
+      _trackers[i]->normalize(luminosity_per_weight);
+    }
+  }
+
+  /**
+   * @brief Output the tracker information.
+   */
+  inline void output_trackers() const {
+    for (uint_fast32_t i = 0; i < _tracker_positions.size(); ++i) {
       _trackers[i]->output_tracker(_output_names[i]);
     }
   }

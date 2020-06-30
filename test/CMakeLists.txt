@@ -1752,6 +1752,15 @@ set(TESTABUNDANCEMODEL_SOURCES
 add_unit_test(NAME testAbundanceModel
               SOURCES ${TESTABUNDANCEMODEL_SOURCES})
 
+## Unit test for WeightedSpectrumTracker
+set(TESTWEIGHTEDSPECTRUMTRACKER_SOURCES
+    testWeightedSpectrumTracker.cpp
+
+    ../src/WeightedSpectrumTracker.hpp
+)
+add_unit_test(NAME testWeightedSpectrumTracker
+              SOURCES ${TESTWEIGHTEDSPECTRUMTRACKER_SOURCES})
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)

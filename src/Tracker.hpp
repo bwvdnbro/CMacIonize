@@ -28,6 +28,7 @@
 
 #include <string>
 
+class Cell;
 class Photon;
 class PhotonPacket;
 
@@ -40,6 +41,22 @@ public:
    * @brief Virtual destructor.
    */
   virtual ~Tracker() {}
+
+  /**
+   * @brief Normalize the tracker for use in a cell with the given size.
+   *
+   * @param cell Cell the tracker is attached to.
+   */
+  virtual void normalize_for_cell(const Cell &cell) {}
+
+  /**
+   * @brief Normalize the tracker with the appropriate ionizing luminosity per
+   * unit photon packet weight.
+   *
+   * @param luminosity_per_weight Ionizing luminosity per unit photon packet
+   * weight (in s^-1).
+   */
+  virtual void normalize(const double luminosity_per_weight) {}
 
   /**
    * @brief Make a duplicate of the current tracker.

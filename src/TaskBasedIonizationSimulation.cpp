@@ -1801,6 +1801,10 @@ void TaskBasedIonizationSimulation::run(
     cmac_assert_message(_buffers->is_empty(), "Number of active buffers: %zu",
                         _buffers->get_number_of_active_buffers());
 
+    if (_trackers != nullptr) {
+      _trackers->normalize(_total_luminosity / _number_of_photons);
+    }
+
     // update copies
     _time_log.start("copy update");
     start_parallel_timing_block();

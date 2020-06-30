@@ -72,7 +72,9 @@ public:
         .pre_increment();
   }
   /**
-   * @brief function that implements photon escape termination
+   * @brief Function that implements photon escape termination
+   *
+   * @param packet Photon packet.
    */
   inline void escape_photon(const PhotonPacket &packet) {
     uint_fast32_t scatter_counter = packet.get_scatter_counter();
