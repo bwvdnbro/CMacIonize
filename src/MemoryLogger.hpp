@@ -32,6 +32,7 @@
 #include "CPUCycle.hpp"
 #include "Error.hpp"
 
+#include <cinttypes>
 #include <fstream>
 #include <string>
 #include <unistd.h>
@@ -86,9 +87,25 @@ public:
    */
   inline void update_size(const uint_fast64_t new_virtual_size,
                           const uint_fast64_t new_physical_size) {
-    cmac_assert(new_virtual_size >= _virtual_memory_size);
-    _virtual_memory_size = new_virtual_size - _virtual_memory_size;
-    _physical_memory_size = new_physical_size - _physical_memory_size;
+
+    // make sure our values are sensible
+    if (new_virtual_size >= _virtual_memory_size) {
+      _virtual_memory_size = new_virtual_size - _virtual_memory_size;
+    } else {
+      cmac_warning("Virtual memory size smaller after allocation, not counting "
+                   "allocation (%" PRIuFAST64 " < %" PRIuFAST64 ")!",
+                   new_virtual_size, _virtual_memory_size);
+      _virtual_memory_size = 0;
+    }
+    if (new_physical_size >= _physical_memory_size) {
+      _physical_memory_size = new_physical_size - _physical_memory_size;
+    } else {
+      cmac_warning("Physical memory size smaller after allocation, not "
+                   "counting allocation (%" PRIuFAST64 " < %" PRIuFAST64 ")!",
+                   new_physical_size, _physical_memory_size);
+      _physical_memory_size = 0;
+    }
+
     _is_snapshot = false;
   }
 

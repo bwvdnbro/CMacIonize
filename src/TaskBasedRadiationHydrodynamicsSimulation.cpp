@@ -1467,6 +1467,14 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
     memory_logger.finalize_entry();
   }
 
+  {
+    if (log) {
+      log->write_status("Outputting memory allocation stats to memory.txt.");
+    }
+    std::ofstream mfile("memory.txt");
+    memory_logger.print(mfile, false);
+  }
+
   /// SIMULATION
   TimeLine *timeline = nullptr;
   int_fast32_t num_step = 0;
@@ -2838,11 +2846,6 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
       pfile << "# rank\tstart\tstop\ttime\n";
       pfile << "0\t" << program_start << "\t" << program_end << "\t"
             << total_timer.value() << "\n";
-    }
-
-    {
-      std::ofstream mfile("memory.txt");
-      memory_logger.print(mfile, false);
     }
 
     {

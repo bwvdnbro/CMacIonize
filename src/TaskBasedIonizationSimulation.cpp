@@ -510,11 +510,6 @@ TaskBasedIonizationSimulation::~TaskBasedIonizationSimulation() {
   }
 
   {
-    std::ofstream mfile("memory.txt");
-    _memory_log.print(mfile, false);
-  }
-
-  {
     std::ofstream mfile("memory_timeline.txt");
     _memory_log.print(mfile, true);
   }
@@ -674,6 +669,14 @@ void TaskBasedIonizationSimulation::run(
                        _grid_creator->number_of_actual_subgrids() -
                            _grid_creator->number_of_original_subgrids(),
                        " subgrid copies.");
+  }
+
+  {
+    if (_log) {
+      _log->write_status("Outputting memory allocation stats to memory.txt.");
+    }
+    std::ofstream mfile("memory.txt");
+    _memory_log.print(mfile, false);
   }
 
   DistributedPhotonSource< DensitySubGrid > *photon_source = nullptr;
