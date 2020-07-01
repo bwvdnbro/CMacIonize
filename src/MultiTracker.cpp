@@ -137,14 +137,3 @@ void MultiTracker::output_tracker(const std::string filename) const {
     _trackers[i]->describe("  ", ofile);
   }
 }
-
-#ifdef HAVE_HDF5
-/**
- * @brief Output the tracker data to the given HDF5 group with the given name.
- *
- * @param group HDF5Group to write to.
- */
-void MultiTracker::output_tracker_to_hdf5(const HDF5Tools::HDF5Group group) {
-  cmac_error("Method not implemented (yet)!");
-}
-#endif

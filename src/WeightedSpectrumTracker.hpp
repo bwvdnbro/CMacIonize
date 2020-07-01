@@ -37,6 +37,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <typeinfo>
 #include <vector>
 
 /**
@@ -338,11 +339,31 @@ public:
 
 #ifdef HAVE_HDF5
   /**
-   * @brief Output the tracker data to the given HDF5 group with the given name.
+   * @brief Does the given tracker belong to the same group as this tracker?
+   *
+   * @param tracker Other tracker.
+   * @return True if both trackers belong to the same group.
+   */
+  virtual bool same_group(const Tracker *tracker) const {
+    if (typeid(this) == typeid(tracker)) {
+      const WeightedSpectrumTracker *other_tracker =
+          static_cast< const WeightedSpectrumTracker * >(tracker);
+      return _number_counts[0].size() ==
+             other_tracker->_number_counts[0].size();
+    } else {
+      return false;
+    }
+  }
+
+  /**
+   * @brief Create the header and shared datasets for an HDF5 group containing
+   * one or multiple trackers of this type.
    *
    * @param group HDF5Group to write to.
+   * @param group_size Number of trackers in the group.
    */
-  virtual void output_tracker_to_hdf5(const HDF5Tools::HDF5Group group) {
+  virtual void create_group(const HDF5Tools::HDF5Group group,
+                            const uint_fast32_t group_size) {
     std::string type_string = "WeightedSpectrum";
     HDF5Tools::write_attribute< std::string >(group, "type", type_string);
     std::string unit_string = "s^-1";
@@ -358,7 +379,26 @@ public:
     for (int_fast32_t i = 0; i < PHOTONTYPE_NUMBER; ++i) {
       std::stringstream namestr;
       namestr << get_photontype_name(i) << " flux";
-      HDF5Tools::write_dataset(group, namestr.str(), _number_counts[i]);
+      HDF5Tools::create_datatable< double >(group, namestr.str(), group_size,
+                                            frequencies.size());
+    }
+  }
+
+  /**
+   * @brief Append the tracker to the given group.
+   *
+   * We assume the group was already properly initialised using create_group().
+   *
+   * @param group HDF5Group to write to.
+   * @param group_index Index of this particular tracker within the group.
+   */
+  virtual void append_to_group(const HDF5Tools::HDF5Group group,
+                               const uint_fast32_t group_index) {
+
+    for (int_fast32_t i = 0; i < PHOTONTYPE_NUMBER; ++i) {
+      std::stringstream namestr;
+      namestr << get_photontype_name(i) << " flux";
+      HDF5Tools::fill_row(group, namestr.str(), group_index, _number_counts[i]);
     }
   }
 #endif

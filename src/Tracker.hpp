@@ -102,11 +102,37 @@ public:
 
 #ifdef HAVE_HDF5
   /**
-   * @brief Output the tracker data to the given HDF5 group with the given name.
+   * @brief Does the given tracker belong to the same group as this tracker?
+   *
+   * @param tracker Other tracker.
+   * @return True if both trackers belong to the same group.
+   */
+  virtual bool same_group(const Tracker *tracker) const { return false; }
+
+  /**
+   * @brief Create the header and shared datasets for an HDF5 group containing
+   * one or multiple trackers of this type.
    *
    * @param group HDF5Group to write to.
+   * @param group_size Number of trackers in the group.
    */
-  virtual void output_tracker_to_hdf5(const HDF5Tools::HDF5Group group) = 0;
+  virtual void create_group(const HDF5Tools::HDF5Group group,
+                            const uint_fast32_t group_size) {
+    cmac_error("Function has not been implemented for this tracker type!");
+  }
+
+  /**
+   * @brief Append the tracker to the given group.
+   *
+   * We assume the group was already properly initialised using create_group().
+   *
+   * @param group HDF5Group to write to.
+   * @param group_index Index of this particular tracker within the group.
+   */
+  virtual void append_to_group(const HDF5Tools::HDF5Group group,
+                               const uint_fast32_t group_index) {
+    cmac_error("Function has not been implemented for this tracker type!");
+  }
 #endif
 
   /**

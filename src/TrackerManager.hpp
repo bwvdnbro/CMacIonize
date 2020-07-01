@@ -69,6 +69,17 @@ private:
   /*! @brief Name of the HDF5 output file. */
   const std::string _hdf5_name;
 
+#ifdef HAVE_HDF5
+  /*! @brief Index of the first tracker in each tracker group. */
+  std::vector< size_t > _tracker_groups;
+
+  /*! @brief Group size for each tracker group. */
+  std::vector< size_t > _group_size;
+
+  /*! @brief Tracker group a each tracker belongs to. */
+  std::vector< size_t > _group_index;
+#endif
+
 public:
   /**
    * @brief Constructor.
@@ -116,10 +127,35 @@ public:
       _trackers[i] = TrackerFactory::generate(blockname.str(), blocks);
 
       std::stringstream default_name;
-      default_name << "Tracker" << i << ".txt";
+      default_name << "Tracker" << i;
+      if (!_hdf5_output) {
+        default_name << ".txt";
+      }
       _output_names[i] = blocks.get_value< std::string >(
           blockname.str() + "output name", default_name.str());
     }
+
+#ifdef HAVE_HDF5
+    if (_hdf5_output) {
+      _group_index.resize(number_of_trackers, 0);
+      // we skip the first tracker, it trivially belongs to group 0
+      _tracker_groups.push_back(0);
+      _group_size.push_back(1);
+      for (uint_fast32_t i = 1; i < number_of_trackers; ++i) {
+        uint_fast32_t group_id = 0;
+        while (group_id < _tracker_groups.size() &&
+               _trackers[_tracker_groups[group_id]]->same_group(_trackers[i])) {
+          ++group_id;
+        }
+        if (group_id == _tracker_groups.size()) {
+          _tracker_groups.push_back(i);
+          _group_size.push_back(0);
+        }
+        _group_index[i] = group_id;
+        ++_group_size[group_id];
+      }
+    }
+#endif
 
     std::ofstream ofile(filename + ".used-values");
     blocks.print_contents(ofile, true);
@@ -252,16 +288,30 @@ public:
 #ifdef HAVE_HDF5
       HDF5Tools::HDF5File file =
           HDF5Tools::open_file(_hdf5_name, HDF5Tools::HDF5FILEMODE_WRITE);
-      for (uint_fast32_t i = 0; i < _tracker_positions.size(); ++i) {
+      for (uint_fast32_t igroup = 0; igroup < _tracker_groups.size();
+           ++igroup) {
+        std::stringstream groupname;
+        groupname << "Group" << igroup;
         HDF5Tools::HDF5Group group =
-            HDF5Tools::create_group(file, _output_names[i]);
-        CoordinateVector<> position = _tracker_positions[i];
-        HDF5Tools::write_attribute< CoordinateVector<> >(group, "position",
-                                                         position);
+            HDF5Tools::create_group(file, groupname.str());
         std::string unit_string = "m";
+        const uint_fast32_t group_size = _group_size[igroup];
+        _trackers[_tracker_groups[igroup]]->create_group(group, group_size);
+        std::vector< CoordinateVector<> > positions(group_size);
+        uint_fast32_t group_id = 0;
+        for (uint_fast32_t i = 0; i < _trackers.size(); ++i) {
+          if (_group_index[i] == igroup) {
+            positions[group_id] = _tracker_positions[i];
+            _trackers[i]->append_to_group(group, group_id);
+            ++group_id;
+            if (group_id == group_size) {
+              break;
+            }
+          }
+        }
+        HDF5Tools::write_dataset(group, "positions", positions);
         HDF5Tools::write_attribute< std::string >(group, "position unit",
                                                   unit_string);
-        _trackers[i]->output_tracker_to_hdf5(group);
         HDF5Tools::close_group(group);
       }
       HDF5Tools::close_file(file);

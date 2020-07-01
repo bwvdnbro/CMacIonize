@@ -62,10 +62,6 @@ public:
   virtual void count_photon(const PhotonPacket &photon);
 
   virtual void output_tracker(const std::string filename) const;
-
-#ifdef HAVE_HDF5
-  virtual void output_tracker_to_hdf5(const HDF5Tools::HDF5Group group);
-#endif
 };
 
 #endif // MULTITRACKER_HPP
