@@ -26,11 +26,16 @@
 #ifndef TRACKERMANAGER_HPP
 #define TRACKERMANAGER_HPP
 
+#include "Configuration.hpp"
 #include "DensityGrid.hpp"
 #include "DensitySubGridCreator.hpp"
 #include "ParameterFile.hpp"
 #include "TrackerFactory.hpp"
 #include "YAMLDictionary.hpp"
+
+#ifdef HAVE_HDF5
+#include "HDF5Tools.hpp"
+#endif
 
 #include <fstream>
 #include <vector>
@@ -58,6 +63,12 @@ private:
   /*! @brief Number of photon packets to use during the tracking step. */
   const uint_fast64_t _number_of_photons;
 
+  /*! @brief Output all trackers to a single HDF5 file? */
+  const bool _hdf5_output;
+
+  /*! @brief Name of the HDF5 output file. */
+  const std::string _hdf5_name;
+
 public:
   /**
    * @brief Constructor.
@@ -66,10 +77,21 @@ public:
    * trackers.
    * @param number_of_photons Number of photon packets to use during the
    * tracking step.
+   * @param hdf5_output Output all trackers to a single HDF5 file?
+   * @param hdf5_name Name of the HDF5 output file.
    */
   TrackerManager(const std::string filename,
-                 const uint_fast64_t number_of_photons)
-      : _number_of_photons(number_of_photons) {
+                 const uint_fast64_t number_of_photons,
+                 const bool hdf5_output = false,
+                 const std::string hdf5_name = "")
+      : _number_of_photons(number_of_photons), _hdf5_output(hdf5_output),
+        _hdf5_name(hdf5_name) {
+
+#ifndef HAVE_HDF5
+    if (hdf5_output) {
+      cmac_error("HDF5 output requested, but HDF5 not enabled!");
+    }
+#endif
 
     std::ifstream file(filename);
 
@@ -113,6 +135,8 @@ public:
    *  - minimum number of photon packets: Minimum number of photon packets to
    *    use during the spectrum tracking step (default: 0, meaning we do not
    *    use a different number for the spectrum tracking step)
+   *  - HDF5 output: Output all trackers to a single HDF5 file? (default: false)
+   *  - HDF5 output name: Name of the HDF5 output file (default: trackers.hdf5).
    *
    * @param params ParameterFile to read from.
    */
@@ -120,7 +144,10 @@ public:
       : TrackerManager(
             params.get_filename("TrackerManager:filename"),
             params.get_value< uint_fast64_t >(
-                "TrackerManager:minimum number of photon packets", 0)) {}
+                "TrackerManager:minimum number of photon packets", 0),
+            params.get_value< bool >("TrackerManager:HDF5 output", false),
+            params.get_value< std::string >("TrackerManager:HDF5 output name",
+                                            "trackers.hdf5")) {}
 
   /**
    * @brief Destructor.
@@ -221,8 +248,28 @@ public:
    * @brief Output the tracker information.
    */
   inline void output_trackers() const {
-    for (uint_fast32_t i = 0; i < _tracker_positions.size(); ++i) {
-      _trackers[i]->output_tracker(_output_names[i]);
+    if (_hdf5_output) {
+#ifdef HAVE_HDF5
+      HDF5Tools::HDF5File file =
+          HDF5Tools::open_file(_hdf5_name, HDF5Tools::HDF5FILEMODE_WRITE);
+      for (uint_fast32_t i = 0; i < _tracker_positions.size(); ++i) {
+        HDF5Tools::HDF5Group group =
+            HDF5Tools::create_group(file, _output_names[i]);
+        CoordinateVector<> position = _tracker_positions[i];
+        HDF5Tools::write_attribute< CoordinateVector<> >(group, "position",
+                                                         position);
+        std::string unit_string = "m";
+        HDF5Tools::write_attribute< std::string >(group, "position unit",
+                                                  unit_string);
+        _trackers[i]->output_tracker_to_hdf5(group);
+        HDF5Tools::close_group(group);
+      }
+      HDF5Tools::close_file(file);
+#endif
+    } else {
+      for (uint_fast32_t i = 0; i < _tracker_positions.size(); ++i) {
+        _trackers[i]->output_tracker(_output_names[i]);
+      }
     }
   }
 

@@ -26,6 +26,12 @@
 #ifndef TRACKER_HPP
 #define TRACKER_HPP
 
+#include "Configuration.hpp"
+
+#ifdef HAVE_HDF5
+#include "HDF5Tools.hpp"
+#endif
+
 #include <string>
 
 class Cell;
@@ -93,6 +99,15 @@ public:
    * @param filename Name of the output file.
    */
   virtual void output_tracker(const std::string filename) const = 0;
+
+#ifdef HAVE_HDF5
+  /**
+   * @brief Output the tracker data to the given HDF5 group with the given name.
+   *
+   * @param group HDF5Group to write to.
+   */
+  virtual void output_tracker_to_hdf5(const HDF5Tools::HDF5Group group) = 0;
+#endif
 
   /**
    * @brief Describe the tracker in the given output stream, appending the given

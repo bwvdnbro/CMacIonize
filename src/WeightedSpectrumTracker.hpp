@@ -35,6 +35,7 @@
 
 #include <cinttypes>
 #include <fstream>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -334,6 +335,33 @@ public:
       ofile << "\n";
     }
   }
+
+#ifdef HAVE_HDF5
+  /**
+   * @brief Output the tracker data to the given HDF5 group with the given name.
+   *
+   * @param group HDF5Group to write to.
+   */
+  virtual void output_tracker_to_hdf5(const HDF5Tools::HDF5Group group) {
+    std::string type_string = "WeightedSpectrum";
+    HDF5Tools::write_attribute< std::string >(group, "type", type_string);
+    std::string unit_string = "s^-1";
+    HDF5Tools::write_attribute< std::string >(group, "frequency unit",
+                                              unit_string);
+    unit_string = "m^-2 s^-1";
+    HDF5Tools::write_attribute< std::string >(group, "flux unit", unit_string);
+    std::vector< double > frequencies(_number_counts[0].size(), 0.);
+    for (uint_fast32_t i = 0; i < frequencies.size(); ++i) {
+      frequencies[i] = _minimum_frequency + (i + 0.5) * _frequency_width;
+    }
+    HDF5Tools::write_dataset(group, "frequencies", frequencies);
+    for (int_fast32_t i = 0; i < PHOTONTYPE_NUMBER; ++i) {
+      std::stringstream namestr;
+      namestr << get_photontype_name(i) << " flux";
+      HDF5Tools::write_dataset(group, namestr.str(), _number_counts[i]);
+    }
+  }
+#endif
 
   /**
    * @brief Describe the tracker in the given output stream, appending the given

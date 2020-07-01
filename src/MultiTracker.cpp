@@ -113,7 +113,10 @@ void MultiTracker::count_photon(const PhotonPacket &photon) {
 }
 
 /**
- * @brief Output the spectrum to the file with the given name.
+ * @brief Output the trackers to the file with the given name.
+ *
+ * We output one file for every tracker in this tracker + an additional file
+ * with the names of all output files.
  *
  * @param filename Name of the output file.
  */
@@ -134,3 +137,14 @@ void MultiTracker::output_tracker(const std::string filename) const {
     _trackers[i]->describe("  ", ofile);
   }
 }
+
+#ifdef HAVE_HDF5
+/**
+ * @brief Output the tracker data to the given HDF5 group with the given name.
+ *
+ * @param group HDF5Group to write to.
+ */
+void MultiTracker::output_tracker_to_hdf5(const HDF5Tools::HDF5Group group) {
+  cmac_error("Method not implemented (yet)!");
+}
+#endif
