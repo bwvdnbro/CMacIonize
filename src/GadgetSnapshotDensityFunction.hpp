@@ -88,7 +88,7 @@ public:
 
   virtual ~GadgetSnapshotDensityFunction();
 
-  virtual DensityValues operator()(const Cell &cell) const;
+  virtual DensityValues operator()(const Cell &cell);
 
   double get_total_hydrogen_number() const;
 };

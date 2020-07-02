@@ -1001,7 +1001,7 @@ double SPHNGSnapshotDensityFunction::mass_contribution(
  * @param cell Geometrical information about the cell.
  * @return Initial physical field values for that cell.
  */
-DensityValues SPHNGSnapshotDensityFunction::operator()(const Cell &cell) const {
+DensityValues SPHNGSnapshotDensityFunction::operator()(const Cell &cell) {
 
   DensityValues values;
 

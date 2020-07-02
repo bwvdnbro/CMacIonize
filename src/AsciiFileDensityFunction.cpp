@@ -165,7 +165,7 @@ AsciiFileDensityFunction::~AsciiFileDensityFunction() {
  * @param cell Geometrical information about the cell.
  * @return Initial physical field values for that cell.
  */
-DensityValues AsciiFileDensityFunction::operator()(const Cell &cell) const {
+DensityValues AsciiFileDensityFunction::operator()(const Cell &cell) {
   DensityValues values;
 
   const CoordinateVector<> position = cell.get_cell_midpoint();

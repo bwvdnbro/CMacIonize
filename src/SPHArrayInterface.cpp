@@ -929,7 +929,7 @@ double SPHArrayInterface::mass_contribution(const Cell &cell,
  * @param cell Geometrical information about the cell.
  * @return Initial physical field values for that cell.
  */
-DensityValues SPHArrayInterface::operator()(const Cell &cell) const {
+DensityValues SPHArrayInterface::operator()(const Cell &cell) {
 
   // time_log.start("Density_mapping");
 

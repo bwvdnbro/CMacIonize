@@ -37,7 +37,7 @@
 class BlockSyntaxHydroMask : public HydroMask {
 private:
   /*! @brief BlockSyntaxDensityFunction that contains the masked out blocks. */
-  const BlockSyntaxDensityFunction _density_function;
+  BlockSyntaxDensityFunction _density_function;
 
   /*! @brief @f$\frac{1}{\gamma{}-1}@f$, with @f$\gamma{}@f$ the polytropic
    *  index of the gas. */

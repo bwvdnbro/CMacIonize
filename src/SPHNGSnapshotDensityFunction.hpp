@@ -108,7 +108,7 @@ public:
   double get_mass(uint_fast32_t index);
   double get_smoothing_length(uint_fast32_t index);
 
-  virtual DensityValues operator()(const Cell &cell) const;
+  virtual DensityValues operator()(const Cell &cell);
 };
 
 #endif // SPHNGSNAPSHOTDENSITYFUNCTION_HPP

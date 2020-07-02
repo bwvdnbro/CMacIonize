@@ -314,7 +314,7 @@ InterpolatedDensityFunction::InterpolatedDensityFunction(ParameterFile &params,
  * @param cell Geometrical information about the cell.
  * @return Initial physical field values for that cell.
  */
-DensityValues InterpolatedDensityFunction::operator()(const Cell &cell) const {
+DensityValues InterpolatedDensityFunction::operator()(const Cell &cell) {
 
   const CoordinateVector<> position = cell.get_cell_midpoint();
 

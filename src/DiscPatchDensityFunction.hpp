@@ -240,7 +240,7 @@ public:
    * @param cell Geometrical information about the cell.
    * @return Initial physical field values for that cell.
    */
-  virtual DensityValues operator()(const Cell &cell) const {
+  virtual DensityValues operator()(const Cell &cell) {
     const double dz = cell.get_cell_midpoint().z() - _disc_z;
     const double cosh = std::cosh(dz * _b_inv);
     const double nH = _density_norm * std::pow(cosh, _exponent);

@@ -61,7 +61,7 @@ public:
    * @param cell Geometrical information about the cell.
    * @return Initial physical field values for that cell.
    */
-  virtual DensityValues operator()(const Cell &cell) const = 0;
+  virtual DensityValues operator()(const Cell &cell) = 0;
 };
 
 #endif // DENSITYFUNCTION_HPP

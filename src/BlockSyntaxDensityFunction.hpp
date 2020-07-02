@@ -159,7 +159,7 @@ public:
    * @param cell Geometrical information about the cell.
    * @return Initial physical field values for that cell.
    */
-  virtual DensityValues operator()(const Cell &cell) const {
+  virtual DensityValues operator()(const Cell &cell) {
     DensityValues values;
 
     const CoordinateVector<> position = cell.get_cell_midpoint();
