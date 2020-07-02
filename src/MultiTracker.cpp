@@ -104,11 +104,14 @@ void MultiTracker::count_photon(const Photon &photon) {
  * @brief Add the contribution of the given photon packet to the bins.
  *
  * @param photon Photon to add.
+ * @param absorption Absorption counters within the cell for this photon
+ * (in m^-1).
  */
-void MultiTracker::count_photon(const PhotonPacket &photon) {
+void MultiTracker::count_photon(const PhotonPacket &photon,
+                                const double *absorption) {
 
   for (uint_fast32_t i = 0; i < _trackers.size(); ++i) {
-    _trackers[i]->count_photon(photon);
+    _trackers[i]->count_photon(photon, absorption);
   }
 }
 

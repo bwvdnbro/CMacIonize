@@ -613,7 +613,7 @@ protected:
 
     Tracker *tracker = _ionization_variables[active_cell].get_tracker();
     if (tracker != nullptr) {
-      tracker->count_photon(photon);
+      tracker->count_photon(photon, dmean_intensity);
     }
 
     subgrid_cell_lock_unlock(active_cell);

@@ -117,7 +117,13 @@ int main(int argc, char **argv) {
         HDF5Tools::read_dataset< double >(group, "Density");
 
     assert_condition(density.size() == 100);
-    assert_values_equal(density[0], 0.12052436);
+    assert_values_equal_rel(density[0], 0.12052436, 1.e-8);
+
+    std::vector< double > density2 =
+        HDF5Tools::read_dataset_part< double >(group, "Density", 31, 40);
+
+    assert_condition(density2.size() == 40);
+    assert_values_equal(density2[0], 0.2861183);
 
     std::vector< uint64_t > ids =
         HDF5Tools::read_dataset< uint64_t >(group, "ParticleIDs");

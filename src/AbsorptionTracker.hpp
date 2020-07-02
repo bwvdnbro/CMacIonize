@@ -1,6 +1,7 @@
 /*******************************************************************************
  * This file is part of CMacIonize
- * Copyright (C) 2019 Bert Vandenbroucke (bert.vandenbroucke@gmail.com)
+ * Copyright (C) 2020 Bert Vandenbroucke (bert.vandenbroucke@gmail.com)
+ *                    Nina Sartorio (sartorio.nina@gmail.com)
  *
  * CMacIonize is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -17,43 +18,61 @@
  ******************************************************************************/
 
 /**
- * @file Tracker.hpp
+ * @file AbsorptionTracker.hpp
  *
- * @brief General interface for trackers that record photon properties.
+ * @brief Tracker that tracks the absorption within a cell.
  *
- * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
+ * @author Bert Vandenbroucke (bert.vandenbroucke@ugent.be)
+ * @author Nina Sartorio (sartorio.nina@gmail.com)
  */
-#ifndef TRACKER_HPP
-#define TRACKER_HPP
+#ifndef ABSORPTIONTRACKER_HPP
+#define ABSORPTIONTRACKER_HPP
 
 #include "Configuration.hpp"
+#include "ElementNames.hpp"
+#include "PhotonType.hpp"
+#include "Tracker.hpp"
+#include "YAMLDictionary.hpp"
 
 #ifdef HAVE_HDF5
 #include "HDF5Tools.hpp"
 #endif
 
-#include <string>
-
-class Cell;
-class Photon;
-class PhotonPacket;
-
 /**
  * @brief General interface for trackers that record photon properties.
  */
-class Tracker {
+class AbsorptionTracker : public Tracker {
+private:
+  /*! @brief the bins for absorption. One for each photon type (source, H
+   *  reemission, He reemission) and each ion. Units of m^-1. */
+  double _absorption_bins[NUMBER_OF_IONNAMES][PHOTONTYPE_NUMBER];
+
 public:
+  /**
+   * @brief Constructor.
+   */
+  inline AbsorptionTracker() {
+    for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; i++) {
+      for (int_fast32_t j = 0; j < PHOTONTYPE_NUMBER; j++) {
+        _absorption_bins[i][j] = 0.;
+      }
+    }
+  }
+
+  /**
+   * @brief YAMLDictionary constructor.
+   *
+   * @param name Name of the block in the dictionary that contains additional
+   * parameters for the spectrum tracker.
+   * @param blocks YAMLDictionary that contains additional parameters.
+   */
+  AbsorptionTracker(const std::string name, YAMLDictionary &blocks)
+      : AbsorptionTracker() {}
+
   /**
    * @brief Virtual destructor.
    */
-  virtual ~Tracker() {}
-
-  /**
-   * @brief Normalize the tracker for use in a cell with the given size.
-   *
-   * @param cell Cell the tracker is attached to.
-   */
-  virtual void normalize_for_cell(const Cell &cell) {}
+  virtual ~AbsorptionTracker() {}
 
   /**
    * @brief Normalize the tracker with the appropriate ionizing luminosity per
@@ -62,14 +81,20 @@ public:
    * @param luminosity_per_weight Ionizing luminosity per unit photon packet
    * weight (in s^-1).
    */
-  virtual void normalize(const double luminosity_per_weight) {}
+  virtual void normalize(const double luminosity_per_weight) {
+    for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; i++) {
+      for (int_fast32_t j = 0; j < PHOTONTYPE_NUMBER; j++) {
+        _absorption_bins[i][j] *= luminosity_per_weight;
+      }
+    }
+  }
 
   /**
    * @brief Make a duplicate of the current tracker.
    *
    * @return Pointer to a new duplicate of the tracker.
    */
-  virtual Tracker *duplicate() = 0;
+  virtual Tracker *duplicate() { return new AbsorptionTracker(); }
 
   /**
    * @brief Add the contribution from the given duplicate tracker to this
@@ -77,7 +102,10 @@ public:
    *
    * @param tracker Duplicate tracker (created using Tracker::duplicate()).
    */
-  virtual void merge(const Tracker *tracker) = 0;
+  virtual void merge(const Tracker *tracker) {
+    AbsorptionTracker *other_tracker =
+        static_cast< AbsorptionTracker * >(tracker);
+  }
 
   /**
    * @brief Add the contribution of the given photon packet to the tracker.
@@ -148,4 +176,4 @@ public:
   virtual void describe(const std::string prefix, std::ostream &stream) const {}
 };
 
-#endif // TRACKER_HPP
+#endif // ABSORPTIONTRACKER_HPP

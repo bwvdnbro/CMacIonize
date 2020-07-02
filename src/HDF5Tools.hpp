@@ -852,6 +852,85 @@ inline std::vector< _datatype_ > read_dataset(hid_t group, std::string name) {
 }
 
 /**
+ * @brief Read part of the dataset with the given name from the given group.
+ *
+ * @param group HDF5Group handle to an open group.
+ * @param name Name of the dataset to read.
+ * @param part_offset Offset of the part that needs to be read.
+ * @param part_size Size of the part that needs to be read.
+ * @return std::vector containing the contents of the dataset.
+ */
+template < typename _datatype_ >
+inline std::vector< _datatype_ >
+read_dataset_part(const hid_t group, const std::string name,
+                  const hsize_t part_offset, const hsize_t part_size) {
+
+  const hid_t datatype = get_datatype_name< _datatype_ >();
+
+// open dataset
+#ifdef HDF5_OLD_API
+  const hid_t dataset = H5Dopen(group, name.c_str());
+#else
+  const hid_t dataset = H5Dopen(group, name.c_str(), H5P_DEFAULT);
+#endif
+  if (dataset < 0) {
+    cmac_error("Failed to open dataset \"%s\"", name.c_str());
+  }
+
+  // open dataspace
+  const hid_t filespace = H5Dget_space(dataset);
+  if (filespace < 0) {
+    cmac_error("Failed to open dataspace of dataset \"%s\"", name.c_str());
+  }
+
+  // select the hyperslab in filespace we want to write to
+  const hsize_t dims[1] = {part_size};
+  const hsize_t offs[1] = {part_offset};
+  herr_t hdf5status = H5Sselect_hyperslab(filespace, H5S_SELECT_SET, offs,
+                                          nullptr, dims, nullptr);
+  if (hdf5status < 0) {
+    cmac_error("Failed to select hyperslab in file space of dataset \"%s\"!",
+               name.c_str());
+  }
+
+  // create memory space
+  const hid_t memspace = H5Screate_simple(1, dims, nullptr);
+  if (memspace < 0) {
+    cmac_error("Failed to create memory space to write dataset \"%s\"!",
+               name.c_str());
+  }
+
+  // read dataset
+  _datatype_ *data = new _datatype_[part_size];
+  hdf5status =
+      H5Dread(dataset, datatype, memspace, filespace, H5P_DEFAULT, data);
+  if (hdf5status < 0) {
+    cmac_error("Failed to read dataset \"%s\"", name.c_str());
+  }
+
+  // close dataspace
+  hdf5status = H5Sclose(filespace);
+  if (hdf5status < 0) {
+    cmac_error("Failed to close dataspace of dataset \"%s\"", name.c_str());
+  }
+
+  // close dataset
+  hdf5status = H5Dclose(dataset);
+  if (hdf5status < 0) {
+    cmac_error("Failed to close dataset \"%s\"", name.c_str());
+  }
+
+  std::vector< _datatype_ > datavector(part_size);
+  for (hsize_t i = 0; i < part_size; ++i) {
+    datavector[i] = data[i];
+  }
+
+  delete[] data;
+
+  return datavector;
+}
+
+/**
  * @brief read_dataset specialization for a CoordinateVector dataset.
  *
  * @param group HDF5Group handle to an open group.

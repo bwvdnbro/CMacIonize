@@ -190,8 +190,11 @@ public:
    * @brief Add the contribution of the given photon packet to the bins.
    *
    * @param photon Photon to add.
+   * @param absorption Absorption counters within the cell for this photon
+   * (in m^-1).
    */
-  virtual void count_photon(const PhotonPacket &photon) {
+  virtual void count_photon(const PhotonPacket &photon,
+                            const double *absorption) {
 
     if (_reference_direction.norm2() > 0.) {
       const double dot_product = CoordinateVector<>::dot_product(

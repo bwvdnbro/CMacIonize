@@ -94,6 +94,18 @@ private:
   /*! @brief Locks per buffer element. */
   std::vector< ThreadLock > _buffer_element_locks;
 
+  /*! @brief Read the number density (true) or density (false)? */
+  bool _read_number_density;
+
+  /*! @brief Read the temperature (true) or pressure (false)? */
+  bool _read_temperature;
+
+  /*! @brief Flags indicating which ionic fractions to read. */
+  bool _read_ionic_fraction[NUMBER_OF_IONNAMES];
+
+  /*! @brief Read the velocity? */
+  bool _read_velocity;
+
   /*! @brief Log to write logging info to. */
   Log *_log;
 
@@ -261,6 +273,29 @@ public:
 
     // open the particle group
     _particle_group = HDF5Tools::open_group(_file, "PartType0");
+
+    // figure out which values to read
+    if (HDF5Tools::group_exists(_particle_group, "NumberDensity")) {
+      _read_number_density = true;
+    } else {
+      if (!HDF5Tools::group_exists(_particle_group, "Density")) {
+        cmac_error("No density variable present in snapshot file!");
+      }
+      _read_number_density = false;
+    }
+    if (HDF5Tools::group_exists(_particle_group, "Temperature")) {
+      _read_temperature = true;
+    } else {
+      if (!HDF5Tools::group_exists(_particle_group, "Pressure")) {
+        cmac_error("No temperature variable present in snapshot file!");
+      }
+      _read_temperature = false;
+    }
+    for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+      _read_ionic_fraction[i] =
+          HDF5Tools::group_exists(_particle_group, get_ion_name(i));
+    }
+    _read_velocity = HDF5Tools::group_exists(_particle_group, "Velocities");
   }
 
   /**
@@ -319,8 +354,8 @@ public:
   /**
    * @brief Buffer the subgrid with the given index.
    *
-   * This function can only be executed by one thread at a time and uses its
-   * own lock to ensure this.
+   * This function uses its own lock to ensure thread safe access to the HDF5
+   * file.
    *
    * @param subgrid_index Index of the subgrid to buffer.
    * @return Index within the buffer of the buffered subgrid. The corresponding
@@ -328,11 +363,86 @@ public:
    * unlock_buffer_element() is called.
    */
   inline uint_fast32_t buffer_subgrid(const uint_fast32_t subgrid_index) {
+
+    // sort the buffers according to their last access time
+    const std::vector< uint_fast32_t > timesort =
+        Utilities::argsort(_buffer_timestamps);
+    // try to lock an old buffer
+    uint_fast32_t ibuffer = 0;
+    while (ibuffer < timesort.size() &&
+           !_buffer_element_locks[timesort[ibuffer]].try_lock()) {
+      ++ibuffer;
+    }
+    if (ibuffer == timesort.size()) {
+      cmac_error("Unable to obtain a free subgrid buffer!");
+    }
+
+    // buffer_index is now locked and can be overwritten
+    const uint_fast32_t buffer_index = timesort[ibuffer];
+
+    // we are going to read the HDF5 file, so from this point we need to be
+    // thread-safe
     _buffer_lock.lock();
-    // sort the buffers according to their
+
+    const uint_fast32_t subgrid_offset = subgrid_index * _subgrid_size;
+
+    std::vector< double > number_density;
+    if (_read_number_density) {
+      number_density = HDF5Tools::read_dataset_part< double >(
+          _particle_group, "NumberDensity", subgrid_offset, _subgrid_size);
+    } else {
+      number_density = HDF5Tools::read_dataset_part< double >(
+          _particle_group, "Density", subgrid_offset, _subgrid_size);
+    }
+    std::vector< double > temperature;
+    if (_read_temperature) {
+      temperature = HDF5Tools::read_dataset_part< double >(
+          _particle_group, "Temperature", subgrid_offset, _subgrid_size);
+    } else {
+      temperature = HDF5Tools::read_dataset_part< double >(
+          _particle_group, "Pressure", subgrid_offset, _subgrid_size);
+    }
+    std::vector< std::vector< double > > neutral_fractions(
+        NUMBER_OF_IONNAMES, std::vector< double >(_subgrid_size, 1.e-6));
+    for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+      // skip ionic fractions that do not exist
+      if (_read_ionic_fraction[i]) {
+        neutral_fractions[i] = HDF5Tools::read_dataset_part< double >(
+            _particle_group, "NeutralFraction" + get_ion_name(i),
+            subgrid_offset, _subgrid_size);
+      }
+    }
+    std::vector< CoordinateVector<> > velocities(_subgrid_size);
+    if (_read_velocity) {
+      cmac_warning("Not reading velocities for now!");
+    }
+
+    for (uint_fast32_t i = 0; i < _subgrid_size; ++i) {
+      DensityValues &cell = _buffer[buffer_index * _subgrid_size + i];
+      if (_read_number_density) {
+        cell.set_number_density(number_density[i]);
+      } else {
+        cell.set_number_density(number_density[i] /
+                                PhysicalConstants::get_physical_constant(
+                                    PHYSICALCONSTANT_PROTON_MASS));
+      }
+      if (_read_temperature) {
+        cell.set_temperature(temperature[i]);
+      } else {
+        const double kB = PhysicalConstants::get_physical_constant(
+            PHYSICALCONSTANT_BOLTZMANN);
+        const double mu = 0.5 * (1. + neutral_fractions[ION_H_n][i]);
+        cell.set_temperature(mu / (number_density[i] * kB));
+      }
+      for (int_fast32_t j = 0; j < NUMBER_OF_IONNAMES; ++j) {
+        cell.set_ionic_fraction(j, neutral_fractions[j][i]);
+      }
+      cell.set_velocity(velocities[i]);
+    }
 
     _buffer_lock.unlock();
-    return 0;
+
+    return buffer_index;
   }
 
   /**
