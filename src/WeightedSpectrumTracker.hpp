@@ -378,12 +378,12 @@ public:
     for (uint_fast32_t i = 0; i < frequencies.size(); ++i) {
       frequencies[i] = _minimum_frequency + (i + 0.5) * _frequency_width;
     }
-    HDF5Tools::write_dataset(group, "frequencies", frequencies);
+    HDF5Tools::write_dataset(group, "frequencies", frequencies, true);
     for (int_fast32_t i = 0; i < PHOTONTYPE_NUMBER; ++i) {
       std::stringstream namestr;
       namestr << get_photontype_name(i) << " flux";
       HDF5Tools::create_datatable< double >(group, namestr.str(), group_size,
-                                            frequencies.size());
+                                            frequencies.size(), true);
     }
   }
 

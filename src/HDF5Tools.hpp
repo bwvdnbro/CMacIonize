@@ -27,9 +27,6 @@
 #ifndef HDF5TOOLS_HPP
 #define HDF5TOOLS_HPP
 
-/*! @brief Enable this to compress HDF5 files. */
-//#define DO_HDF5_COMPRESSION
-
 #include "CoordinateVector.hpp"
 #include "Error.hpp"
 
@@ -1322,10 +1319,12 @@ inline HDF5Dictionary< _datatype_ > read_dictionary(hid_t group,
  * @param group HDF5Group handle to an open group.
  * @param name Name of the dataset to write.
  * @param values std::vector containing the contents of the dataset.
+ * @param compress Apply compression to the dataset?
  */
 template < typename _datatype_ >
 inline void write_dataset(hid_t group, std::string name,
-                          std::vector< _datatype_ > &values) {
+                          std::vector< _datatype_ > &values,
+                          const bool compress = false) {
 
   const hid_t datatype = get_datatype_name< _datatype_ >();
 
@@ -1345,23 +1344,25 @@ inline void write_dataset(hid_t group, std::string name,
   if (hdf5status < 0) {
     cmac_error("Failed to set chunk size for dataset \"%s\"", name.c_str());
   }
-#ifdef DO_HDF5_COMPRESSION
-  hdf5status = H5Pset_fletcher32(prop);
-  if (hdf5status < 0) {
-    cmac_error("Failed to set Fletcher32 filter for dataset \"%s\"",
-               name.c_str());
-  }
-  hdf5status = H5Pset_shuffle(prop);
-  if (hdf5status < 0) {
-    cmac_error("Failed to set shuffle filter for dataset \"%s\"", name.c_str());
-  }
-  hdf5status = H5Pset_deflate(prop, 9);
-  if (hdf5status < 0) {
-    cmac_error("Failed to set compression for dataset \"%s\"", name.c_str());
-  }
-#endif
 
-// create dataset
+  if (compress) {
+    hdf5status = H5Pset_fletcher32(prop);
+    if (hdf5status < 0) {
+      cmac_error("Failed to set Fletcher32 filter for dataset \"%s\"",
+                 name.c_str());
+    }
+    hdf5status = H5Pset_shuffle(prop);
+    if (hdf5status < 0) {
+      cmac_error("Failed to set shuffle filter for dataset \"%s\"",
+                 name.c_str());
+    }
+    hdf5status = H5Pset_deflate(prop, 9);
+    if (hdf5status < 0) {
+      cmac_error("Failed to set compression for dataset \"%s\"", name.c_str());
+    }
+  }
+
+  // create dataset
 #ifdef HDF5_OLD_API
   const hid_t dataset =
       H5Dcreate(group, name.c_str(), datatype, filespace, prop);
@@ -1412,10 +1413,12 @@ inline void write_dataset(hid_t group, std::string name,
  * @param group HDF5Group handle to an open group.
  * @param name Name of the dataset to write.
  * @param values std::vector containing the contents of the dataset.
+ * @param compress Apply compression to the dataset?
  */
 template <>
 inline void write_dataset(hid_t group, std::string name,
-                          std::vector< CoordinateVector<> > &values) {
+                          std::vector< CoordinateVector<> > &values,
+                          const bool compress) {
 
   const hid_t datatype = get_datatype_name< double >();
 
@@ -1435,21 +1438,23 @@ inline void write_dataset(hid_t group, std::string name,
   if (hdf5status < 0) {
     cmac_error("Failed to set chunk size for dataset \"%s\"", name.c_str());
   }
-#ifdef DO_HDF5_COMPRESSION
-  hdf5status = H5Pset_fletcher32(prop);
-  if (hdf5status < 0) {
-    cmac_error("Failed to set Fletcher32 filter for dataset \"%s\"",
-               name.c_str());
+
+  if (compress) {
+    hdf5status = H5Pset_fletcher32(prop);
+    if (hdf5status < 0) {
+      cmac_error("Failed to set Fletcher32 filter for dataset \"%s\"",
+                 name.c_str());
+    }
+    hdf5status = H5Pset_shuffle(prop);
+    if (hdf5status < 0) {
+      cmac_error("Failed to set shuffle filter for dataset \"%s\"",
+                 name.c_str());
+    }
+    hdf5status = H5Pset_deflate(prop, 9);
+    if (hdf5status < 0) {
+      cmac_error("Failed to set compression for dataset \"%s\"", name.c_str());
+    }
   }
-  hdf5status = H5Pset_shuffle(prop);
-  if (hdf5status < 0) {
-    cmac_error("Failed to set shuffle filter for dataset \"%s\"", name.c_str());
-  }
-  hdf5status = H5Pset_deflate(prop, 9);
-  if (hdf5status < 0) {
-    cmac_error("Failed to set compression for dataset \"%s\"", name.c_str());
-  }
-#endif
 
 // create dataset
 #ifdef HDF5_OLD_API
@@ -1506,9 +1511,11 @@ inline void write_dataset(hid_t group, std::string name,
  * @param group HDF5Group handle to an open group.
  * @param name Name of the dataset to create.
  * @param size Size of the dataset.
+ * @param compress Apply compression to the dataset?
  */
 template < typename _datatype_ >
-inline void create_dataset(hid_t group, std::string name, hsize_t size) {
+inline void create_dataset(hid_t group, std::string name, hsize_t size,
+                           const bool compress = false) {
 
   const hid_t datatype = get_datatype_name< _datatype_ >();
 
@@ -1527,21 +1534,23 @@ inline void create_dataset(hid_t group, std::string name, hsize_t size) {
   if (hdf5status < 0) {
     cmac_error("Failed to set chunk size for dataset \"%s\"", name.c_str());
   }
-#ifdef DO_HDF5_COMPRESSION
-  hdf5status = H5Pset_fletcher32(prop);
-  if (hdf5status < 0) {
-    cmac_error("Failed to set Fletcher32 filter for dataset \"%s\"",
-               name.c_str());
+
+  if (compress) {
+    hdf5status = H5Pset_fletcher32(prop);
+    if (hdf5status < 0) {
+      cmac_error("Failed to set Fletcher32 filter for dataset \"%s\"",
+                 name.c_str());
+    }
+    hdf5status = H5Pset_shuffle(prop);
+    if (hdf5status < 0) {
+      cmac_error("Failed to set shuffle filter for dataset \"%s\"",
+                 name.c_str());
+    }
+    hdf5status = H5Pset_deflate(prop, 9);
+    if (hdf5status < 0) {
+      cmac_error("Failed to set compression for dataset \"%s\"", name.c_str());
+    }
   }
-  hdf5status = H5Pset_shuffle(prop);
-  if (hdf5status < 0) {
-    cmac_error("Failed to set shuffle filter for dataset \"%s\"", name.c_str());
-  }
-  hdf5status = H5Pset_deflate(prop, 9);
-  if (hdf5status < 0) {
-    cmac_error("Failed to set compression for dataset \"%s\"", name.c_str());
-  }
-#endif
 
 // create dataset
 #ifdef HDF5_OLD_API
@@ -1583,10 +1592,12 @@ inline void create_dataset(hid_t group, std::string name, hsize_t size) {
  * @param group HDF5Group handle to an open group.
  * @param name Name of the dataset to create.
  * @param size Size of the dataset.
+ * @param compress Apply compression to the dataset?
  */
 template <>
 inline void create_dataset< CoordinateVector<> >(hid_t group, std::string name,
-                                                 hsize_t size) {
+                                                 hsize_t size,
+                                                 const bool compress) {
 
   const hid_t datatype = get_datatype_name< double >();
 
@@ -1605,21 +1616,23 @@ inline void create_dataset< CoordinateVector<> >(hid_t group, std::string name,
   if (hdf5status < 0) {
     cmac_error("Failed to set chunk size for dataset \"%s\"", name.c_str());
   }
-#ifdef DO_HDF5_COMPRESSION
-  hdf5status = H5Pset_fletcher32(prop);
-  if (hdf5status < 0) {
-    cmac_error("Failed to set Fletcher32 filter for dataset \"%s\"",
-               name.c_str());
+
+  if (compress) {
+    hdf5status = H5Pset_fletcher32(prop);
+    if (hdf5status < 0) {
+      cmac_error("Failed to set Fletcher32 filter for dataset \"%s\"",
+                 name.c_str());
+    }
+    hdf5status = H5Pset_shuffle(prop);
+    if (hdf5status < 0) {
+      cmac_error("Failed to set shuffle filter for dataset \"%s\"",
+                 name.c_str());
+    }
+    hdf5status = H5Pset_deflate(prop, 9);
+    if (hdf5status < 0) {
+      cmac_error("Failed to set compression for dataset \"%s\"", name.c_str());
+    }
   }
-  hdf5status = H5Pset_shuffle(prop);
-  if (hdf5status < 0) {
-    cmac_error("Failed to set shuffle filter for dataset \"%s\"", name.c_str());
-  }
-  hdf5status = H5Pset_deflate(prop, 9);
-  if (hdf5status < 0) {
-    cmac_error("Failed to set compression for dataset \"%s\"", name.c_str());
-  }
-#endif
 
 // create dataset
 #ifdef HDF5_OLD_API
@@ -1827,11 +1840,12 @@ inline void append_dataset(hid_t group, std::string name, hsize_t offset,
  * @param name Name of the dataset to create.
  * @param number_of_rows Number of rows in the dataset.
  * @param number_of_columns Number of columns in the dataset.
+ * @param compress Apply compression to the dataset?
  */
 template < typename _datatype_ >
 inline void create_datatable(hid_t group, std::string name,
-                             hsize_t number_of_rows,
-                             hsize_t number_of_columns) {
+                             hsize_t number_of_rows, hsize_t number_of_columns,
+                             const bool compress = false) {
 
   const hid_t datatype = get_datatype_name< _datatype_ >();
 
@@ -1851,21 +1865,23 @@ inline void create_datatable(hid_t group, std::string name,
   if (hdf5status < 0) {
     cmac_error("Failed to set chunk size for dataset \"%s\"", name.c_str());
   }
-#ifdef DO_HDF5_COMPRESSION
-  hdf5status = H5Pset_fletcher32(prop);
-  if (hdf5status < 0) {
-    cmac_error("Failed to set Fletcher32 filter for dataset \"%s\"",
-               name.c_str());
+
+  if (compress) {
+    hdf5status = H5Pset_fletcher32(prop);
+    if (hdf5status < 0) {
+      cmac_error("Failed to set Fletcher32 filter for dataset \"%s\"",
+                 name.c_str());
+    }
+    hdf5status = H5Pset_shuffle(prop);
+    if (hdf5status < 0) {
+      cmac_error("Failed to set shuffle filter for dataset \"%s\"",
+                 name.c_str());
+    }
+    hdf5status = H5Pset_deflate(prop, 9);
+    if (hdf5status < 0) {
+      cmac_error("Failed to set compression for dataset \"%s\"", name.c_str());
+    }
   }
-  hdf5status = H5Pset_shuffle(prop);
-  if (hdf5status < 0) {
-    cmac_error("Failed to set shuffle filter for dataset \"%s\"", name.c_str());
-  }
-  hdf5status = H5Pset_deflate(prop, 9);
-  if (hdf5status < 0) {
-    cmac_error("Failed to set compression for dataset \"%s\"", name.c_str());
-  }
-#endif
 
 // create dataset
 #ifdef HDF5_OLD_API
