@@ -395,7 +395,8 @@ public:
                   params.get_physical_vector< QUANTITY_LENGTH >(
                       "SimulationBox:sides")),
             params.get_value< CoordinateVector< uint_fast32_t > >(
-                "DensityGrid:number of cells")) {}
+                "DensityGrid:number of cells"),
+            log) {}
 
   /**
    * @brief Virtual destructor.
