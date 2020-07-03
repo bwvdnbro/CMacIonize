@@ -59,9 +59,9 @@ private:
   /*! @brief Particle group within the snapshot file. */
   HDF5Tools::HDF5Group _particle_group;
 
-  /*! @brief Number of old cells per new cell. If larger than one, a
-   *  mass-conserving mapping is used during read. */
-  uint_fast32_t _number_of_old_cells_per_new_cell;
+  /*! @brief Number of old cells per new cell (in 1 coordinate dimension). If
+   *  larger than one, a mass-conserving mapping is used during read. */
+  uint_fast32_t _number_of_old_cells_per_new_cell_1D;
 
   /*! @brief Anchor of the old simulation box (in m). */
   CoordinateVector<> _old_anchor;
@@ -69,8 +69,17 @@ private:
   /*! @brief Width of a subgrid in the old simulation (in m). */
   CoordinateVector<> _subgrid_width;
 
-  /*! @brief Number of cells in a subgrid. */
-  uint_fast32_t _subgrid_size;
+  /*! @brief Number of cells in 1D in an original subgrid. */
+  CoordinateVector< uint_fast32_t > _original_subgrid_ncell;
+
+  /*! @brief Number of cells in an original subgrid. */
+  uint_fast32_t _original_subgrid_size;
+
+  /*! @brief Number of cells in 1D in a remapped subgrid. */
+  CoordinateVector< uint_fast32_t > _mapped_subgrid_ncell;
+
+  /*! @brief Number of cells in a remapped subgrid. */
+  uint_fast32_t _mapped_subgrid_size;
 
   /*! @brief Number of subgrids in the original snapshot in each dimension. */
   CoordinateVector< uint_fast32_t > _number_of_subgrids;
@@ -125,7 +134,7 @@ public:
       Log *log = nullptr)
       : _buffer_size(buffer_size), _buffer_timestamps(buffer_size, 0),
         _buffer_subgrid_indices(buffer_size),
-        _buffer_element_locks(buffer_size) {
+        _buffer_element_locks(buffer_size), _log(log) {
 
     // check that the file can be opened
     std::ifstream file(filename);
@@ -172,6 +181,13 @@ public:
         new_box.get_anchor() - old_box.get_anchor();
     const CoordinateVector<> available_sides =
         new_box.get_top_anchor() - old_box.get_anchor();
+    if (log) {
+      log->write_info("Anchor in old box: [", anchor_in_old_box.x(), " m, ",
+                      anchor_in_old_box.y(), " m, ", anchor_in_old_box.z(),
+                      " m].");
+      log->write_info("Available sides: [", available_sides.x(), " m, ",
+                      available_sides.y(), " m, ", available_sides.z(), " m].");
+    }
     if (anchor_in_old_box.x() < 0. || anchor_in_old_box.y() < 0. ||
         anchor_in_old_box.z() < 0. ||
         available_sides.x() < new_box.get_sides().x() ||
@@ -201,6 +217,18 @@ public:
         static_cast< uint_fast32_t >(std::round(cell_sides_float.x())),
         static_cast< uint_fast32_t >(std::round(cell_sides_float.y())),
         static_cast< uint_fast32_t >(std::round(cell_sides_float.z()))};
+    if (log) {
+      log->write_info("Old cell size: [", old_cell_size.x(), " m, ",
+                      old_cell_size.y(), " m, ", old_cell_size.z(), " m].");
+      log->write_info("Cell offset float: [", cell_offset_float.x(), ", ",
+                      cell_offset_float.y(), ", ", cell_offset_float.z(), "].");
+      log->write_info("Cell offset: [", cell_offset.x(), ", ", cell_offset.y(),
+                      ", ", cell_offset.z(), "].");
+      log->write_info("Cell sides float: [", cell_sides_float.x(), ", ",
+                      cell_sides_float.y(), ", ", cell_sides_float.z(), "].");
+      log->write_info("Cell sides: [", cell_sides.x(), ", ", cell_sides.y(),
+                      ", ", cell_sides.z(), "].");
+    }
     if ((std::abs(cell_offset_float.x()) - cell_offset.x()) > 1.e-10 ||
         (std::abs(cell_offset_float.y()) - cell_offset.y()) > 1.e-10 ||
         (std::abs(cell_offset_float.z()) - cell_offset.z()) > 1.e-10 ||
@@ -216,6 +244,10 @@ public:
         new_box.get_sides().x() / new_ncell.x(),
         new_box.get_sides().y() / new_ncell.y(),
         new_box.get_sides().z() / new_ncell.z());
+    if (log) {
+      log->write_info("New cell size: [", new_cell_size.x(), " m, ",
+                      new_cell_size.y(), " m, ", new_cell_size.z(), " m].");
+    }
     if (std::abs(old_box.get_sides().x() - old_box.get_sides().y()) > 1.e-10 ||
         std::abs(old_box.get_sides().x() - old_box.get_sides().z()) > 1.e-10 ||
         std::abs(new_box.get_sides().x() - new_box.get_sides().y()) > 1.e-10 ||
@@ -230,21 +262,35 @@ public:
     if (cell_sides.x() <= new_ncell.x()) {
       // there is a many/one to one mapping between new and old cells, and we
       // don't need to do anything special when reading cells
-      _number_of_old_cells_per_new_cell = 1;
+      _number_of_old_cells_per_new_cell_1D = 1;
     } else {
       if (cell_sides.x() % new_ncell.x() != 0) {
         cmac_error("New resolution not compatible with old resolution!");
       }
-      _number_of_old_cells_per_new_cell = cell_sides.x() / new_ncell.x();
+      _number_of_old_cells_per_new_cell_1D = cell_sides.x() / new_ncell.x();
     }
 
-    const CoordinateVector< uint_fast32_t > subgrid_ncell(
+    _original_subgrid_ncell = CoordinateVector< uint_fast32_t >(
         old_ncell.x() / _number_of_subgrids.x(),
         old_ncell.y() / _number_of_subgrids.y(),
         old_ncell.z() / _number_of_subgrids.z());
+    _subgrid_width =
+        CoordinateVector<>(old_box.get_sides().x() / _number_of_subgrids.x(),
+                           old_box.get_sides().y() / _number_of_subgrids.y(),
+                           old_box.get_sides().z() / _number_of_subgrids.z());
+
+    if (log) {
+      log->write_info("Number of old cells per new cell 1D: ",
+                      _number_of_old_cells_per_new_cell_1D);
+      log->write_info("Original subgrid ncell: [", _original_subgrid_ncell.x(),
+                      ", ", _original_subgrid_ncell.y(), ", ",
+                      _original_subgrid_ncell.z(), "].");
+      log->write_info("Subgrid width: [", _subgrid_width.x(), " m, ",
+                      _subgrid_width.y(), " m, ", _subgrid_width.z(), " m].");
+    }
 
     // we also make sure that we don't need to degrade across subgrid boundaries
-    if (_number_of_old_cells_per_new_cell > 1) {
+    if (_number_of_old_cells_per_new_cell_1D > 1) {
       const CoordinateVector<> subgrid_offset_float(
           anchor_in_old_box.x() / _subgrid_width.x(),
           anchor_in_old_box.y() / _subgrid_width.y(),
@@ -253,10 +299,18 @@ public:
           static_cast< uint_fast32_t >(std::round(subgrid_offset_float.x())),
           static_cast< uint_fast32_t >(std::round(subgrid_offset_float.y())),
           static_cast< uint_fast32_t >(std::round(subgrid_offset_float.z())));
+      if (log) {
+        log->write_info("Subgrid offset float: [", subgrid_offset_float.x(),
+                        ", ", subgrid_offset_float.y(), ", ",
+                        subgrid_offset_float.z(), "].");
+        log->write_info("Subgrid offset: [", subgrid_offset.x(), ", ",
+                        subgrid_offset.y(), ", ", subgrid_offset.z(), "].");
+      }
       if (std::abs(subgrid_offset_float.x() - subgrid_offset.x()) > 1.e-10 ||
           std::abs(subgrid_offset_float.y() - subgrid_offset.y()) > 1.e-10 ||
           std::abs(subgrid_offset_float.z() - subgrid_offset.z()) > 1.e-10 ||
-          subgrid_ncell.x() % _number_of_old_cells_per_new_cell != 0) {
+          _original_subgrid_ncell.x() % _number_of_old_cells_per_new_cell_1D !=
+              0) {
         cmac_error("Degrading resolution across subgrid boundaries not yet "
                    "supported!");
       }
@@ -264,12 +318,15 @@ public:
 
     // now compute the relevant quantities for locating blocks
     _old_anchor = old_box.get_anchor();
-    _subgrid_width =
-        CoordinateVector<>(old_box.get_sides().x() / _number_of_subgrids.x(),
-                           old_box.get_sides().y() / _number_of_subgrids.y(),
-                           old_box.get_sides().z() / _number_of_subgrids.z());
 
-    _subgrid_size = subgrid_ncell.x() * subgrid_ncell.y() * subgrid_ncell.z();
+    _original_subgrid_size = _original_subgrid_ncell.x() *
+                             _original_subgrid_ncell.y() *
+                             _original_subgrid_ncell.z();
+    _mapped_subgrid_ncell =
+        _original_subgrid_ncell / _number_of_old_cells_per_new_cell_1D;
+    _mapped_subgrid_size = _mapped_subgrid_ncell.x() *
+                           _mapped_subgrid_ncell.y() *
+                           _mapped_subgrid_ncell.z();
 
     // open the particle group
     _particle_group = HDF5Tools::open_group(_file, "PartType0");
@@ -292,10 +349,27 @@ public:
       _read_temperature = false;
     }
     for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
-      _read_ionic_fraction[i] =
-          HDF5Tools::group_exists(_particle_group, get_ion_name(i));
+      _read_ionic_fraction[i] = HDF5Tools::group_exists(
+          _particle_group, "NeutralFraction" + get_ion_name(i));
     }
     _read_velocity = HDF5Tools::group_exists(_particle_group, "Velocities");
+
+    if (log) {
+      log->write_info("Old anchor: [", _old_anchor.x(), " m, ", _old_anchor.y(),
+                      " m, ", _old_anchor.z(), " m].");
+      log->write_info("Original subgrid size: ", _original_subgrid_size);
+      log->write_info("Mapped subgrid ncell: [", _mapped_subgrid_ncell.x(),
+                      ", ", _mapped_subgrid_ncell.y(), ", ",
+                      _mapped_subgrid_ncell.z(), "].");
+      log->write_info("Mapped subgrid size: ", _mapped_subgrid_size);
+      log->write_info("Read number density: ", _read_number_density);
+      log->write_info("Read temperature: ", _read_temperature);
+      for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+        log->write_info("Read ionic fraction ", get_ion_name(i), ": ",
+                        _read_ionic_fraction[i]);
+      }
+      log->write_info("Read velocity: ", _read_velocity);
+    }
   }
 
   /**
@@ -332,7 +406,7 @@ public:
    * @brief Initialize the internal buffer.
    */
   virtual void initialize() {
-    _buffer.resize(_buffer_size * _subgrid_size);
+    _buffer.resize(_buffer_size * _mapped_subgrid_size);
     _buffer_indices.resize(_number_of_subgrids.x() * _number_of_subgrids.y() *
                                _number_of_subgrids.z(),
                            0xffffffff);
@@ -365,8 +439,10 @@ public:
   inline uint_fast32_t buffer_subgrid(const uint_fast32_t subgrid_index) {
 
     // sort the buffers according to their last access time
+    const std::vector< uint_fast32_t > buffer_timestamps_copy(
+        _buffer_timestamps);
     const std::vector< uint_fast32_t > timesort =
-        Utilities::argsort(_buffer_timestamps);
+        Utilities::argsort(buffer_timestamps_copy);
     // try to lock an old buffer
     uint_fast32_t ibuffer = 0;
     while (ibuffer < timesort.size() &&
@@ -384,63 +460,122 @@ public:
     // thread-safe
     _buffer_lock.lock();
 
-    const uint_fast32_t subgrid_offset = subgrid_index * _subgrid_size;
+    if (_log) {
+      _log->write_info("Reading subgrid ", subgrid_index,
+                       " into buffer element ", buffer_index);
+    }
+
+    const uint_fast32_t subgrid_offset = subgrid_index * _original_subgrid_size;
 
     std::vector< double > number_density;
     if (_read_number_density) {
       number_density = HDF5Tools::read_dataset_part< double >(
-          _particle_group, "NumberDensity", subgrid_offset, _subgrid_size);
+          _particle_group, "NumberDensity", subgrid_offset,
+          _original_subgrid_size);
     } else {
       number_density = HDF5Tools::read_dataset_part< double >(
-          _particle_group, "Density", subgrid_offset, _subgrid_size);
+          _particle_group, "Density", subgrid_offset, _original_subgrid_size);
     }
     std::vector< double > temperature;
     if (_read_temperature) {
       temperature = HDF5Tools::read_dataset_part< double >(
-          _particle_group, "Temperature", subgrid_offset, _subgrid_size);
+          _particle_group, "Temperature", subgrid_offset,
+          _original_subgrid_size);
     } else {
       temperature = HDF5Tools::read_dataset_part< double >(
-          _particle_group, "Pressure", subgrid_offset, _subgrid_size);
+          _particle_group, "Pressure", subgrid_offset, _original_subgrid_size);
     }
     std::vector< std::vector< double > > neutral_fractions(
-        NUMBER_OF_IONNAMES, std::vector< double >(_subgrid_size, 1.e-6));
+        NUMBER_OF_IONNAMES,
+        std::vector< double >(_original_subgrid_size, 1.e-6));
     for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
       // skip ionic fractions that do not exist
       if (_read_ionic_fraction[i]) {
         neutral_fractions[i] = HDF5Tools::read_dataset_part< double >(
             _particle_group, "NeutralFraction" + get_ion_name(i),
-            subgrid_offset, _subgrid_size);
+            subgrid_offset, _original_subgrid_size);
       }
     }
-    std::vector< CoordinateVector<> > velocities(_subgrid_size);
+    std::vector< CoordinateVector<> > velocities(_original_subgrid_size);
     if (_read_velocity) {
       cmac_warning("Not reading velocities for now!");
     }
 
-    for (uint_fast32_t i = 0; i < _subgrid_size; ++i) {
-      DensityValues &cell = _buffer[buffer_index * _subgrid_size + i];
-      if (_read_number_density) {
-        cell.set_number_density(number_density[i]);
-      } else {
-        cell.set_number_density(number_density[i] /
-                                PhysicalConstants::get_physical_constant(
-                                    PHYSICALCONSTANT_PROTON_MASS));
-      }
-      if (_read_temperature) {
-        cell.set_temperature(temperature[i]);
-      } else {
-        const double kB = PhysicalConstants::get_physical_constant(
-            PHYSICALCONSTANT_BOLTZMANN);
-        const double mu = 0.5 * (1. + neutral_fractions[ION_H_n][i]);
-        cell.set_temperature(mu / (number_density[i] * kB));
-      }
-      for (int_fast32_t j = 0; j < NUMBER_OF_IONNAMES; ++j) {
-        cell.set_ionic_fraction(j, neutral_fractions[j][i]);
-      }
-      cell.set_velocity(velocities[i]);
-    }
-
+    // we are done reading the file, unlock the file so that another thread
+    // can access it
     _buffer_lock.unlock();
+
+    const double norm = 1. / (_number_of_old_cells_per_new_cell_1D *
+                              _number_of_old_cells_per_new_cell_1D *
+                              _number_of_old_cells_per_new_cell_1D);
+    for (uint_fast32_t ix = 0; ix < _mapped_subgrid_ncell.x(); ++ix) {
+      for (uint_fast32_t iy = 0; iy < _mapped_subgrid_ncell.y(); ++iy) {
+        for (uint_fast32_t iz = 0; iz < _mapped_subgrid_ncell.z(); ++iz) {
+          const uint_fast32_t mapped_subgrid_index =
+              ix * _mapped_subgrid_ncell.y() * _mapped_subgrid_ncell.z() +
+              iy * _mapped_subgrid_ncell.z() + iz;
+          double cell_number_density = 0.;
+          double cell_temperature = 0.;
+          double cell_ionic_fraction[NUMBER_OF_IONNAMES] = {0.};
+          CoordinateVector<> cell_velocity;
+          for (uint_fast32_t oix = 0;
+               oix < _number_of_old_cells_per_new_cell_1D; ++oix) {
+            for (uint_fast32_t oiy = 0;
+                 oiy < _number_of_old_cells_per_new_cell_1D; ++oiy) {
+              for (uint_fast32_t oiz = 0;
+                   oiz < _number_of_old_cells_per_new_cell_1D; ++oiz) {
+                const uint_fast32_t original_subgrid_index =
+                    (_number_of_old_cells_per_new_cell_1D * ix + oix) *
+                        _original_subgrid_ncell.y() *
+                        _original_subgrid_ncell.z() +
+                    (_number_of_old_cells_per_new_cell_1D * iy + oiy) *
+                        _original_subgrid_ncell.z() +
+                    (_number_of_old_cells_per_new_cell_1D * iz + oiz);
+                if (_read_number_density) {
+                  cell_number_density += number_density[original_subgrid_index];
+                } else {
+                  cell_number_density +=
+                      number_density[original_subgrid_index] /
+                      PhysicalConstants::get_physical_constant(
+                          PHYSICALCONSTANT_PROTON_MASS);
+                }
+                if (_read_temperature) {
+                  cell_temperature += temperature[original_subgrid_index];
+                } else {
+                  const double kB = PhysicalConstants::get_physical_constant(
+                      PHYSICALCONSTANT_BOLTZMANN);
+                  const double mu =
+                      0.5 *
+                      (1. + neutral_fractions[ION_H_n][original_subgrid_index]);
+                  cell_temperature +=
+                      mu / (number_density[original_subgrid_index] * kB);
+                }
+                for (int_fast32_t j = 0; j < NUMBER_OF_IONNAMES; ++j) {
+                  cell_ionic_fraction[j] +=
+                      neutral_fractions[j][original_subgrid_index];
+                }
+                cell_velocity += velocities[original_subgrid_index];
+              }
+            }
+          }
+          DensityValues &cell = _buffer[buffer_index * _mapped_subgrid_size +
+                                        mapped_subgrid_index];
+          cell.set_number_density(cell_number_density * norm);
+          cell.set_temperature(cell_temperature * norm);
+          for (int_fast32_t j = 0; j < NUMBER_OF_IONNAMES; ++j) {
+            cell.set_ionic_fraction(j, cell_ionic_fraction[j] * norm);
+          }
+          cell.set_velocity(cell_velocity * norm);
+        }
+      }
+    }
+    // invalidate the old subgrid pointer, this buffer will no longer contain
+    // that subgrid
+    _buffer_indices[_buffer_subgrid_indices[buffer_index]] = 0xffffffff;
+    // point the new subgrid to this buffer
+    _buffer_indices[subgrid_index] = buffer_index;
+    // make sure the cross check works
+    _buffer_subgrid_indices[buffer_index] = subgrid_index;
 
     return buffer_index;
   }
@@ -474,6 +609,8 @@ public:
         buffer_index = buffer_subgrid(subgrid_index);
       }
     }
+    // update the access time for the buffer element
+    cpucycle_tick(_buffer_timestamps[buffer_index]);
     return buffer_index;
   }
 
@@ -483,6 +620,8 @@ public:
    * @param buffer_index Index of a buffer element.
    */
   inline void unlock_buffer_element(const uint_fast32_t buffer_index) {
+    // update the access time for the buffer element
+    cpucycle_tick(_buffer_timestamps[buffer_index]);
     _buffer_element_locks[buffer_index].unlock();
   }
 
@@ -498,7 +637,66 @@ public:
    * @param cell Cell for which the density needs to be computed.
    * @return Initial values for that cell.
    */
-  virtual DensityValues operator()(const Cell &cell) { return DensityValues(); }
+  virtual DensityValues operator()(const Cell &cell) {
+
+    // find the (original) subgrid that contains the cell midpoint position
+    const CoordinateVector<> p = cell.get_cell_midpoint();
+    const uint_fast32_t six = static_cast< uint_fast32_t >(
+        (p.x() - _old_anchor.x()) / _subgrid_width.x());
+    const uint_fast32_t siy = static_cast< uint_fast32_t >(
+        (p.y() - _old_anchor.y()) / _subgrid_width.y());
+    const uint_fast32_t siz = static_cast< uint_fast32_t >(
+        (p.z() - _old_anchor.z()) / _subgrid_width.z());
+    const uint_fast32_t subgrid_index =
+        six * _number_of_subgrids.y() * _number_of_subgrids.z() +
+        siy * _number_of_subgrids.z() + siz;
+
+    //    if(_log){
+    //      _log->write_info("p: ", p.x(), " ", p.y(), " ", p.z());
+    //      _log->write_info("si: ", six, " ", siy, " ", siz);
+    //      _log->write_info("subgrid_index: ", subgrid_index);
+    //    }
+
+    // obtain the buffer that contains the subgrid (and lock it)
+    const uint_fast32_t buffer_index = get_buffer_index(subgrid_index);
+
+    //    if(_log){
+    //      _log->write_info("buffer index: ", buffer_index);
+    //    }
+
+    // find the index of the cell within the (mapped) buffer
+    const CoordinateVector<> subgrid_anchor =
+        _old_anchor + CoordinateVector<>(six * _subgrid_width.x(),
+                                         siy * _subgrid_width.y(),
+                                         siz * _subgrid_width.z());
+    const uint_fast32_t cix = static_cast< uint_fast32_t >(
+        (p.x() - subgrid_anchor.x()) / _subgrid_width.x() *
+        _mapped_subgrid_ncell.x());
+    const uint_fast32_t ciy = static_cast< uint_fast32_t >(
+        (p.y() - subgrid_anchor.y()) / _subgrid_width.y() *
+        _mapped_subgrid_ncell.y());
+    const uint_fast32_t ciz = static_cast< uint_fast32_t >(
+        (p.z() - subgrid_anchor.z()) / _subgrid_width.z() *
+        _mapped_subgrid_ncell.z());
+
+    //    if(_log){
+    //      _log->write_info("subgrid anchor: ", subgrid_anchor.x(), " ",
+    //                       subgrid_anchor.y(), " ",
+    //                       subgrid_anchor.z());
+    //      _log->write_info("ci: ", cix, " ", ciy, " ", ciz);
+    //    }
+
+    // obtain the cell values
+    const DensityValues values =
+        _buffer[buffer_index * _mapped_subgrid_size +
+                cix * _mapped_subgrid_ncell.y() * _mapped_subgrid_ncell.z() +
+                ciy * _mapped_subgrid_ncell.z() + ciz];
+
+    // unlock the buffer
+    unlock_buffer_element(buffer_index);
+
+    return values;
+  }
 };
 
 #endif // BUFFEREDCMACIONIZESNAPSHOTDENSITYFUNCTION_HPP

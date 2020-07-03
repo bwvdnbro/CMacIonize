@@ -1761,6 +1761,20 @@ set(TESTWEIGHTEDSPECTRUMTRACKER_SOURCES
 add_unit_test(NAME testWeightedSpectrumTracker
               SOURCES ${TESTWEIGHTEDSPECTRUMTRACKER_SOURCES})
 
+## Unit test for BufferedCMacIonizeSnapshotDensityFunction
+if(HAVE_HDF5)
+  set(TESTBUFFEREDCMACIONIZESNAPSHOTDENSITYFUNCTION_SOURCES
+      testBufferedCMacIonizeSnapshotDensityFunction.cpp
+  )
+  configure_file(${PROJECT_SOURCE_DIR}/test/taskbased.hdf5
+                 ${PROJECT_BINARY_DIR}/rundir/test/taskbased.hdf5
+                 COPYONLY)
+  add_unit_test(
+    NAME testBufferedCMacIonizeSnapshotDensityFunction
+    SOURCES ${TESTBUFFEREDCMACIONIZESNAPSHOTDENSITYFUNCTION_SOURCES}
+    LIBS ${HDF5_LIBRARIES})
+endif(HAVE_HDF5)
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)
