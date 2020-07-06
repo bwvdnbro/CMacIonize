@@ -28,6 +28,7 @@
 #define WEIGHTEDSPECTRUMTRACKER_HPP
 
 #include "Cell.hpp"
+#include "LinearFrequencyBins.hpp"
 #include "Photon.hpp"
 #include "PhotonPacket.hpp"
 #include "Tracker.hpp"
@@ -49,14 +50,8 @@
  */
 class WeightedSpectrumTracker : public Tracker {
 private:
-  /*! @brief Minimum frequency for the spectral bins (in Hz). */
-  const double _minimum_frequency;
-
-  /*! @brief Width of a single frequency bin (in Hz). */
-  const double _frequency_width;
-
-  /*! @brief Inverse width of a single frequency bin (in Hz^-1). */
-  const double _inverse_frequency_width;
+  /*! @brief Frequency bins. */
+  FrequencyBins *_frequency_bins;
 
   /*! @brief Side length of a cell (in m). */
   double _side_length;
@@ -68,18 +63,15 @@ public:
   /**
    * @brief Constructor.
    *
-   * @param number_of_bins Number of bins to use.
+   * @param frequency_bins FrequencyBins to use.
    * @param side_length Side length of a cell (in m).
    */
-  WeightedSpectrumTracker(const uint_fast32_t number_of_bins,
+  WeightedSpectrumTracker(FrequencyBins *frequency_bins,
                           const double side_length = 0.)
-      : _minimum_frequency(3.289e15),
-        _frequency_width(3. * 3.289e15 / number_of_bins),
-        _inverse_frequency_width(1. / _frequency_width),
-        _side_length(side_length) {
+      : _frequency_bins(frequency_bins), _side_length(side_length) {
 
     for (int_fast32_t i = 0; i < PHOTONTYPE_NUMBER; ++i) {
-      _number_counts[i].resize(number_of_bins, 0.);
+      _number_counts[i].resize(_frequency_bins->get_number_of_bins(), 0.);
     }
   }
 
@@ -87,21 +79,21 @@ public:
    * @brief YAMLDictionary constructor.
    *
    * The following parameters are read:
-   *  - number of bins: Number of bins in the spectral histrogram
-   *    (default: 100).
+   *  - FrequencyBins: parameter block containing parameters for the frequency
+   *    bins (default is LinearFrequencyBins with 100 bins between 13.6 eV and
+   *    54.4 eV).
    *
    * @param name Name of the block in the dictionary that contains additional
    * parameters for the spectrum tracker.
    * @param blocks YAMLDictionary that contains additional parameters.
    */
   WeightedSpectrumTracker(const std::string name, YAMLDictionary &blocks)
-      : WeightedSpectrumTracker(
-            blocks.get_value< uint_fast32_t >(name + "number of bins", 100)) {}
+      : WeightedSpectrumTracker(new LinearFrequencyBins(name, blocks)) {}
 
   /**
    * @brief Virtual destructor.
    */
-  virtual ~WeightedSpectrumTracker() {}
+  virtual ~WeightedSpectrumTracker() { delete _frequency_bins; }
 
   /**
    * @brief Normalize the tracker for use in a cell with the given size.
@@ -133,7 +125,7 @@ public:
    * @return Pointer to a new duplicate of the tracker.
    */
   virtual Tracker *duplicate() {
-    return new WeightedSpectrumTracker(_number_counts[0].size(), _side_length);
+    return new WeightedSpectrumTracker(_frequency_bins, _side_length);
   }
 
   /**
@@ -142,15 +134,17 @@ public:
    *
    * @param tracker Duplicate tracker (created using Tracker::duplicate()).
    */
-  virtual void merge(const Tracker *tracker) {
+  virtual void merge(Tracker *tracker) {
 
-    const WeightedSpectrumTracker *other =
-        reinterpret_cast< const WeightedSpectrumTracker * >(tracker);
+    WeightedSpectrumTracker *other =
+        reinterpret_cast< WeightedSpectrumTracker * >(tracker);
     for (int_fast32_t i = 0; i < PHOTONTYPE_NUMBER; ++i) {
       for (uint_fast32_t j = 0; j < _number_counts[i].size(); ++j) {
         _number_counts[i][j] += other->_number_counts[i][j];
       }
     }
+    // make sure we do not delete the frequency bins twice
+    other->_frequency_bins = nullptr;
   }
 
   /**
@@ -286,13 +280,10 @@ public:
     cmac_assert_message(_side_length > 0., "Tracker was not normalized!");
 
     const double frequency = photon.get_energy();
-    const uint_fast32_t index =
-        (frequency - _minimum_frequency) * _inverse_frequency_width;
-    if (index < _number_counts[0].size()) {
-      const double weight = get_projected_area(photon.get_direction()) *
-                            _side_length * _side_length;
-      _number_counts[photon.get_type()][index] += 1. / weight;
-    }
+    const size_t index = _frequency_bins->get_bin_number(frequency);
+    const double weight = get_projected_area(photon.get_direction()) *
+                          _side_length * _side_length;
+    _number_counts[photon.get_type()][index] += 1. / weight;
   }
 
   /**
@@ -308,13 +299,10 @@ public:
     cmac_assert_message(_side_length > 0., "Tracker was not normalized!");
 
     const double frequency = photon.get_energy();
-    const uint_fast32_t index =
-        (frequency - _minimum_frequency) * _inverse_frequency_width;
-    if (index < _number_counts[0].size()) {
-      const double weight = get_projected_area(photon.get_direction()) *
-                            _side_length * _side_length;
-      _number_counts[photon.get_type()][index] += 1. / weight;
-    }
+    const size_t index = _frequency_bins->get_bin_number(frequency);
+    const double weight = get_projected_area(photon.get_direction()) *
+                          _side_length * _side_length;
+    _number_counts[photon.get_type()][index] += 1. / weight;
   }
 
   /**
@@ -331,7 +319,7 @@ public:
     }
     ofile << "\n";
     for (uint_fast32_t i = 0; i < _number_counts[0].size(); ++i) {
-      const double nu = _minimum_frequency + (i + 0.5) * _frequency_width;
+      const double nu = _frequency_bins->get_frequency(i);
       ofile << nu;
       for (int_fast32_t j = 0; j < PHOTONTYPE_NUMBER; ++j) {
         ofile << "\t" << _number_counts[j][i];
@@ -376,7 +364,7 @@ public:
     HDF5Tools::write_attribute< std::string >(group, "flux unit", unit_string);
     std::vector< double > frequencies(_number_counts[0].size(), 0.);
     for (uint_fast32_t i = 0; i < frequencies.size(); ++i) {
-      frequencies[i] = _minimum_frequency + (i + 0.5) * _frequency_width;
+      frequencies[i] = _frequency_bins->get_frequency(i);
     }
     HDF5Tools::write_dataset(group, "frequencies", frequencies, true);
     for (int_fast32_t i = 0; i < PHOTONTYPE_NUMBER; ++i) {

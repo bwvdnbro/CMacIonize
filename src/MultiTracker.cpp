@@ -81,8 +81,8 @@ Tracker *MultiTracker::duplicate() {
  *
  * @param tracker Duplicate tracker (created using Tracker::duplicate()).
  */
-void MultiTracker::merge(const Tracker *tracker) {
-  const MultiTracker *other = reinterpret_cast< const MultiTracker * >(tracker);
+void MultiTracker::merge(Tracker *tracker) {
+  const MultiTracker *other = reinterpret_cast< MultiTracker * >(tracker);
   for (uint_fast32_t i = 0; i < _trackers.size(); ++i) {
     _trackers[i]->merge(other->_trackers[i]);
   }

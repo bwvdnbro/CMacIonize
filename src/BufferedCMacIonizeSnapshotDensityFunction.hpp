@@ -498,13 +498,28 @@ public:
       }
     }
     std::vector< CoordinateVector<> > velocities(_original_subgrid_size);
-    if (_read_velocity) {
-      cmac_warning("Not reading velocities for now!");
-    }
+    //    if (_read_velocity) {
+    //      cmac_warning("Not reading velocities for now!");
+    //    }
 
     // we are done reading the file, unlock the file so that another thread
     // can access it
     _buffer_lock.unlock();
+
+    if (!_read_number_density || !_read_temperature) {
+      for (uint_fast32_t i = 0; i < _original_subgrid_size; ++i) {
+        if (!_read_number_density) {
+          number_density[i] /= PhysicalConstants::get_physical_constant(
+              PHYSICALCONSTANT_PROTON_MASS);
+        }
+        if (!_read_temperature) {
+          const double kB = PhysicalConstants::get_physical_constant(
+              PHYSICALCONSTANT_BOLTZMANN);
+          const double mu = 0.5 * (1. + neutral_fractions[ION_H_n][i]);
+          temperature[i] *= mu / (number_density[i] * kB);
+        }
+      }
+    }
 
     const double norm = 1. / (_number_of_old_cells_per_new_cell_1D *
                               _number_of_old_cells_per_new_cell_1D *
@@ -549,7 +564,8 @@ public:
                       0.5 *
                       (1. + neutral_fractions[ION_H_n][original_subgrid_index]);
                   cell_temperature +=
-                      mu / (number_density[original_subgrid_index] * kB);
+                      mu * temperature[original_subgrid_index] /
+                      (number_density[original_subgrid_index] * kB);
                 }
                 for (int_fast32_t j = 0; j < NUMBER_OF_IONNAMES; ++j) {
                   cell_ionic_fraction[j] +=

@@ -77,7 +77,7 @@ public:
    *
    * @param tracker Duplicate tracker (created using Tracker::duplicate()).
    */
-  virtual void merge(const Tracker *tracker) = 0;
+  virtual void merge(Tracker *tracker) = 0;
 
   /**
    * @brief Add the contribution of the given photon packet to the tracker.

@@ -144,9 +144,9 @@ public:
    *
    * @param tracker Duplicate tracker (created using Tracker::duplicate()).
    */
-  virtual void merge(const Tracker *tracker) {
+  virtual void merge(Tracker *tracker) {
     const SpectrumTracker *other =
-        reinterpret_cast< const SpectrumTracker * >(tracker);
+        reinterpret_cast< SpectrumTracker * >(tracker);
     for (uint_fast32_t i = 0; i < _number_counts_primary.size(); ++i) {
       _number_counts_primary[i] += other->_number_counts_primary[i];
       _number_counts_diffuse_H[i] += other->_number_counts_diffuse_H[i];
