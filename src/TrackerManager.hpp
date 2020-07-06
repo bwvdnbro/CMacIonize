@@ -299,10 +299,12 @@ public:
         const uint_fast32_t group_size = _group_size[igroup];
         _trackers[_tracker_groups[igroup]]->create_group(group, group_size);
         std::vector< CoordinateVector<> > positions(group_size);
+        std::vector< std::string > labels(group_size);
         uint_fast32_t group_id = 0;
         for (uint_fast32_t i = 0; i < _trackers.size(); ++i) {
           if (_group_index[i] == igroup) {
             positions[group_id] = _tracker_positions[i];
+            labels[group_id] = _output_names[i];
             _trackers[i]->append_to_group(group, group_id);
             ++group_id;
             if (group_id == group_size) {
@@ -311,6 +313,7 @@ public:
           }
         }
         HDF5Tools::write_dataset(group, "positions", positions);
+        HDF5Tools::write_dataset(group, "tracker labels", labels);
         HDF5Tools::write_attribute< std::string >(group, "position unit",
                                                   unit_string);
         HDF5Tools::close_group(group);

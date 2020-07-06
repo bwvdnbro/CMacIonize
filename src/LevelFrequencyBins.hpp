@@ -42,8 +42,8 @@ private:
   /*! @brief Edges of the frequency bins (in m). */
   double _frequencies[NUMBER_OF_IONNAMES + 1];
 
-  /*! @brief Bin for each ion. */
-  uint_fast32_t _ion_to_bin[NUMBER_OF_IONNAMES];
+  /*! @brief Bin corresponding to the given ion transition. */
+  uint_fast32_t _bin_to_ion[NUMBER_OF_IONNAMES];
 
 public:
   /**
@@ -52,9 +52,13 @@ public:
   inline LevelFrequencyBins() {
     for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
       _frequencies[i] = get_ionization_energy(i);
-      _ion_to_bin[i] = i;
+      _bin_to_ion[i] = i;
     }
     if (NUMBER_OF_IONNAMES > 1) {
+      std::sort(&_bin_to_ion[0], &_bin_to_ion[NUMBER_OF_IONNAMES - 1],
+                [this](const uint_fast32_t i1, const uint_fast32_t i2) {
+                  return this->_frequencies[i1] < this->_frequencies[i2];
+                });
       std::sort(&_frequencies[0], &_frequencies[NUMBER_OF_IONNAMES - 1]);
     }
     // the upper limit is hardcoded for now
@@ -113,7 +117,7 @@ public:
    * this bin.
    */
   virtual std::string get_label(const size_t bin_number) const {
-    return get_ion_name(bin_number);
+    return get_ion_name(_bin_to_ion[bin_number]);
   }
 
   /**

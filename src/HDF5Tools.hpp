@@ -1504,6 +1504,121 @@ inline void write_dataset(hid_t group, std::string name,
 }
 
 /**
+ * @brief write_dataset specialization for a std::string dataset.
+ *
+ * @param group HDF5Group handle to an open group.
+ * @param name Name of the dataset to write.
+ * @param values std::vector containing the contents of the dataset.
+ * @param compress Apply compression to the dataset?
+ */
+template <>
+inline void write_dataset(hid_t group, std::string name,
+                          std::vector< std::string > &values,
+                          const bool compress) {
+
+  const hid_t datatype = H5Tcopy(H5T_C_S1);
+  if (datatype < 0) {
+    cmac_error("Failed to create C-string datatype for attribute \"%s\"!",
+               name.c_str());
+  }
+
+  // determine the maximum length of all strings
+  const uint_fast32_t vsize = values.size();
+  size_t length = 0;
+  for (uint_fast32_t i = 0; i < vsize; ++i) {
+    length = std::max(length, values[i].length());
+  }
+
+  // set datatype length to variable
+  herr_t hdf5status = H5Tset_size(datatype, length + 1);
+  if (hdf5status < 0) {
+    cmac_error("Failed to set size of C-string datatype for dataset \"%s\"!",
+               name.c_str());
+  }
+
+  // create dataspace
+  const uint_fast32_t limit = 1 << 10;
+  const hsize_t dims[1] = {vsize};
+  const hsize_t chunk[1] = {std::min(vsize, limit)};
+  const hid_t filespace = H5Screate_simple(1, dims, nullptr);
+  if (filespace < 0) {
+    cmac_error("Failed to create dataspace for dataset \"%s\"!", name.c_str());
+  }
+
+  // enable data compression
+  const hid_t prop = H5Pcreate(H5P_DATASET_CREATE);
+  hdf5status = H5Pset_chunk(prop, 1, chunk);
+  if (hdf5status < 0) {
+    cmac_error("Failed to set chunk size for dataset \"%s\"", name.c_str());
+  }
+
+  if (compress) {
+    hdf5status = H5Pset_fletcher32(prop);
+    if (hdf5status < 0) {
+      cmac_error("Failed to set Fletcher32 filter for dataset \"%s\"",
+                 name.c_str());
+    }
+    hdf5status = H5Pset_shuffle(prop);
+    if (hdf5status < 0) {
+      cmac_error("Failed to set shuffle filter for dataset \"%s\"",
+                 name.c_str());
+    }
+    hdf5status = H5Pset_deflate(prop, 9);
+    if (hdf5status < 0) {
+      cmac_error("Failed to set compression for dataset \"%s\"", name.c_str());
+    }
+  }
+
+// create dataset
+#ifdef HDF5_OLD_API
+  const hid_t dataset =
+      H5Dcreate(group, name.c_str(), datatype, filespace, prop);
+#else
+  const hid_t dataset = H5Dcreate(group, name.c_str(), datatype, filespace,
+                                  H5P_DEFAULT, prop, H5P_DEFAULT);
+#endif
+  if (dataset < 0) {
+    cmac_error("Failed to create dataset \"%s\"", name.c_str());
+  }
+
+  // write dataset
+  char *data = new char[(length + 1) * vsize];
+  for (size_t i = 0; i < vsize; ++i) {
+    size_t j;
+    for (j = 0; j < values[i].size(); ++j) {
+      data[(length + 1) * i + j] = values[i][j];
+    }
+    data[(length + 1) * i + j] = '\0';
+  }
+  hdf5status =
+      H5Dwrite(dataset, datatype, H5S_ALL, filespace, H5P_DEFAULT, data);
+  if (hdf5status < 0) {
+    cmac_error("Failed to write dataset \"%s\"", name.c_str());
+  }
+
+  // close creation properties
+  hdf5status = H5Pclose(prop);
+  if (hdf5status < 0) {
+    cmac_error("Failed to close creation properties for dataset \"%s\"",
+               name.c_str());
+  }
+
+  // close dataspace
+  hdf5status = H5Sclose(filespace);
+  if (hdf5status < 0) {
+    cmac_error("Failed to close dataspace of dataset \"%s\"", name.c_str());
+  }
+
+  // close dataset
+  hdf5status = H5Dclose(dataset);
+  if (hdf5status < 0) {
+    cmac_error("Failed to close dataset \"%s\"", name.c_str());
+  }
+
+  delete[] data;
+}
+
+/**
  * @brief Create a new dataset with the given name and size in the given group.
  *
  * Once created, the dataset can be filled using HDF5Tools::append_dataset.

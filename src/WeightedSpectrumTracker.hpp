@@ -362,10 +362,17 @@ public:
     unit_string = "m^-2 s^-1";
     HDF5Tools::write_attribute< std::string >(group, "flux unit", unit_string);
     std::vector< double > frequencies(_number_counts[0].size(), 0.);
+    std::vector< std::string > labels(_number_counts[0].size());
     for (uint_fast32_t i = 0; i < frequencies.size(); ++i) {
       frequencies[i] = _frequency_bins->get_frequency(i);
+      if (_frequency_bins->has_labels()) {
+        labels[i] = _frequency_bins->get_label(i);
+      }
     }
     HDF5Tools::write_dataset(group, "frequencies", frequencies);
+    if (_frequency_bins->has_labels()) {
+      HDF5Tools::write_dataset(group, "bin labels", labels);
+    }
     for (int_fast32_t i = 0; i < PHOTONTYPE_NUMBER; ++i) {
       std::stringstream namestr;
       namestr << get_photontype_name(i) << " flux";
