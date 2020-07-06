@@ -28,7 +28,7 @@
 #define WEIGHTEDSPECTRUMTRACKER_HPP
 
 #include "Cell.hpp"
-#include "LinearFrequencyBins.hpp"
+#include "FrequencyBinsFactory.hpp"
 #include "Photon.hpp"
 #include "PhotonPacket.hpp"
 #include "Tracker.hpp"
@@ -88,7 +88,7 @@ public:
    * @param blocks YAMLDictionary that contains additional parameters.
    */
   WeightedSpectrumTracker(const std::string name, YAMLDictionary &blocks)
-      : WeightedSpectrumTracker(new LinearFrequencyBins(name, blocks)) {}
+      : WeightedSpectrumTracker(FrequencyBinsFactory::generate(name, blocks)) {}
 
   /**
    * @brief Virtual destructor.
