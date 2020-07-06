@@ -336,11 +336,10 @@ public:
    * @return True if both trackers belong to the same group.
    */
   virtual bool same_group(const Tracker *tracker) const {
-    if (typeid(this) == typeid(tracker)) {
+    if (typeid(*this).hash_code() == typeid(*tracker).hash_code()) {
       const WeightedSpectrumTracker *other_tracker =
           static_cast< const WeightedSpectrumTracker * >(tracker);
-      return _number_counts[0].size() ==
-             other_tracker->_number_counts[0].size();
+      return _frequency_bins->is_same(other_tracker->_frequency_bins);
     } else {
       return false;
     }

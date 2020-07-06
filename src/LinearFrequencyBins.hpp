@@ -29,6 +29,8 @@
 #include "FrequencyBins.hpp"
 #include "YAMLDictionary.hpp"
 
+#include <typeinfo>
+
 /**
  * @brief Fixed number linear frequency bins.
  */
@@ -131,6 +133,24 @@ public:
    */
   virtual double get_frequency(const size_t bin_number) const {
     return _minimum_frequency + (0.5 + bin_number) * _frequency_width;
+  }
+
+  /**
+   * @brief Is this FrequencyBins object equivalent to the given one?
+   *
+   * @param frequency_bins FrequencyBins object to compare with.
+   * @return True if both objects represent the same binning.
+   */
+  virtual bool is_same(const FrequencyBins *frequency_bins) const {
+    if (typeid(*this).hash_code() == typeid(*frequency_bins).hash_code()) {
+      const LinearFrequencyBins *other =
+          static_cast< const LinearFrequencyBins * >(frequency_bins);
+      return (_number_of_bins == other->_number_of_bins) &&
+             (_minimum_frequency == other->_minimum_frequency) &&
+             (_maximum_frequency == other->_maximum_frequency);
+    } else {
+      return false;
+    }
   }
 };
 

@@ -17,34 +17,61 @@
  ******************************************************************************/
 
 /**
- * @file FrequencyBins.hpp
+ * @file LevelFrequencyBins.hpp
  *
- * @brief Interface for frequency binning.
+ * @brief Frequency bins based on the ionization energies of the ions that are
+ * tracked.
  *
  * @author Bert Vandenbroucke (bert.vandenbroucke@ugent.be)
  */
-#ifndef FREQUENCYBINS_HPP
-#define FREQUENCYBINS_HPP
+#ifndef LEVELFREQUENCYBINS_HPP
+#define LEVELFREQUENCYBINS_HPP
 
-#include <cstddef>
-#include <string>
+#include "ElementData.hpp"
+#include "FrequencyBins.hpp"
+#include "Utilities.hpp"
+
+#include <typeinfo>
 
 /**
- * @brief Interface for frequency binning.
+ * @brief Frequency bins based on the ionization energies of the ions that are
+ * tracked.
  */
-class FrequencyBins {
+class LevelFrequencyBins : public FrequencyBins {
+private:
+  /*! @brief Edges of the frequency bins (in m). */
+  double _frequencies[NUMBER_OF_IONNAMES + 1];
+
+  /*! @brief Bin for each ion. */
+  uint_fast32_t _ion_to_bin[NUMBER_OF_IONNAMES];
+
 public:
+  /**
+   * @brief Constructor.
+   */
+  inline LevelFrequencyBins() {
+    for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+      _frequencies[i] = get_ionization_energy(i);
+      _ion_to_bin[i] = i;
+    }
+    if (NUMBER_OF_IONNAMES > 1) {
+      std::sort(&_frequencies[0], &_frequencies[NUMBER_OF_IONNAMES - 1]);
+    }
+    // the upper limit is hardcoded for now
+    _frequencies[NUMBER_OF_IONNAMES] = 4 * _frequencies[ION_H_n];
+  }
+
   /**
    * @brief Virtual destructor.
    */
-  virtual ~FrequencyBins() {}
+  virtual ~LevelFrequencyBins() {}
 
   /**
    * @brief Get the number of bins.
    *
    * @return Total number of bins.
    */
-  virtual size_t get_number_of_bins() const = 0;
+  virtual size_t get_number_of_bins() const { return NUMBER_OF_IONNAMES; }
 
   /**
    * @brief Get the bin number for the given frequency.
@@ -56,7 +83,9 @@ public:
    * @return Corresponding bin index @f$i@f$, so that frequency satisfies
    * @f$\nu{}_i \leq{} \nu{} < \nu{}_{i+1}@f$.
    */
-  virtual size_t get_bin_number(const double frequency) const = 0;
+  virtual size_t get_bin_number(const double frequency) const {
+    return Utilities::locate(frequency, _frequencies, NUMBER_OF_IONNAMES + 1);
+  }
 
   /**
    * @brief Get the frequency corresponding to the given bin number.
@@ -65,22 +94,27 @@ public:
    * @return Frequency for that bin. The implementation determines where in the
    * bin this frequency is taken.
    */
-  virtual double get_frequency(const size_t bin_number) const = 0;
+  virtual double get_frequency(const size_t bin_number) const {
+    return _frequencies[bin_number];
+  }
 
   /**
    * @brief Does this implementation have bin labels?
    *
-   * @return False (default).
+   * @return True.
    */
-  virtual bool has_labels() { return false; }
+  virtual bool has_labels() { return true; }
 
   /**
    * @brief Get the label for the given bin number.
    *
    * @param bin_number Bin number.
-   * @return An empty string (default).
+   * @return The name of the ion that gets ionized at the lower frequency of
+   * this bin.
    */
-  virtual std::string get_label(const size_t bin_number) const { return ""; }
+  virtual std::string get_label(const size_t bin_number) const {
+    return get_ion_name(bin_number);
+  }
 
   /**
    * @brief Is this FrequencyBins object equivalent to the given one?
@@ -88,7 +122,9 @@ public:
    * @param frequency_bins FrequencyBins object to compare with.
    * @return True if both objects represent the same binning.
    */
-  virtual bool is_same(const FrequencyBins *frequency_bins) const = 0;
+  virtual bool is_same(const FrequencyBins *frequency_bins) const {
+    return typeid(*this).hash_code() == typeid(*frequency_bins).hash_code();
+  }
 };
 
-#endif // FREQUENCYBINS_HPP
+#endif // LEVELFREQUENCYBINS_HPP

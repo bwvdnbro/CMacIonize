@@ -143,8 +143,9 @@ public:
       _group_size.push_back(1);
       for (uint_fast32_t i = 1; i < number_of_trackers; ++i) {
         uint_fast32_t group_id = 0;
-        while (group_id < _tracker_groups.size() &&
-               _trackers[_tracker_groups[group_id]]->same_group(_trackers[i])) {
+        while (
+            group_id < _tracker_groups.size() &&
+            !_trackers[_tracker_groups[group_id]]->same_group(_trackers[i])) {
           ++group_id;
         }
         if (group_id == _tracker_groups.size()) {

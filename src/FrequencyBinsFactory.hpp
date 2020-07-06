@@ -30,6 +30,7 @@
 #include "YAMLDictionary.hpp"
 
 // implementations
+#include "LevelFrequencyBins.hpp"
 #include "LinearFrequencyBins.hpp"
 
 /**
@@ -42,6 +43,8 @@ public:
    * given YAMLDictionary.
    *
    * Supported types are (default: Linear):
+   *  - Level: The bottom frequency for each bin corresponds to the ionization
+   *    energy for one of the ions in the simulation.
    *  - Linear: Fixed number of linear bins between a given lower and upper
    *    limit.
    *
@@ -57,7 +60,9 @@ public:
     const std::string type =
         blocks.get_value< std::string >(name + "FrequencyBins:type", "Linear");
 
-    if (type == "Linear") {
+    if (type == "Level") {
+      return new LevelFrequencyBins();
+    } else if (type == "Linear") {
       return new LinearFrequencyBins(name, blocks);
     } else {
       cmac_error("Unknown FrequencyBins type: \"%s\".", type.c_str());

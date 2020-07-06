@@ -140,14 +140,14 @@ enum IonName {
   ION_S_p3,
 #endif
 #ifdef HAS_ARGON
+  /*! @brief Neutral argon. */
+  ION_Ar_n,
   /*! @brief Ionized argon. */
   ION_Ar_p1,
   /*! @brief Double ionized argon. */
   ION_Ar_p2,
   /*! @brief Triple ionized argon. */
   ION_Ar_p3,
-  /*! @brief Quadruple ionized argon. */
-  ION_Ar_p4,
 #endif
   /*! @brief Number of supported elements. */
   NUMBER_OF_IONNAMES
@@ -257,14 +257,14 @@ static inline std::string get_ion_name(const int_fast32_t ion) {
 #endif
 
 #ifdef HAS_ARGON
+  case ION_Ar_n:
+    return "Ar";
   case ION_Ar_p1:
     return "Ar+";
   case ION_Ar_p2:
     return "Ar++";
   case ION_Ar_p3:
     return "Ar+++";
-  case ION_Ar_p4:
-    return "Ar++++";
 #endif
 
   default:
@@ -331,13 +331,13 @@ static inline int_fast32_t get_element(const int_fast32_t ion) {
 #endif
 
 #ifdef HAS_ARGON
+  case ION_Ar_n:
+    return ELEMENT_Ar;
   case ION_Ar_p1:
     return ELEMENT_Ar;
   case ION_Ar_p2:
     return ELEMENT_Ar;
   case ION_Ar_p3:
-    return ELEMENT_Ar;
-  case ION_Ar_p4:
     return ELEMENT_Ar;
 #endif
 
