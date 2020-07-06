@@ -49,18 +49,25 @@
  * output fields are active.
  * @param log Log to write logging information to.
  * @param padding Number of digits used for the counter in the filenames.
+ * @param compression Compress the HDF5 output?
  */
 GadgetDensityGridWriter::GadgetDensityGridWriter(
     std::string prefix, std::string output_folder, const bool hydro,
-    const DensityGridWriterFields fields, Log *log, uint_fast8_t padding)
+    const DensityGridWriterFields fields, Log *log, uint_fast8_t padding,
+    const bool compression)
     : DensityGridWriter(output_folder, hydro, fields, log), _prefix(prefix),
-      _padding(padding) {
+      _padding(padding), _compression(compression) {
 
   // turn off default HDF5 error handling: we catch errors ourselves
   HDF5Tools::initialize();
   if (_log) {
     _log->write_status("Set up GadgetDensityGridWriter with prefix \"", _prefix,
                        "\".");
+    if (_compression) {
+      _log->write_status("Compression enabled.");
+    } else {
+      _log->write_status("Compression disabled.");
+    }
   }
 }
 
@@ -70,6 +77,7 @@ GadgetDensityGridWriter::GadgetDensityGridWriter(
  * Parameters are:
  *  - prefix: Prefix to prepend to all snapshot file names (default: snapshot)
  *  - padding: Number of digits to use in the output file names (default: 3)
+ *  - compression: Compress HDF5 datasets? (default: false)
  *
  * @param output_folder Name of the folder where output files should be placed.
  * @param params ParameterFile to read.
@@ -83,7 +91,8 @@ GadgetDensityGridWriter::GadgetDensityGridWriter(std::string output_folder,
           params.get_value< std::string >("DensityGridWriter:prefix",
                                           "snapshot"),
           output_folder, hydro, DensityGridWriterFields(params, hydro), log,
-          params.get_value< uint_fast8_t >("DensityGridWriter:padding", 3)) {}
+          params.get_value< uint_fast8_t >("DensityGridWriter:padding", 3),
+          params.get_value< bool >("DensityGridWriter:compression", false)) {}
 
 /**
  * @brief Write the file.
@@ -203,14 +212,15 @@ void GadgetDensityGridWriter::write(DensityGrid &grid, uint_fast32_t iteration,
       const std::string name = DensityGridWriterFields::get_name(property);
       if (DensityGridWriterFields::get_type(property) ==
           DENSITYGRIDFIELDTYPE_VECTOR_DOUBLE) {
-        HDF5Tools::create_dataset< CoordinateVector<> >(group, name,
-                                                        numpart[0]);
+        HDF5Tools::create_dataset< CoordinateVector<> >(group, name, numpart[0],
+                                                        _compression);
       } else {
         if (DensityGridWriterFields::is_ion_property(property)) {
           for (int_fast32_t ion = 0; ion < NUMBER_OF_IONNAMES; ++ion) {
             if (_fields.ion_present(property, ion)) {
               const std::string prop_name = name + get_ion_name(ion);
-              HDF5Tools::create_dataset< double >(group, prop_name, numpart[0]);
+              HDF5Tools::create_dataset< double >(group, prop_name, numpart[0],
+                                                  _compression);
             }
           }
         } else if (DensityGridWriterFields::is_heating_property(property)) {
@@ -218,11 +228,13 @@ void GadgetDensityGridWriter::write(DensityGrid &grid, uint_fast32_t iteration,
                ++heating) {
             if (_fields.heatingterm_present(property, heating)) {
               const std::string prop_name = name + get_ion_name(heating);
-              HDF5Tools::create_dataset< double >(group, prop_name, numpart[0]);
+              HDF5Tools::create_dataset< double >(group, prop_name, numpart[0],
+                                                  _compression);
             }
           }
         } else {
-          HDF5Tools::create_dataset< double >(group, name, numpart[0]);
+          HDF5Tools::create_dataset< double >(group, name, numpart[0],
+                                              _compression);
         }
       }
     }
@@ -468,14 +480,15 @@ void GadgetDensityGridWriter::write(
       const std::string name = DensityGridWriterFields::get_name(property);
       if (DensityGridWriterFields::get_type(property) ==
           DENSITYGRIDFIELDTYPE_VECTOR_DOUBLE) {
-        HDF5Tools::create_dataset< CoordinateVector<> >(group, name,
-                                                        numpart[0]);
+        HDF5Tools::create_dataset< CoordinateVector<> >(group, name, numpart[0],
+                                                        _compression);
       } else {
         if (DensityGridWriterFields::is_ion_property(property)) {
           for (int_fast32_t ion = 0; ion < NUMBER_OF_IONNAMES; ++ion) {
             if (fields.ion_present(property, ion)) {
               const std::string prop_name = name + get_ion_name(ion);
-              HDF5Tools::create_dataset< double >(group, prop_name, numpart[0]);
+              HDF5Tools::create_dataset< double >(group, prop_name, numpart[0],
+                                                  _compression);
             }
           }
         } else if (DensityGridWriterFields::is_heating_property(property)) {
@@ -483,11 +496,13 @@ void GadgetDensityGridWriter::write(
                ++heating) {
             if (fields.heatingterm_present(property, heating)) {
               const std::string prop_name = name + get_ion_name(heating);
-              HDF5Tools::create_dataset< double >(group, prop_name, numpart[0]);
+              HDF5Tools::create_dataset< double >(group, prop_name, numpart[0],
+                                                  _compression);
             }
           }
         } else {
-          HDF5Tools::create_dataset< double >(group, name, numpart[0]);
+          HDF5Tools::create_dataset< double >(group, name, numpart[0],
+                                              _compression);
         }
       }
     }
@@ -745,14 +760,15 @@ void GadgetDensityGridWriter::write(
       const std::string name = DensityGridWriterFields::get_name(property);
       if (DensityGridWriterFields::get_type(property) ==
           DENSITYGRIDFIELDTYPE_VECTOR_DOUBLE) {
-        HDF5Tools::create_dataset< CoordinateVector<> >(group, name,
-                                                        numpart[0]);
+        HDF5Tools::create_dataset< CoordinateVector<> >(group, name, numpart[0],
+                                                        _compression);
       } else {
         if (DensityGridWriterFields::is_ion_property(property)) {
           for (int_fast32_t ion = 0; ion < NUMBER_OF_IONNAMES; ++ion) {
             if (fields.ion_present(property, ion)) {
               const std::string prop_name = name + get_ion_name(ion);
-              HDF5Tools::create_dataset< double >(group, prop_name, numpart[0]);
+              HDF5Tools::create_dataset< double >(group, prop_name, numpart[0],
+                                                  _compression);
             }
           }
         } else if (DensityGridWriterFields::is_heating_property(property)) {
@@ -760,11 +776,13 @@ void GadgetDensityGridWriter::write(
                ++heating) {
             if (fields.heatingterm_present(property, heating)) {
               const std::string prop_name = name + get_ion_name(heating);
-              HDF5Tools::create_dataset< double >(group, prop_name, numpart[0]);
+              HDF5Tools::create_dataset< double >(group, prop_name, numpart[0],
+                                                  _compression);
             }
           }
         } else {
-          HDF5Tools::create_dataset< double >(group, name, numpart[0]);
+          HDF5Tools::create_dataset< double >(group, name, numpart[0],
+                                              _compression);
         }
       }
     }
