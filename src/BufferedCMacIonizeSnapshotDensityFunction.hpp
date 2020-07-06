@@ -547,26 +547,8 @@ public:
                     (_number_of_old_cells_per_new_cell_1D * iy + oiy) *
                         _original_subgrid_ncell.z() +
                     (_number_of_old_cells_per_new_cell_1D * iz + oiz);
-                if (_read_number_density) {
-                  cell_number_density += number_density[original_subgrid_index];
-                } else {
-                  cell_number_density +=
-                      number_density[original_subgrid_index] /
-                      PhysicalConstants::get_physical_constant(
-                          PHYSICALCONSTANT_PROTON_MASS);
-                }
-                if (_read_temperature) {
-                  cell_temperature += temperature[original_subgrid_index];
-                } else {
-                  const double kB = PhysicalConstants::get_physical_constant(
-                      PHYSICALCONSTANT_BOLTZMANN);
-                  const double mu =
-                      0.5 *
-                      (1. + neutral_fractions[ION_H_n][original_subgrid_index]);
-                  cell_temperature +=
-                      mu * temperature[original_subgrid_index] /
-                      (number_density[original_subgrid_index] * kB);
-                }
+                cell_number_density += number_density[original_subgrid_index];
+                cell_temperature += temperature[original_subgrid_index];
                 for (int_fast32_t j = 0; j < NUMBER_OF_IONNAMES; ++j) {
                   cell_ionic_fraction[j] +=
                       neutral_fractions[j][original_subgrid_index];
