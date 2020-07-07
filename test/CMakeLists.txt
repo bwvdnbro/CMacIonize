@@ -1761,6 +1761,15 @@ set(TESTWEIGHTEDSPECTRUMTRACKER_SOURCES
 add_unit_test(NAME testWeightedSpectrumTracker
               SOURCES ${TESTWEIGHTEDSPECTRUMTRACKER_SOURCES})
 
+## Unit test for AbsorptionTracker
+set(TESTABSORPTION_SOURCES
+    testAbsorptionTracker.cpp
+
+    ../src/AbsorptionTracker.hpp
+)
+add_unit_test(NAME testAbsorptionTracker
+              SOURCES ${TESTABSORPTION_SOURCES})              
+
 ## Unit test for BufferedCMacIonizeSnapshotDensityFunction
 if(HAVE_HDF5)
   set(TESTBUFFEREDCMACIONIZESNAPSHOTDENSITYFUNCTION_SOURCES

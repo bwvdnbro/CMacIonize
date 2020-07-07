@@ -30,6 +30,8 @@
 
 #include "Configuration.hpp"
 #include "ElementNames.hpp"
+#include "Error.hpp"
+#include "PhotonPacket.hpp"
 #include "PhotonType.hpp"
 #include "Tracker.hpp"
 #include "YAMLDictionary.hpp"
@@ -38,14 +40,17 @@
 #include "HDF5Tools.hpp"
 #endif
 
+#include <fstream>
+#include <typeinfo>
+
 /**
  * @brief General interface for trackers that record photon properties.
  */
 class AbsorptionTracker : public Tracker {
 private:
   /*! @brief the bins for absorption. One for each photon type (source, H
-   *  reemission, He reemission) and each ion. Units of m^-1. */
-  double _absorption_bins[NUMBER_OF_IONNAMES][PHOTONTYPE_NUMBER];
+   *  reemission, He reemission) and each ion. Units of m^3. */
+  double _absorption_bins[PHOTONTYPE_NUMBER][NUMBER_OF_IONNAMES];
 
 public:
   /**
@@ -54,7 +59,7 @@ public:
   inline AbsorptionTracker() {
     for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; i++) {
       for (int_fast32_t j = 0; j < PHOTONTYPE_NUMBER; j++) {
-        _absorption_bins[i][j] = 0.;
+        _absorption_bins[j][i] = 0.;
       }
     }
   }
@@ -84,7 +89,7 @@ public:
   virtual void normalize(const double luminosity_per_weight) {
     for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; i++) {
       for (int_fast32_t j = 0; j < PHOTONTYPE_NUMBER; j++) {
-        _absorption_bins[i][j] *= luminosity_per_weight;
+        _absorption_bins[j][i] *= luminosity_per_weight;
       }
     }
   }
@@ -103,8 +108,13 @@ public:
    * @param tracker Duplicate tracker (created using Tracker::duplicate()).
    */
   virtual void merge(const Tracker *tracker) {
-    AbsorptionTracker *other_tracker =
-        static_cast< AbsorptionTracker * >(tracker);
+    const AbsorptionTracker *other_tracker =
+        static_cast< const AbsorptionTracker * >(tracker);
+    for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; i++) {
+      for (int_fast32_t j = 0; j < PHOTONTYPE_NUMBER; j++) {
+        _absorption_bins[j][i] += other_tracker->_absorption_bins[j][i];
+      }
+    }
   }
 
   /**
@@ -112,24 +122,48 @@ public:
    *
    * @param photon Photon to add.
    */
-  virtual void count_photon(const Photon &photon) = 0;
+  virtual void count_photon(const Photon &photon) {
+    cmac_error("Function not in use in current version of code")
+  }
 
   /**
    * @brief Add the contribution of the given photon packet to the tracker.
    *
+   * Note this is the absorption volume. In order to get the number of photons
+   * absorbed one has to multiply by the number density of hydrogen (as cross
+   * sections are abundance weighted).
+   *
    * @param photon Photon to add.
    * @param absorption Absorption counters within the cell for this photon
-   * (in m^-1).
+   * (in m^3).
    */
   virtual void count_photon(const PhotonPacket &photon,
-                            const double *absorption) = 0;
+                            const double *absorption) {
+    for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; i++) {
+      _absorption_bins[i][photon.get_type()] += absorption[i];
+    }
+  }
 
   /**
    * @brief Output the tracker data to the file with the given name.
    *
    * @param filename Name of the output file.
    */
-  virtual void output_tracker(const std::string filename) const = 0;
+  virtual void output_tracker(const std::string filename) const {
+    std::ofstream ofile(filename);
+    ofile << "# Ion ";
+    for (int_fast32_t j = 0; j < PHOTONTYPE_NUMBER; j++) {
+      ofile << "\t" << get_photontype_name(j);
+    }
+    ofile << "\n";
+    for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; i++) {
+      ofile << get_ion_name(i);
+      for (int_fast32_t j = 0; j < PHOTONTYPE_NUMBER; j++) {
+        ofile << "\t" << _absorption_bins[j][i];
+      }
+      ofile << "\n";
+    }
+  }
 
 #ifdef HAVE_HDF5
   /**
@@ -138,7 +172,9 @@ public:
    * @param tracker Other tracker.
    * @return True if both trackers belong to the same group.
    */
-  virtual bool same_group(const Tracker *tracker) const { return false; }
+  virtual bool same_group(const Tracker *tracker) const {
+    return typeid(*tracker).hash_code() == typeid(*this).hash_code();
+  }
 
   /**
    * @brief Create the header and shared datasets for an HDF5 group containing
@@ -149,7 +185,18 @@ public:
    */
   virtual void create_group(const HDF5Tools::HDF5Group group,
                             const uint_fast32_t group_size) {
-    cmac_error("Function has not been implemented for this tracker type!");
+    std::vector< std::string > ion_names(NUMBER_OF_IONNAMES);
+    for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; i++) {
+      ion_names[i] = get_ion_name(i);
+    }
+    HDF5Tools::write_dataset(group, "ion name", ion_names);
+
+    for (int_fast32_t i = 0; i < PHOTONTYPE_NUMBER; i++) {
+      std::stringstream mystring;
+      mystring << get_photontype_name(i) << " absorption";
+      HDF5Tools::create_datatable< double >(group, mystring.str(), group_size,
+                                            NUMBER_OF_IONNAMES);
+    }
   }
 
   /**
@@ -162,7 +209,12 @@ public:
    */
   virtual void append_to_group(const HDF5Tools::HDF5Group group,
                                const uint_fast32_t group_index) {
-    cmac_error("Function has not been implemented for this tracker type!");
+    for (int_fast32_t i = 0; i < PHOTONTYPE_NUMBER; i++) {
+      std::stringstream mystring;
+      mystring << get_photontype_name(i) << " absorption";
+      HDF5Tools::fill_row(group, mystring.str(), group_index,
+                          _absorption_bins[i]);
+    }
   }
 #endif
 
@@ -173,7 +225,9 @@ public:
    * @param prefix Prefix to add to each output line.
    * @param stream std::ostream to write to.
    */
-  virtual void describe(const std::string prefix, std::ostream &stream) const {}
+  virtual void describe(const std::string prefix, std::ostream &stream) const {
+    stream << prefix << "type: AbsorptionTracker\n";
+  }
 };
 
 #endif // ABSORPTIONTRACKER_HPP
