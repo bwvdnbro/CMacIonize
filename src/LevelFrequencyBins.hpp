@@ -55,11 +55,11 @@ public:
       _bin_to_ion[i] = i;
     }
     if (NUMBER_OF_IONNAMES > 1) {
-      std::sort(&_bin_to_ion[0], &_bin_to_ion[NUMBER_OF_IONNAMES - 1],
+      std::sort(&_bin_to_ion[0], &_bin_to_ion[NUMBER_OF_IONNAMES],
                 [this](const uint_fast32_t i1, const uint_fast32_t i2) {
                   return this->_frequencies[i1] < this->_frequencies[i2];
                 });
-      std::sort(&_frequencies[0], &_frequencies[NUMBER_OF_IONNAMES - 1]);
+      std::sort(&_frequencies[0], &_frequencies[NUMBER_OF_IONNAMES]);
     }
     // the upper limit is hardcoded for now
     _frequencies[NUMBER_OF_IONNAMES] = 4 * _frequencies[ION_H_n];
