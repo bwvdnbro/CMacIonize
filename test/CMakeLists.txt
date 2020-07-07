@@ -1767,8 +1767,12 @@ set(TESTABSORPTION_SOURCES
 
     ../src/AbsorptionTracker.hpp
 )
+if(HAVE_HDF5)
+  set(TESTABSORPTION_LIBS ${HDF5_LIBRARIES})
+endif(HAVE_HDF5)
 add_unit_test(NAME testAbsorptionTracker
-              SOURCES ${TESTABSORPTION_SOURCES})              
+              SOURCES ${TESTABSORPTION_SOURCES}
+              LIBS ${TESTABSORPTION_LIBS})
 
 ## Unit test for BufferedCMacIonizeSnapshotDensityFunction
 if(HAVE_HDF5)

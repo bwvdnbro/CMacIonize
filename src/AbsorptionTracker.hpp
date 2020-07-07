@@ -50,17 +50,15 @@ class AbsorptionTracker : public Tracker {
 private:
   /*! @brief the bins for absorption. One for each photon type (source, H
    *  reemission, He reemission) and each ion. Units of m^3. */
-  double _absorption_bins[PHOTONTYPE_NUMBER][NUMBER_OF_IONNAMES];
+  std::vector< double > _absorption_bins[PHOTONTYPE_NUMBER];
 
 public:
   /**
    * @brief Constructor.
    */
   inline AbsorptionTracker() {
-    for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; i++) {
-      for (int_fast32_t j = 0; j < PHOTONTYPE_NUMBER; j++) {
-        _absorption_bins[j][i] = 0.;
-      }
+    for (int_fast32_t j = 0; j < PHOTONTYPE_NUMBER; j++) {
+      _absorption_bins[j].resize(NUMBER_OF_IONNAMES, 0.);
     }
   }
 
@@ -107,9 +105,9 @@ public:
    *
    * @param tracker Duplicate tracker (created using Tracker::duplicate()).
    */
-  virtual void merge(const Tracker *tracker) {
-    const AbsorptionTracker *other_tracker =
-        static_cast< const AbsorptionTracker * >(tracker);
+  virtual void merge(Tracker *tracker) {
+    AbsorptionTracker *other_tracker =
+        static_cast< AbsorptionTracker * >(tracker);
     for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; i++) {
       for (int_fast32_t j = 0; j < PHOTONTYPE_NUMBER; j++) {
         _absorption_bins[j][i] += other_tracker->_absorption_bins[j][i];
@@ -140,7 +138,7 @@ public:
   virtual void count_photon(const PhotonPacket &photon,
                             const double *absorption) {
     for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; i++) {
-      _absorption_bins[i][photon.get_type()] += absorption[i];
+      _absorption_bins[photon.get_type()][i] += absorption[i];
     }
   }
 
@@ -212,8 +210,8 @@ public:
     for (int_fast32_t i = 0; i < PHOTONTYPE_NUMBER; i++) {
       std::stringstream mystring;
       mystring << get_photontype_name(i) << " absorption";
-      HDF5Tools::fill_row(group, mystring.str(), group_index,
-                          _absorption_bins[i]);
+      HDF5Tools::fill_row< double >(group, mystring.str(), group_index,
+                                    _absorption_bins[i]);
     }
   }
 #endif

@@ -28,6 +28,7 @@
 
 #include "AbsorptionTracker.hpp"
 #include "Assert.hpp"
+#include "RandomGenerator.hpp"
 
 /**
  * @brief Unit test for the AbsorptionTracker class.
@@ -36,4 +37,31 @@
  * @param argv Command line arguments.
  * @return Exit code: 0 on success.
  */
-int main(int argc, char **argv) { return 0; }
+int main(int argc, char **argv) {
+
+  AbsorptionTracker tracker;
+
+  RandomGenerator rg;
+
+  PhotonPacket photon;
+  photon.set_type(PHOTONTYPE_PRIMARY);
+  double absorption[NUMBER_OF_IONNAMES];
+  for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
+    absorption[i] = rg.get_uniform_random_double();
+  }
+  tracker.count_photon(photon, absorption);
+
+  tracker.output_tracker("test_absorption_tracker.txt");
+
+#ifdef HAVE_HDF5
+  HDF5Tools::HDF5File file = HDF5Tools::open_file(
+      "test_absorption_tracker.hdf5", HDF5Tools::HDF5FILEMODE_WRITE);
+  HDF5Tools::HDF5Group group = HDF5Tools::create_group(file, "AbsorptionGroup");
+  tracker.create_group(group, 1);
+  tracker.append_to_group(group, 0);
+  HDF5Tools::close_group(group);
+  HDF5Tools::close_file(file);
+#endif
+
+  return 0;
+}
