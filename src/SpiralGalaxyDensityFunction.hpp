@@ -112,7 +112,7 @@ public:
    * @param cell Geometrical information about the cell.
    * @return Initial physical field values for that cell.
    */
-  inline DensityValues operator()(const Cell &cell) const {
+  inline DensityValues operator()(const Cell &cell) {
     const CoordinateVector<> &position = cell.get_cell_midpoint();
     const double w2 = position.x() * position.x() + position.y() * position.y();
     const double w = std::sqrt(w2);

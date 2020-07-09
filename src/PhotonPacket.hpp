@@ -67,6 +67,9 @@ private:
    *  but their type can change during reemission events. */
   PhotonType _type;
 
+  /*! @brief Tracer for the number of scatterings the photon experiences */
+  uint_fast32_t _scatter_counter;
+
 public:
 #ifdef HAVE_MPI
   /**
@@ -278,6 +281,24 @@ public:
    * @param type PhotonType type identifier.
    */
   inline void set_type(PhotonType type) { _type = type; }
+
+  /**
+   * @brief Get the photon scatter counter.
+   *
+   * @return scatter counter for a photon packet
+   *
+   */
+
+  inline uint_fast32_t get_scatter_counter() const { return _scatter_counter; }
+
+  /**
+   * @brief Set the photon scatter counter.
+   *
+   * @param scatter_counter sets a scatter counter for a photon packet
+   */
+  inline void set_scatter_counter(uint_fast32_t scatter_counter) {
+    _scatter_counter = scatter_counter;
+  }
 };
 
 #endif // PHOTONPACKET_HPP

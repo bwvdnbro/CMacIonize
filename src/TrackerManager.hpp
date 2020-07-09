@@ -26,11 +26,16 @@
 #ifndef TRACKERMANAGER_HPP
 #define TRACKERMANAGER_HPP
 
+#include "Configuration.hpp"
 #include "DensityGrid.hpp"
 #include "DensitySubGridCreator.hpp"
 #include "ParameterFile.hpp"
 #include "TrackerFactory.hpp"
 #include "YAMLDictionary.hpp"
+
+#ifdef HAVE_HDF5
+#include "HDF5Tools.hpp"
+#endif
 
 #include <fstream>
 #include <vector>
@@ -58,6 +63,23 @@ private:
   /*! @brief Number of photon packets to use during the tracking step. */
   const uint_fast64_t _number_of_photons;
 
+  /*! @brief Output all trackers to a single HDF5 file? */
+  const bool _hdf5_output;
+
+  /*! @brief Name of the HDF5 output file. */
+  const std::string _hdf5_name;
+
+#ifdef HAVE_HDF5
+  /*! @brief Index of the first tracker in each tracker group. */
+  std::vector< size_t > _tracker_groups;
+
+  /*! @brief Group size for each tracker group. */
+  std::vector< size_t > _group_size;
+
+  /*! @brief Tracker group a each tracker belongs to. */
+  std::vector< size_t > _group_index;
+#endif
+
 public:
   /**
    * @brief Constructor.
@@ -66,10 +88,21 @@ public:
    * trackers.
    * @param number_of_photons Number of photon packets to use during the
    * tracking step.
+   * @param hdf5_output Output all trackers to a single HDF5 file?
+   * @param hdf5_name Name of the HDF5 output file.
    */
   TrackerManager(const std::string filename,
-                 const uint_fast64_t number_of_photons)
-      : _number_of_photons(number_of_photons) {
+                 const uint_fast64_t number_of_photons,
+                 const bool hdf5_output = false,
+                 const std::string hdf5_name = "")
+      : _number_of_photons(number_of_photons), _hdf5_output(hdf5_output),
+        _hdf5_name(hdf5_name) {
+
+#ifndef HAVE_HDF5
+    if (hdf5_output) {
+      cmac_error("HDF5 output requested, but HDF5 not enabled!");
+    }
+#endif
 
     std::ifstream file(filename);
 
@@ -94,10 +127,36 @@ public:
       _trackers[i] = TrackerFactory::generate(blockname.str(), blocks);
 
       std::stringstream default_name;
-      default_name << "Tracker" << i << ".txt";
+      default_name << "Tracker" << i;
+      if (!_hdf5_output) {
+        default_name << ".txt";
+      }
       _output_names[i] = blocks.get_value< std::string >(
           blockname.str() + "output name", default_name.str());
     }
+
+#ifdef HAVE_HDF5
+    if (_hdf5_output) {
+      _group_index.resize(number_of_trackers, 0);
+      // we skip the first tracker, it trivially belongs to group 0
+      _tracker_groups.push_back(0);
+      _group_size.push_back(1);
+      for (uint_fast32_t i = 1; i < number_of_trackers; ++i) {
+        uint_fast32_t group_id = 0;
+        while (
+            group_id < _tracker_groups.size() &&
+            !_trackers[_tracker_groups[group_id]]->same_group(_trackers[i])) {
+          ++group_id;
+        }
+        if (group_id == _tracker_groups.size()) {
+          _tracker_groups.push_back(i);
+          _group_size.push_back(0);
+        }
+        _group_index[i] = group_id;
+        ++_group_size[group_id];
+      }
+    }
+#endif
 
     std::ofstream ofile(filename + ".used-values");
     blocks.print_contents(ofile, true);
@@ -113,6 +172,8 @@ public:
    *  - minimum number of photon packets: Minimum number of photon packets to
    *    use during the spectrum tracking step (default: 0, meaning we do not
    *    use a different number for the spectrum tracking step)
+   *  - HDF5 output: Output all trackers to a single HDF5 file? (default: false)
+   *  - HDF5 output name: Name of the HDF5 output file (default: trackers.hdf5).
    *
    * @param params ParameterFile to read from.
    */
@@ -120,7 +181,10 @@ public:
       : TrackerManager(
             params.get_filename("TrackerManager:filename"),
             params.get_value< uint_fast64_t >(
-                "TrackerManager:minimum number of photon packets", 0)) {}
+                "TrackerManager:minimum number of photon packets", 0),
+            params.get_value< bool >("TrackerManager:HDF5 output", false),
+            params.get_value< std::string >("TrackerManager:HDF5 output name",
+                                            "trackers.hdf5")) {}
 
   /**
    * @brief Destructor.
@@ -141,11 +205,12 @@ public:
       if (!grid.get_box().inside(_tracker_positions[i])) {
         cmac_error("Tracker is not inside grid!");
       }
-      IonizationVariables &ionization_variables =
-          grid.get_cell(_tracker_positions[i]).get_ionization_variables();
+      auto it = grid.get_cell(_tracker_positions[i]);
+      IonizationVariables &ionization_variables = it.get_ionization_variables();
       if (ionization_variables.get_tracker() != nullptr) {
         cmac_error("Cell already has a tracker!");
       }
+      _trackers[i]->normalize_for_cell(it);
       ionization_variables.add_tracker(_trackers[i]);
     }
   }
@@ -169,6 +234,7 @@ public:
         if (ionization_variables.get_tracker() != nullptr) {
           cmac_error("Cell already has a tracker!");
         }
+        _trackers[i]->normalize_for_cell(cellit);
         ionization_variables.add_tracker(_trackers[i]);
       }
       auto copies = gridit.get_copies();
@@ -194,9 +260,15 @@ public:
   }
 
   /**
-   * @brief Output the tracker information.
+   * @brief Normalize the trackers based on the actual physical weight of each
+   * photon packet.
+   *
+   * This function also merges copies made by add_trackers().
+   *
+   * @param luminosity_per_weight Ionizing luminosity per unit photon packet
+   * weight used to normalize photon packet contributions (in s^-1).
    */
-  inline void output_trackers() const {
+  inline void normalize(const double luminosity_per_weight) {
     for (uint_fast32_t i = 0; i < _tracker_positions.size(); ++i) {
       if (_copies[i] != 0xffffffff) {
         size_t copy = _copies[i] - _tracker_positions.size();
@@ -205,7 +277,53 @@ public:
           ++copy;
         }
       }
-      _trackers[i]->output_tracker(_output_names[i]);
+      _trackers[i]->normalize(luminosity_per_weight);
+    }
+  }
+
+  /**
+   * @brief Output the tracker information.
+   */
+  inline void output_trackers() const {
+    if (_hdf5_output) {
+#ifdef HAVE_HDF5
+      HDF5Tools::HDF5File file =
+          HDF5Tools::open_file(_hdf5_name, HDF5Tools::HDF5FILEMODE_WRITE);
+      for (uint_fast32_t igroup = 0; igroup < _tracker_groups.size();
+           ++igroup) {
+        std::stringstream groupname;
+        groupname << "Group" << igroup;
+        HDF5Tools::HDF5Group group =
+            HDF5Tools::create_group(file, groupname.str());
+        std::string unit_string = "m";
+        const uint_fast32_t group_size = _group_size[igroup];
+        _trackers[_tracker_groups[igroup]]->create_group(group, group_size);
+        std::vector< CoordinateVector<> > positions(group_size);
+        std::vector< std::string > labels(group_size);
+        uint_fast32_t group_id = 0;
+        for (uint_fast32_t i = 0; i < _trackers.size(); ++i) {
+          if (_group_index[i] == igroup) {
+            positions[group_id] = _tracker_positions[i];
+            labels[group_id] = _output_names[i];
+            _trackers[i]->append_to_group(group, group_id);
+            ++group_id;
+            if (group_id == group_size) {
+              break;
+            }
+          }
+        }
+        HDF5Tools::write_dataset(group, "positions", positions);
+        HDF5Tools::write_dataset(group, "tracker labels", labels);
+        HDF5Tools::write_attribute< std::string >(group, "position unit",
+                                                  unit_string);
+        HDF5Tools::close_group(group);
+      }
+      HDF5Tools::close_file(file);
+#endif
+    } else {
+      for (uint_fast32_t i = 0; i < _tracker_positions.size(); ++i) {
+        _trackers[i]->output_tracker(_output_names[i]);
+      }
     }
   }
 

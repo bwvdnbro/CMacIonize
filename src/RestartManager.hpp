@@ -32,6 +32,7 @@
 #include "RestartWriter.hpp"
 #include "Timer.hpp"
 
+#include <cinttypes>
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
@@ -247,8 +248,9 @@ public:
     if (!_stop_file && !_resubmit_command.empty()) {
       int_fast32_t exit_code = system(_resubmit_command.c_str());
       if (exit_code != 0) {
-        cmac_error("Error when executing command \"%s\"!",
-                   _resubmit_command.c_str());
+        cmac_warning(
+            "Error when executing command \"%s\" (exit code: %" PRIiFAST32 ")!",
+            _resubmit_command.c_str(), exit_code);
       }
     }
   }

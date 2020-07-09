@@ -275,7 +275,7 @@ public:
   // DensityMapping get_dens_map(){return _dens_map;}
 
   virtual void initialize();
-  virtual DensityValues operator()(const Cell &cell) const;
+  virtual DensityValues operator()(const Cell &cell);
 
   void gridding();
 

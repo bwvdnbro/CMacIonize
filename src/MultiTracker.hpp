@@ -56,10 +56,11 @@ public:
   virtual ~MultiTracker();
 
   virtual Tracker *duplicate();
-  virtual void merge(const Tracker *tracker);
+  virtual void merge(Tracker *tracker);
 
   virtual void count_photon(const Photon &photon);
-  virtual void count_photon(const PhotonPacket &photon);
+  virtual void count_photon(const PhotonPacket &photon,
+                            const double *absorption);
 
   virtual void output_tracker(const std::string filename) const;
 };

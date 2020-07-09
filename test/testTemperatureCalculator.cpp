@@ -49,7 +49,7 @@ public:
    * @param cell Geometrical information about the cell.
    * @return Initial physical field values for that cell.
    */
-  virtual DensityValues operator()(const Cell &cell) const {
+  virtual DensityValues operator()(const Cell &cell) {
     const double z = cell.get_cell_midpoint().z();
     const double z1 = z / 0.25e19;
     const double z2 = z / 1.5e19;

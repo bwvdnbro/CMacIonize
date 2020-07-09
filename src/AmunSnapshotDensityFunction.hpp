@@ -98,7 +98,7 @@ public:
 
   virtual void free();
 
-  virtual DensityValues operator()(const Cell &cell) const;
+  virtual DensityValues operator()(const Cell &cell);
 };
 
 #endif // AMUNSNAPSHOTDENSITYFUNCTION_HPP

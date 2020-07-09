@@ -32,6 +32,7 @@
 // implementations
 #include "MultiTracker.hpp"
 #include "SpectrumTracker.hpp"
+#include "WeightedSpectrumTracker.hpp"
 
 /**
  * @brief Factory for Tracker instances.
@@ -43,7 +44,10 @@ public:
    * YAMLDictionary.
    *
    * Supported types are:
+   *  - Multi: Dummy that allows attaching multiple trackers to a single cell.
    *  - Spectrum: Spectrum tracker
+   *  - WeightedSpectrum: Spectrum tracker that weighs contributions according
+   *    to the projected surface area for incoming photon packets.
    *
    * @param name Name of the corresponding block in the dictionary.
    * @param blocks YAMLDictionary to read from.
@@ -59,6 +63,8 @@ public:
       return new MultiTracker(name, blocks);
     } else if (type == "Spectrum") {
       return new SpectrumTracker(name, blocks);
+    } else if (type == "WeightedSpectrum") {
+      return new WeightedSpectrumTracker(name, blocks);
     } else {
       cmac_error("Unknown Tracker type: \"%s\"!", type.c_str());
       return nullptr;

@@ -263,7 +263,7 @@ void FLASHSnapshotDensityFunction::free() { delete _grid; }
  * @param cell Geometrical information about the cell.
  * @return Initial physical field values for that cell.
  */
-DensityValues FLASHSnapshotDensityFunction::operator()(const Cell &cell) const {
+DensityValues FLASHSnapshotDensityFunction::operator()(const Cell &cell) {
 
   DensityValues values;
 

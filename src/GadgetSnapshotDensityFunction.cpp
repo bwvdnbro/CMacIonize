@@ -312,8 +312,7 @@ GadgetSnapshotDensityFunction::~GadgetSnapshotDensityFunction() {
  * @param cell Geometrical information about the cell.
  * @return Initial physical field values for that cell.
  */
-DensityValues GadgetSnapshotDensityFunction::
-operator()(const Cell &cell) const {
+DensityValues GadgetSnapshotDensityFunction::operator()(const Cell &cell) {
 
   DensityValues values;
 

@@ -37,6 +37,7 @@
 #include "MemorySpace.hpp"
 #include "OpenMP.hpp"
 #include "ParameterFile.hpp"
+#include "PhotonPacketStatistics.hpp"
 #include "PhotonSourceDistributionFactory.hpp"
 #include "PhotonSourceSpectrumFactory.hpp"
 #include "RecombinationRatesFactory.hpp"
@@ -509,11 +510,6 @@ TaskBasedIonizationSimulation::~TaskBasedIonizationSimulation() {
   }
 
   {
-    std::ofstream mfile("memory.txt");
-    _memory_log.print(mfile, false);
-  }
-
-  {
     std::ofstream mfile("memory_timeline.txt");
     _memory_log.print(mfile, true);
   }
@@ -675,6 +671,14 @@ void TaskBasedIonizationSimulation::run(
                        " subgrid copies.");
   }
 
+  {
+    if (_log) {
+      _log->write_status("Outputting memory allocation stats to memory.txt.");
+    }
+    std::ofstream mfile("memory.txt");
+    _memory_log.print(mfile, false);
+  }
+
   DistributedPhotonSource< DensitySubGrid > *photon_source = nullptr;
   uint_fast32_t number_of_discrete_photons = 0;
   if (_photon_source_distribution != nullptr) {
@@ -763,6 +767,9 @@ void TaskBasedIonizationSimulation::run(
     if (photon_source) {
       photon_source->reset();
     }
+
+    // define photon scattering stats
+    PhotonPacketStatistics statistics(5);
 
     if (_trackers != nullptr && iloop == _number_of_iterations - 1) {
       if (_log) {
@@ -1026,6 +1033,7 @@ void TaskBasedIonizationSimulation::run(
               PhotonPacket &photon = input_buffer[i];
 
               photon.set_type(PHOTONTYPE_PRIMARY);
+              photon.set_scatter_counter(0);
 
               // initial position: we currently assume a single source at the
               // origin
@@ -1120,6 +1128,7 @@ void TaskBasedIonizationSimulation::run(
               PhotonPacket &photon = active_buffer[active_index];
 
               photon.set_type(PHOTONTYPE_PRIMARY);
+              photon.set_scatter_counter(0);
 
               // initial position: we currently assume a single source at the
               // origin
@@ -1311,6 +1320,8 @@ void TaskBasedIonizationSimulation::run(
               if (new_frequency > 0.) {
                 PhotonPacket &new_photon = buffer[index];
                 new_photon.set_type(new_type);
+                new_photon.set_scatter_counter(
+                    old_photon.get_scatter_counter() + 1);
                 new_photon.set_position(old_photon.get_position());
                 new_photon.set_weight(old_photon.get_weight());
 
@@ -1350,6 +1361,8 @@ void TaskBasedIonizationSimulation::run(
                     _random_generators[thread_id].get_uniform_random_double()));
 
                 ++index;
+              } else {
+                statistics.absorb_photon(old_photon);
               }
             }
             // update the size of the buffer to account for photons that were
@@ -1446,6 +1459,12 @@ void TaskBasedIonizationSimulation::run(
                 const uint_fast32_t index =
                     output_buffer.get_next_free_photon();
                 output_buffer[index] = photon;
+              } else {
+                if (result == 0) {
+                  statistics.absorb_photon(photon);
+                } else {
+                  statistics.escape_photon(photon);
+                }
               }
             }
 
@@ -1645,7 +1664,9 @@ void TaskBasedIonizationSimulation::run(
     _grid_creator->update_original_counters();
     stop_parallel_timing_block();
     _time_log.end("update copies");
-
+    if (iloop == _number_of_iterations - 1) {
+      statistics.print_stats();
+    }
     _photon_propagation_timer.stop();
 
     if (_log != nullptr) {
@@ -1782,6 +1803,10 @@ void TaskBasedIonizationSimulation::run(
 
     cmac_assert_message(_buffers->is_empty(), "Number of active buffers: %zu",
                         _buffers->get_number_of_active_buffers());
+
+    if (_trackers != nullptr) {
+      _trackers->normalize(_total_luminosity / _number_of_photons);
+    }
 
     // update copies
     _time_log.start("copy update");

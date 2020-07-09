@@ -144,9 +144,9 @@ public:
    *
    * @param tracker Duplicate tracker (created using Tracker::duplicate()).
    */
-  virtual void merge(const Tracker *tracker) {
+  virtual void merge(Tracker *tracker) {
     const SpectrumTracker *other =
-        reinterpret_cast< const SpectrumTracker * >(tracker);
+        reinterpret_cast< SpectrumTracker * >(tracker);
     for (uint_fast32_t i = 0; i < _number_counts_primary.size(); ++i) {
       _number_counts_primary[i] += other->_number_counts_primary[i];
       _number_counts_diffuse_H[i] += other->_number_counts_diffuse_H[i];
@@ -190,8 +190,11 @@ public:
    * @brief Add the contribution of the given photon packet to the bins.
    *
    * @param photon Photon to add.
+   * @param absorption Absorption counters within the cell for this photon
+   * (in m^-1).
    */
-  virtual void count_photon(const PhotonPacket &photon) {
+  virtual void count_photon(const PhotonPacket &photon,
+                            const double *absorption) {
 
     if (_reference_direction.norm2() > 0.) {
       const double dot_product = CoordinateVector<>::dot_product(

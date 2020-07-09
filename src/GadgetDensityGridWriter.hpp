@@ -43,12 +43,16 @@ private:
   /*! @brief Number of digits used for the counter in the filenames. */
   const uint_fast8_t _padding;
 
+  /*! @brief Compress the HDF5 output? */
+  const bool _compression;
+
 public:
   GadgetDensityGridWriter(
       std::string prefix, std::string output_folder = std::string("."),
       const bool hydro = false,
       const DensityGridWriterFields fields = DensityGridWriterFields(false),
-      Log *log = nullptr, uint_fast8_t padding = 3);
+      Log *log = nullptr, uint_fast8_t padding = 3,
+      const bool compression = false);
   GadgetDensityGridWriter(std::string output_folder, ParameterFile &params,
                           const bool hydro, Log *log = nullptr);
 

@@ -242,7 +242,7 @@ void AmunSnapshotDensityFunction::free() {
  * @param cell Geometrical information about the cell.
  * @return Initial physical field values for that cell.
  */
-DensityValues AmunSnapshotDensityFunction::operator()(const Cell &cell) const {
+DensityValues AmunSnapshotDensityFunction::operator()(const Cell &cell) {
 
   const CoordinateVector<> midpoint = cell.get_cell_midpoint();
   CoordinateVector<> dx = midpoint - _box.get_anchor();

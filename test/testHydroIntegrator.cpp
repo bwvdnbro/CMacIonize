@@ -44,7 +44,7 @@ public:
    * @param cell Geometrical information about the cell.
    * @return Initial physical field values for that cell.
    */
-  virtual DensityValues operator()(const Cell &cell) const {
+  virtual DensityValues operator()(const Cell &cell) {
     const CoordinateVector<> position = cell.get_cell_midpoint();
     const double hydrogen_mass =
         PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_PROTON_MASS);

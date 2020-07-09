@@ -1398,7 +1398,7 @@ public:
 #ifdef SAFE_HYDRO
       it.get_hydro_variables().conserved(4) =
           std::max(it.get_hydro_variables().get_conserved_total_energy(), 0.);
-      if(_gamma > 1.){
+      if (_gamma > 1.) {
         if (it.get_hydro_variables().get_conserved_total_energy() == 0.) {
           it.get_hydro_variables().set_conserved_momentum(0.);
         }

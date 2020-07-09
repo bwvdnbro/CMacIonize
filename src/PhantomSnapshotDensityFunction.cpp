@@ -745,8 +745,7 @@ double PhantomSnapshotDensityFunction::get_smoothing_length(
  * @param cell Geometrical information about the cell.
  * @return Initial physical field values for that cell.
  */
-DensityValues PhantomSnapshotDensityFunction::
-operator()(const Cell &cell) const {
+DensityValues PhantomSnapshotDensityFunction::operator()(const Cell &cell) {
 
   DensityValues values;
   if (_use_new_algorithm) {

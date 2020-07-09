@@ -155,7 +155,7 @@ public:
    * @param cell Geometrical information about the cell.
    * @return Initial physical field values for that cell.
    */
-  virtual DensityValues operator()(const Cell &cell) const {
+  virtual DensityValues operator()(const Cell &cell) {
 
     const double r = cell.get_cell_midpoint().norm();
     const double ksi = r * _r0inv;
