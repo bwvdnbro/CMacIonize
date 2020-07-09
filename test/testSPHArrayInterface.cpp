@@ -41,7 +41,7 @@ public:
    * @param cell Cell.
    * @return Neutral fraction.
    */
-  virtual DensityValues operator()(const Cell &cell) const {
+  virtual DensityValues operator()(const Cell &cell) {
     const CoordinateVector<> p = cell.get_cell_midpoint();
     DensityValues values;
     if ((p - CoordinateVector<>(0.5)).norm() < 0.2) {

@@ -1353,8 +1353,12 @@ set(TESTTRACKERMANAGER_SOURCES
     ../src/MultiTracker.cpp
     ../src/TrackerManager.hpp
 )
+if(HAVE_HDF5)
+  set(TESTTRACKERMANAGER_LIBS ${HDF5_LIBRARIES})
+endif(HAVE_HDF5)
 add_unit_test(NAME testTrackerManager
-              SOURCES ${TESTTRACKERMANAGER_SOURCES})
+              SOURCES ${TESTTRACKERMANAGER_SOURCES}
+              LIBS ${TESTTRACKERMANAGER_LIBS})
 configure_file(
   ${PROJECT_SOURCE_DIR}/test/test_tracker_manager.yml
   ${PROJECT_BINARY_DIR}/rundir/test/test_tracker_manager.yml @ONLY)
@@ -1366,8 +1370,12 @@ set(TESTMULTITRACKER_SOURCES
     ../src/MultiTracker.cpp
     ../src/MultiTracker.hpp
 )
+if(HAVE_HDF5)
+  set(TESTMULTITRACKER_LIBS ${HDF5_LIBRARIES})
+endif(HAVE_HDF5)
 add_unit_test(NAME testMultiTracker
-              SOURCES ${TESTMULTITRACKER_SOURCES})
+              SOURCES ${TESTMULTITRACKER_SOURCES}
+              LIBS ${TESTMULTITRACKER_LIBS})
 configure_file(
   ${PROJECT_SOURCE_DIR}/test/test_multi_tracker.yml
   ${PROJECT_BINARY_DIR}/rundir/test/test_multi_tracker.yml @ONLY)
@@ -1762,17 +1770,17 @@ add_unit_test(NAME testWeightedSpectrumTracker
               SOURCES ${TESTWEIGHTEDSPECTRUMTRACKER_SOURCES})
 
 ## Unit test for AbsorptionTracker
-set(TESTABSORPTION_SOURCES
+set(TESTABSORPTIONTRACKER_SOURCES
     testAbsorptionTracker.cpp
 
     ../src/AbsorptionTracker.hpp
 )
 if(HAVE_HDF5)
-  set(TESTABSORPTION_LIBS ${HDF5_LIBRARIES})
+  set(TESTABSORPTIONTRACKER_LIBS ${HDF5_LIBRARIES})
 endif(HAVE_HDF5)
 add_unit_test(NAME testAbsorptionTracker
-              SOURCES ${TESTABSORPTION_SOURCES}
-              LIBS ${TESTABSORPTION_LIBS})
+              SOURCES ${TESTABSORPTIONTRACKER_SOURCES}
+              LIBS ${TESTABSORPTIONTRACKER_LIBS})
 
 ## Unit test for BufferedCMacIonizeSnapshotDensityFunction
 if(HAVE_HDF5)
