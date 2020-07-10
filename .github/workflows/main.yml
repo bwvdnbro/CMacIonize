@@ -13,7 +13,6 @@ on:
 jobs:
   # Build and test the code
   build:
-    name: Build and test the code
     # The type of runner that the job will run on
     runs-on: ${{ matrix.os }}
     # Matrix of systems, HDF5/no HDF5 and GCC/Clang
@@ -51,8 +50,6 @@ jobs:
         cd $GITHUB_WORKSPACE
         mkdir build
         cd build
-        which ${{ matrix.cc }}
-        which ${{ matrix.cpp }}
         cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=${{ matrix.cc }} -DCMAKE_CXX_COMPILER=${{ matrix.cpp }} ..
         
     - name: Compile
@@ -76,7 +73,6 @@ jobs:
 
   # check code formatting
   formatting:
-    name: Formatting
     runs-on: ubuntu-18.04
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
