@@ -1,8 +1,11 @@
+![Automated build and unit tests](https://github.com/bwvdnbro/CMacIonize/workflows/Automated%20build%20and%20unit%20tests/badge.svg)
+
 # CMacIonize
-C++ version of Kenny Wood's ionization code.
+C++ Monte Carlo photoionization and radiation hydrodynamics code.
 
  - [Obtaining and compiling the code](#compilation)
  - [Code dependencies](#dependencies)
+ - [Documentation](#documentation)
  - [Support](#support)
 
 ## Compilation
@@ -28,7 +31,7 @@ Documentation can be generated using `make doc`.
 
 Unit tests can be run using `make check`.
 
-A number (currently only 1) of benchmark problems is provided in the folder
+A number of benchmark problems is provided in the folder
 `build/rundir/benchmark`. Each benchmark problem consists of at least a
 parameter file that can be used to run the benchmark, and a `.txt` file
 containing some more information about the benchmark problem.
@@ -84,8 +87,15 @@ libraries. However, all files that are necessary for the unit tests are also
 included in the repository (even if the scripts to generate them are), so
 it is still possible to compile and run the code without Python.
 
+## Documentation
+
+The CMacIonize code contains a full inline documentation using Doxygen. A recent version of this documentation is available from [an online mirror](https://users.ugent.be/~bwvdnbro/CMacIonize/). A small number of [online tutorials](https://bwvdnbro.github.io/CMacIonize/tutorials/) is available from [the CMacIonize webpage](https://bwvdnbro.github.io/CMacIonize/). Other sources of documentation include:
+ - the journal article describing the original photoionization code on which CMacIonize was based, [Wood, Mathis & Ercolano (2004)](https://ui.adsabs.harvard.edu/abs/2004MNRAS.348.1337W/abstract)
+ - the journal article describing CMacIonize 1.0, [Vandenbroucke & Wood (2018)](https://ui.adsabs.harvard.edu/abs/2018A%26C....23...40V/abstract)
+ - the journal article describing the task-based algorithm underlying CMacIonize 2.0, [Vandenbroucke & Camps (2020)](https://ui.adsabs.harvard.edu/abs/2020arXiv200615147V/abstract)
+
 ## Support
 
-If you have any issues obtaining, compiling or running the code, please consult the [wiki](https://github.com/bwvdnbro/CMacIonize/wiki) or let us know (bert.vandenbroucke@gmail.com). Try to use github issue were applicable to
+If you have any issues obtaining, compiling or running the code, please consult the [wiki](https://github.com/bwvdnbro/CMacIonize/wiki) or the [online tutorials](https://bwvdnbro.github.io/CMacIonize/tutorials/), or let us know by email (bert.vandenbroucke@gmail.com). A [Slack workspace](https://cmacionize.slack.com) is available for regular users and contributors upon invitation. Try to use github issue were applicable to
  - [submit bug reports](https://github.com/bwvdnbro/CMacIonize/issues/new?template=bug.md)
  - [request new code features](https://github.com/bwvdnbro/CMacIonize/issues/new?template=enhancement.md)
