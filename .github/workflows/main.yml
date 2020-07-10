@@ -20,14 +20,14 @@ jobs:
       matrix:
         os: [ubuntu-20.04]
         hdf5: [true]
-        compiler: [gcc, clang]
+        compiler: [clang]
         include:
           - compiler: gcc
             cc: gcc
             cpp: g++
           - compiler: clang
-            cc: clang-9.0
-            cpp: clang++-9.0
+            cc: clang
+            cpp: clang++
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -45,6 +45,8 @@ jobs:
         cd $GITHUB_WORKSPACE
         mkdir build
         cd build
+        which ${{ matrix.cc }}
+        which ${{ matrix.cpp }}
         cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=${{ matrix.cc }} -DCMAKE_CXX_COMPILER=${{ matrix.cpp }} ..
         
     - name: Compile
