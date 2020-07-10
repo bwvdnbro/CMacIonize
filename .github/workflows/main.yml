@@ -1,26 +1,32 @@
-# This is a basic workflow to help you get started with Actions
+# Script for the automatic build and unit testing
 
 name: Automated build and unit tests
 
-# Controls when the action will run. Triggers the workflow on push or pull request
-# events but only for the master branch
+# Action triggers for all pushes and pull requests on the master branch
 on:
   push:
     branches: [ master ]
   pull_request:
     branches: [ master ]
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+# List of jobs to run
 jobs:
-  # This workflow contains a single job called "build"
+  # Build and test the code
   build:
+    name: Build and test the code
     # The type of runner that the job will run on
     runs-on: ${{ matrix.os }}
+    # Matrix of systems, HDF5/no HDF5 and GCC/Clang
     strategy:
       matrix:
-        os: [ubuntu-20.04]
-        hdf5: [true]
-        compiler: [clang]
+        os: [ubuntu-18.04, ubuntu-20.04]
+        hdf5: [true, false]
+        compiler: [gcc, clang]
+        # exclude HDF5 builds with Clang
+        exclude:
+          - compiler: clang
+            hdf5: true
+        # Set the C and C++ compiler names for the given compiler family
         include:
           - compiler: gcc
             cc: gcc
@@ -37,7 +43,7 @@ jobs:
     - name: Install dependencies
       if: matrix.hdf5
       run: |
-        sudo apt install libhdf5-dev
+        sudo apt-get install libhdf5-dev
 
     # Runs a single command using the runners shell
     - name: Configure
@@ -67,3 +73,24 @@ jobs:
         cd $GITHUB_WORKSPACE
         cd build
         make check -j4
+
+  # check code formatting
+  formatting:
+    name: Formatting
+    runs-on: ubuntu-18.04
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+      - name: Install dependencies
+        run: |
+          sudo apt-get install clang-format-6.0
+      - name: Check formatting
+        run: |
+          cd $GITHUB_WORKSPACE
+          ./format_script.sh
+          if ! git diff --no-ext-diff --quiet --exit-code; then
+            echo "Code not correctly formatted!"
+            exit 1
+          else
+            echo "Code format check passed."
+          fi
