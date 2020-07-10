@@ -32,8 +32,12 @@ jobs:
         
     - name: Compile
       run: |
+        cd $GITHUB_WORKSPACE
+        cd build
         make -j4
     
     - name: Unit tests
       run: |
+        cd $GITHUB_WORKSPACE
+        cd build
         make check -j4
