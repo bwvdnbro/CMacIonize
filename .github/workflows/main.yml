@@ -21,10 +21,6 @@ jobs:
         os: [ubuntu-18.04, ubuntu-20.04]
         hdf5: [true, false]
         compiler: [gcc, clang]
-        # exclude HDF5 builds with Clang
-        exclude:
-          - compiler: clang
-            hdf5: true
         # Set the C and C++ compiler names for the given compiler family
         include:
           - compiler: gcc
