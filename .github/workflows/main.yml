@@ -1,0 +1,88 @@
+# Script for the automatic build and unit testing
+
+name: Automated build and unit tests
+
+# Action triggers for all pushes and pull requests on the master branch
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+# List of jobs to run
+jobs:
+  # Build and test the code
+  build:
+    # The type of runner that the job will run on
+    runs-on: ${{ matrix.os }}
+    # Matrix of systems, HDF5/no HDF5 and GCC/Clang
+    strategy:
+      matrix:
+        os: [ubuntu-18.04, ubuntu-20.04]
+        hdf5: [true, false]
+        compiler: [gcc, clang]
+        # Set the C and C++ compiler names for the given compiler family
+        include:
+          - compiler: gcc
+            cc: gcc
+            cpp: g++
+          - compiler: clang
+            cc: clang
+            cpp: clang++
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+    - uses: actions/checkout@v2
+
+    - name: Install dependencies
+      if: matrix.hdf5
+      run: |
+        sudo apt-get install libhdf5-dev
+
+    # Runs a single command using the runners shell
+    - name: Configure
+      run: |
+        cd $GITHUB_WORKSPACE
+        mkdir build
+        cd build
+        cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=${{ matrix.cc }} -DCMAKE_CXX_COMPILER=${{ matrix.cpp }} ..
+        
+    - name: Compile
+      run: |
+        cd $GITHUB_WORKSPACE
+        cd build
+        make -j4
+    
+    - name: Compile unit tests
+      run: |
+        cd $GITHUB_WORKSPACE
+        cd build
+        make buildTests -j4
+    
+    - name: Run unit tests
+      if: matrix.hdf5
+      run: |
+        cd $GITHUB_WORKSPACE
+        cd build
+        make check -j4
+
+  # check code formatting
+  formatting:
+    runs-on: ubuntu-18.04
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+      - name: Install dependencies
+        run: |
+          sudo apt-get install clang-format-6.0
+      - name: Check formatting
+        run: |
+          cd $GITHUB_WORKSPACE
+          ./format_script.sh
+          if ! git diff --no-ext-diff --quiet --exit-code; then
+            echo "Code not correctly formatted!"
+            exit 1
+          else
+            echo "Code format check passed."
+          fi
