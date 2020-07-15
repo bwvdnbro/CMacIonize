@@ -95,7 +95,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: Install dependencies
         run: |
-          sudo apt-get install dot doxygen
+          sudo apt-get install graphviz doxygen
       - name: Check documentation
         run: |
           cd $GITHUB_WORKSPACE
