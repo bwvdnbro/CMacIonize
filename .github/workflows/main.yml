@@ -86,3 +86,20 @@ jobs:
           else
             echo "Code format check passed."
           fi
+
+  # check code formatting
+  documentation:
+    runs-on: ubuntu-18.04
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+      - name: Install dependencies
+        run: |
+          sudo apt-get install graphviz doxygen
+      - name: Check documentation
+        run: |
+          cd $GITHUB_WORKSPACE
+          mkdir build
+          cd build
+          cmake ..
+          make doc
