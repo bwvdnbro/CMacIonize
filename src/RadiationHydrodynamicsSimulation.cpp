@@ -337,6 +337,9 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
     } else {
       mask = HydroMaskFactory::restart(*restart_reader, log);
     }
+    if (mask == nullptr) {
+      cmac_error("Hydro mask requested, but no hydro mask was found!");
+    }
   }
 
   // optional external point mass potential

@@ -311,7 +311,6 @@ int main(int argc, char **argv) {
         parser.get_value< int_fast32_t >("threads"),
         parser.get_value< std::string >("params"),
         parser.get_value< bool >("task-plot"),
-        parser.get_value< bool >("verbose"),
         !parser.get_value< bool >("no-initial-output"), log);
 
     if (parser.get_value< bool >("dry-run")) {

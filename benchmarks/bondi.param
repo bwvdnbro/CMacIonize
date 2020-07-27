@@ -52,6 +52,7 @@ BondiProfile:
 # Set up a mask for the central region of the box where the Bondi profile is
 # divergent
 HydroMask:
+  type: BlockSyntax
   filename: bondi.yml
 
 # RHD simulation parameters

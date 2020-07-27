@@ -93,7 +93,7 @@ public:
    * @return The index of the last buffer we copied into. If this index is not
    * the same as the original index, the original index should be queued.
    */
-  inline size_t add_photons(const size_t index, PhotonBuffer &buffer) {
+  inline size_t add_photons(const size_t index, const PhotonBuffer &buffer) {
 
     PhotonBuffer &buffer_target = _memory_space[index];
     const uint_fast32_t size_in = buffer.size();
