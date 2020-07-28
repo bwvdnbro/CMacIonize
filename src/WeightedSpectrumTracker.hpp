@@ -285,7 +285,8 @@ public:
                           _side_length * _side_length;
 
     cmac_assert_message(weight == weight, "direction: %g %g %g",
-                        photon.get_direction());
+                        photon.get_direction().x(), photon.get_direction().y(),
+                        photon.get_direction().z());
 
     _number_counts[photon.get_type()][index] += 1. / weight;
   }
@@ -308,7 +309,8 @@ public:
                           _side_length * _side_length;
 
     cmac_assert_message(weight == weight, "direction: %g %g %g",
-                        photon.get_direction());
+                        photon.get_direction().x(), photon.get_direction().y(),
+                        photon.get_direction().z());
 
     _number_counts[photon.get_type()][index] += 1. / weight;
   }
