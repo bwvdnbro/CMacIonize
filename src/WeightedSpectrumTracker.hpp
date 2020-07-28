@@ -283,6 +283,9 @@ public:
     const size_t index = _frequency_bins->get_bin_number(frequency);
     const double weight = get_projected_area(photon.get_direction()) *
                           _side_length * _side_length;
+
+    cmac_assert(weight == weight);
+
     _number_counts[photon.get_type()][index] += 1. / weight;
   }
 
