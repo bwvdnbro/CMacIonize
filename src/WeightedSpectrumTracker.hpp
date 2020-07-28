@@ -112,9 +112,13 @@ public:
    * weight (in s^-1).
    */
   virtual void normalize(const double luminosity_per_weight) {
+
+    cmac_assert_message(_side_length > 0., "Tracker was not normalized!");
+
+    const double norm = luminosity_per_weight / (_side_length * _side_length);
     for (int_fast32_t i = 0; i < PHOTONTYPE_NUMBER; ++i) {
       for (uint_fast32_t j = 0; j < _number_counts[i].size(); ++j) {
-        _number_counts[i][j] *= luminosity_per_weight;
+        _number_counts[i][j] *= norm;
       }
     }
   }
@@ -281,14 +285,20 @@ public:
 
     const double frequency = photon.get_energy();
     const size_t index = _frequency_bins->get_bin_number(frequency);
-    const double weight = get_projected_area(photon.get_direction()) *
-                          _side_length * _side_length;
+
+    cmac_assert(index >= 0);
+    cmac_assert(index < _number_counts[0].size());
+
+    const double weight = get_projected_area(photon.get_direction());
 
     cmac_assert_message(weight == weight, "direction: %g %g %g",
                         photon.get_direction().x(), photon.get_direction().y(),
                         photon.get_direction().z());
 
-    _number_counts[photon.get_type()][index] += 1. / weight;
+    const double inverse_weight = 1. / weight;
+    cmac_assert(!std::isinf(inverse_weight));
+
+    _number_counts[photon.get_type()][index] += inverse_weight;
   }
 
   /**
@@ -305,14 +315,20 @@ public:
 
     const double frequency = photon.get_energy();
     const size_t index = _frequency_bins->get_bin_number(frequency);
-    const double weight = get_projected_area(photon.get_direction()) *
-                          _side_length * _side_length;
+
+    cmac_assert(index >= 0);
+    cmac_assert(index < _number_counts[0].size());
+
+    const double weight = get_projected_area(photon.get_direction());
 
     cmac_assert_message(weight == weight, "direction: %g %g %g",
                         photon.get_direction().x(), photon.get_direction().y(),
                         photon.get_direction().z());
 
-    _number_counts[photon.get_type()][index] += 1. / weight;
+    const double inverse_weight = 1. / weight;
+    cmac_assert(!std::isinf(inverse_weight));
+
+    _number_counts[photon.get_type()][index] += inverse_weight;
   }
 
   /**

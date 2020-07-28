@@ -25,6 +25,7 @@
  */
 
 #include "Assert.hpp"
+#include "RandomGenerator.hpp"
 #include "WeightedSpectrumTracker.hpp"
 
 /**
@@ -84,6 +85,21 @@ int main(int argc, char **argv) {
     const double area = WeightedSpectrumTracker::get_projected_area(n);
     cmac_warning("area: %g", area);
     assert_values_equal_rel(area, std::sqrt(3), 1.e-16);
+  }
+
+  /// a bunch of random directions to make sure the result is always valid
+  {
+    RandomGenerator rg(42);
+    for (uint_fast32_t i = 0; i < 1e6; ++i) {
+      CoordinateVector<> direction(rg.get_uniform_random_double(),
+                                   rg.get_uniform_random_double(),
+                                   rg.get_uniform_random_double());
+      direction /= direction.norm();
+      const double area =
+          WeightedSpectrumTracker::get_projected_area(direction);
+      assert_condition(area > 0.);
+      assert_condition(area == area);
+    }
   }
 
   return 0;
