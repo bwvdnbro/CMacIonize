@@ -1074,11 +1074,31 @@ public:
   }
 
   /**
+   * @brief Access the element at the given position.
+   *
+   * This version only allows read access.
+   *
+   * @param index Multidimensional index.
+   * @return Element at that position.
+   */
+  inline const _datatype_ &
+  operator[](std::array< size_t, _size_ > index) const {
+
+    size_t dataindex = 0;
+    size_t product = 1;
+    for (uint_fast8_t i = 0; i < _size_; ++i) {
+      dataindex += index[_size_ - 1 - i] * product;
+      product *= _size[_size_ - 1 - i];
+    }
+    return _data[dataindex];
+  }
+
+  /**
    * @brief Get the size of the multidimensional array.
    *
    * @return Size of the array.
    */
-  inline std::array< size_t, _size_ > size() { return _size; }
+  inline std::array< size_t, _size_ > size() const { return _size; }
 };
 
 /**

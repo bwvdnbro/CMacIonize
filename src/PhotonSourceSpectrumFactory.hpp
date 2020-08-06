@@ -40,11 +40,36 @@
 #include "UniformPhotonSourceSpectrum.hpp"
 #include "WMBasicPhotonSourceSpectrum.hpp"
 
+// HDF5 dependent implementations
+#ifdef HAVE_HDF5
+#include "CastelliKuruczPhotonSourceSpectrum.hpp"
+#endif
+
 /**
  * @brief Factory for PhotonSourceSpectrum instances.
  */
 class PhotonSourceSpectrumFactory {
 public:
+  /**
+   * @brief Method that checks if the requested PhotonSourceSpectrum
+   * implementation requires HDF5.
+   *
+   * @param type Requested DensityFunction type.
+   * @param log Log to write logging info to.
+   */
+  static void check_hdf5(std::string type, Log *log = nullptr) {
+    if (type == "CastelliKurucz") {
+      if (log) {
+        log->write_error("Cannot create an instance of ", type,
+                         "PhotonSourceSpectrum, since the code was "
+                         "compiled without HDF5 support.");
+      }
+      cmac_error("A %sPhotonSourceSpectrum requires HDF5. However, the code "
+                 "was compiled without HDF5 support!",
+                 type.c_str());
+    }
+  }
+
   /**
    * @brief Generate a PhotonSourceSpectrum based on the given type.
    *
@@ -60,6 +85,10 @@ public:
                                                          std::string role,
                                                          ParameterFile &params,
                                                          Log *log = nullptr) {
+
+#ifndef HAVE_HDF5
+    check_hdf5(type, log);
+#endif
 
     if (type == "FaucherGiguere") {
       return new FaucherGiguerePhotonSourceSpectrum(role, params, log);
@@ -77,6 +106,10 @@ public:
       return new UniformPhotonSourceSpectrum();
     } else if (type == "WMBasic") {
       return new WMBasicPhotonSourceSpectrum(role, params, log);
+#ifdef HAVE_HDF5
+    } else if (type == "CastelliKurucz") {
+      return new CastelliKuruczPhotonSourceSpectrum(role, params, log);
+#endif
     } else if (type == "None") {
       return nullptr;
     } else {
@@ -90,6 +123,7 @@ public:
    * parameter file (corresponding to the given role).
    *
    * Supported types are (default: Planck):
+   *  - CastelliKurucz: Castelli & Kurucz (2003) stellar atmosphere spectrum.
    *  - FaucherGiguere: Redshift dependent UVB spectrum of Faucher-Giguère et
    *    al. (2009)
    *  - Monochromatic: Monochromatic spectrum
