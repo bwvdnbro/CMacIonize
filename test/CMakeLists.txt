@@ -1097,8 +1097,17 @@ set(TESTMASKEDPHOTONSOURCESPECTRUM_SOURCES
     ../src/PopStarPhotonSourceSpectrum.cpp
     ../src/WMBasicPhotonSourceSpectrum.cpp
 )
-add_unit_test(NAME testMaskedPhotonSourceSpectrum
-              SOURCES ${TESTMASKEDPHOTONSOURCESPECTRUM_SOURCES})
+if(HAVE_HDF5)
+  list(APPEND TESTMASKEDPHOTONSOURCESPECTRUM_SOURCES
+       ../src/CastelliKuruczPhotonSourceSpectrum.cpp
+       )
+  add_unit_test(NAME testMaskedPhotonSourceSpectrum
+                SOURCES ${TESTMASKEDPHOTONSOURCESPECTRUM_SOURCES}
+                LIBS ${HDF5_LIBRARIES})
+else(HAVE_HDF5)
+  add_unit_test(NAME testMaskedPhotonSourceSpectrum
+                SOURCES ${TESTMASKEDPHOTONSOURCESPECTRUM_SOURCES})
+endif(HAVE_HDF5)
 
 ## Unit test for SPHArrayInterface
 set(TESTSPHARRAYINTERFACE_SOURCES
@@ -1794,6 +1803,18 @@ if(HAVE_HDF5)
     NAME testBufferedCMacIonizeSnapshotDensityFunction
     SOURCES ${TESTBUFFEREDCMACIONIZESNAPSHOTDENSITYFUNCTION_SOURCES}
     LIBS ${HDF5_LIBRARIES})
+endif(HAVE_HDF5)
+
+## Unit test for CastelliKuruczPhotonSourceSpectrum
+if(HAVE_HDF5)
+  set(TESTCASTELLIKURUCZPHOTONSOURCESPECTRUM_SOURCES
+      testCastelliKuruczPhotonSourceSpectrum.cpp
+
+      ../src/CastelliKuruczPhotonSourceSpectrum.cpp
+      )
+  add_unit_test(NAME testCastelliKuruczPhotonSourceSpectrum
+                SOURCES ${TESTCASTELLIKURUCZPHOTONSOURCESPECTRUM_SOURCES}
+                LIBS ${HDF5_LIBRARIES})
 endif(HAVE_HDF5)
 
 ### Python module unit tests ###################################################

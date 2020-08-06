@@ -114,6 +114,16 @@ message(STATUS "PopStarDataLocation.hpp: ${POPSTARDATALOCATION}")
 configure_file(${PROJECT_SOURCE_DIR}/src/PopStarDataLocation.hpp.in
                ${PROJECT_BINARY_DIR}/src/PopStarDataLocation.hpp @ONLY)
 
+# CastelliKuruczDataLocation.hpp
+if(HAVE_HDF5)
+configure_file(${PROJECT_SOURCE_DIR}/data/CastelliKurucz.hdf5
+               ${PROJECT_BINARY_DIR}/data/CastelliKurucz.hdf5 COPYONLY)
+set(CASTELLIKURUCZDATALOCATION ${PROJECT_BINARY_DIR}/data/CastelliKurucz.hdf5)
+message(STATUS "CastelliKuruczDataLocation.hpp: ${CASTELLIKURUCZDATALOCATION}")
+configure_file(${PROJECT_SOURCE_DIR}/src/CastelliKuruczDataLocation.hpp.in
+               ${PROJECT_BINARY_DIR}/src/CastelliKuruczDataLocation.hpp @ONLY)
+endif(HAVE_HDF5)
+
 # Configuration files
 configure_file(${PROJECT_SOURCE_DIR}/src/Configuration.hpp.in
                ${PROJECT_BINARY_DIR}/src/Configuration.hpp @ONLY)
@@ -169,6 +179,7 @@ set(LIBIONIZATIONSIMULATION_SOURCES
 if(HAVE_HDF5)
   list(APPEND LIBIONIZATIONSIMULATION_SOURCES
        ../src/AmunSnapshotDensityFunction.cpp
+       ../src/CastelliKuruczPhotonSourceSpectrum.cpp
        ../src/CMacIonizeSnapshotDensityFunction.cpp
        ../src/CMacIonizeVoronoiGeneratorDistribution.cpp
        ../src/FLASHSnapshotDensityFunction.cpp
@@ -367,6 +378,7 @@ set(LIBTASKBASEDIONIZATIONSIMULATION_SOURCES
 if(HAVE_HDF5)
     list(APPEND LIBTASKBASEDIONIZATIONSIMULATION_SOURCES
         AmunSnapshotDensityFunction.cpp
+        CastelliKuruczPhotonSourceSpectrum.cpp
         CMacIonizeSnapshotDensityFunction.cpp
         FLASHSnapshotDensityFunction.cpp
         GadgetSnapshotDensityFunction.cpp
