@@ -65,5 +65,7 @@ int main(int argc, char **argv) {
   }
   assert_values_equal(xi2, 0.0106294);
 
+  density.free();
+
   return 0;
 }

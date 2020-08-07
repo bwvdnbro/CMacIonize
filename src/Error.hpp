@@ -49,7 +49,7 @@
     char line[65];                                                             \
     while (buffer[pos] != '\0') {                                              \
       if (buffer[pos] == '\n') {                                               \
-        fprintf(stream, "     %-65s\n", line);                                 \
+        fprintf(stream, "     %-65.65s\n", line);                              \
         ++pos;                                                                 \
         linepos = 0;                                                           \
       } else {                                                                 \
@@ -82,7 +82,7 @@
           ++linepos;                                                           \
         }                                                                      \
         if (linepos == 65) {                                                   \
-          fprintf(stream, "     %-65s\n", line);                               \
+          fprintf(stream, "     %-65.65s\n", line);                            \
           linepos = 0;                                                         \
         }                                                                      \
         ++pos;                                                                 \
@@ -90,7 +90,7 @@
     }                                                                          \
     if (linepos) {                                                             \
       line[linepos] = '\0';                                                    \
-      fprintf(stream, "     %-65s\n", line);                                   \
+      fprintf(stream, "     %-65.65s\n", line);                                \
     }                                                                          \
   }
 

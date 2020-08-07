@@ -1873,3 +1873,6 @@ add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND}
                                   --parallel ${MAX_NUMBER_OF_THREADS}
                                   --output-on-failure
                         DEPENDS ${TESTNAMES})
+add_custom_target(check_serial COMMAND ${CMAKE_CTEST_COMMAND}
+                                  --output-on-failure
+                               DEPENDS ${TESTNAMES})
