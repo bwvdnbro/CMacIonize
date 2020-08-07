@@ -249,7 +249,12 @@ public:
   /**
    * @brief Virtual destructor.
    */
-  virtual ~UniformRandomPhotonSourceDistribution() {}
+  virtual ~UniformRandomPhotonSourceDistribution() {
+    if (_output_file) {
+      _output_file->close();
+      delete _output_file;
+    }
+  }
 
   /**
    * @brief Get the number of sources contained within this distribution.
