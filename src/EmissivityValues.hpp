@@ -104,7 +104,7 @@ public:
    * @param line Valid EmissionLine.
    * @return Emissivity of that line (in J m^-3s^-1).
    */
-  inline double get_emissivity(int_fast32_t line) const {
+  inline double get_emissivity(const int_fast32_t line) const {
     return _emissivities[line];
   }
 
@@ -114,7 +114,7 @@ public:
    * @param line Valid EmissionLine.
    * @param emissivity Emissivity of that line (in J m^-3s^-1).
    */
-  inline void set_emissivity(int_fast32_t line, double emissivity) {
+  inline void set_emissivity(const int_fast32_t line, const double emissivity) {
     _emissivities[line] = emissivity;
   }
 
@@ -124,7 +124,7 @@ public:
    * @param line Valid EmissionLine.
    * @return std::string containing the name of the EmissionLine.
    */
-  static inline std::string get_name(int_fast32_t line) {
+  static inline std::string get_name(const int_fast32_t line) {
     switch (line) {
     case EMISSIONLINE_HAlpha:
       return "Halpha";
@@ -213,6 +213,157 @@ public:
     default:
       cmac_error("Unknown EmissionLine: %" PRIiFAST32 "!", line);
       return "";
+    }
+  }
+
+  /**
+   * @brief Get the central wavelength for the given emission line.
+   *
+   * @param line EmissionLine.
+   * @return Corresponding wavelength, in m (or 0 if the line is a pseudo-line).
+   */
+  static inline double get_central_wavelength(const int_fast32_t line) {
+
+    switch (line) {
+    case EMISSIONLINE_HAlpha:
+      // NIST (via wikepedia)
+      return 656.279e-9;
+    case EMISSIONLINE_HBeta:
+      // NIST (via wikipedia)
+      return 486.135e-9;
+    case EMISSIONLINE_HII:
+      // pseudo-line (not sure what it is exactly)
+      return 0.;
+    case EMISSIONLINE_BALMER_JUMP_LOW:
+      // pseudo-line (not sure what it is exactly)
+      return 0.;
+    case EMISSIONLINE_BALMER_JUMP_HIGH:
+      // pseudo-line (not sure what it is exactly)
+      return 0.;
+    case EMISSIONLINE_OI_6300:
+      // Osterbrock & Ferland (2006), Table 3.14
+      return 6300.3e-10;
+    case EMISSIONLINE_OI_6364:
+      // Osterbrock & Ferland (2006), Table 3.14
+      return 6363.8e-10;
+    case EMISSIONLINE_OII_3727:
+      // Osterbrock & Ferland (2006), Table 3.13
+      // rate average of the 3726.0 and 3728.8 angstrom transitions
+      return 3726.5e-10;
+    case EMISSIONLINE_OIII_5007:
+      // Osterbrock & Ferland (2006), Table 3.12
+      return 5006.9e-10;
+    case EMISSIONLINE_OIII_4959:
+      // Osterbrock & Ferland (2006), Table 3.12
+      return 4958.9e-10;
+    case EMISSIONLINE_OIII_4363:
+      // Osterbrock & Ferland (2006), Table 3.12
+      return 4363.2e-10;
+    case EMISSIONLINE_OIII_52mu:
+      // Osterbrock & Ferland (2006), Table 3.12
+      return 51.814e-6;
+    case EMISSIONLINE_OIII_88mu:
+      // Osterbrock & Ferland (2006), Table 3.12
+      return 88.356e-6;
+    case EMISSIONLINE_NII_5755:
+      // Osterbrock & Ferland (2006), Table 3.12
+      return 5754.6e-10;
+    case EMISSIONLINE_NII_6548:
+      // Osterbrock & Ferland (2006), Table 3.12
+      return 6548.0e-10;
+    case EMISSIONLINE_NII_6584:
+      // Osterbrock & Ferland (2006), Table 3.12
+      return 6583.4e-10;
+    case EMISSIONLINE_NeIII_3869:
+      // Osterbrock & Ferland (2006), Table 3.14
+      return 3868.8e-10;
+    case EMISSIONLINE_NeIII_3968:
+      // Osterbrock & Ferland (2006), Table 3.14
+      return 3967.5e-10;
+    case EMISSIONLINE_SII_6725:
+      // Osterbrock & Ferland (2006), Table 3.13
+      // rate average of the 6716.5 and 6730.8 angstrom transition
+      return 6727.5e-10;
+    case EMISSIONLINE_SII_4072:
+      // Osterbrock & Ferland (2006), Table 3.13
+      // rate average of the 4068.6 and 4076.4 angstrom transition
+      return 4070.8e-10;
+    case EMISSIONLINE_SIII_9405:
+      // Osterbrock & Ferland (2006), Table 3.12
+      // rate average of the 9068.9 and 9531.0 angstrom transition
+      return 9403.3e-10;
+    case EMISSIONLINE_SIII_6312:
+      // Osterbrock & Ferland (2006), Table 3.12
+      return 6312.0e-10;
+    case EMISSIONLINE_SIII_19mu:
+      // Osterbrock & Ferland (2006), Table 3.12
+      return 18.713e-6;
+    case EMISSIONLINE_SIII_33mu:
+      // Osterbrock & Ferland (2006), Table 3.12
+      return 33.47e-6;
+    case EMISSIONLINE_avg_T:
+      // pseudo-line
+      return 0.;
+    case EMISSIONLINE_avg_T_count:
+      // pseudo-line
+      return 0.;
+    case EMISSIONLINE_avg_nH_nHe:
+      // pseudo-line
+      return 0.;
+    case EMISSIONLINE_avg_nH_nHe_count:
+      // pseudo-line
+      return 0.;
+    case EMISSIONLINE_NeII_12mu:
+      // Osterbrock & Ferland (2006), Table 3.11
+      return 12.814e-6;
+    case EMISSIONLINE_NIII_57mu:
+      // Osterbrock & Ferland (2006), Table 3.9
+      return 57.343e-6;
+    case EMISSIONLINE_NeIII_15mu:
+      // Osterbrock & Ferland (2006), Table 3.14
+      return 15.555e-6;
+    case EMISSIONLINE_NII_122mu:
+      // Osterbrock & Ferland (2006), Table 3.12
+      return 121.89e-6;
+    case EMISSIONLINE_CII_158mu:
+      // Osterbrock & Ferland (2006), Table 3.9
+      return 157.74e-6;
+    case EMISSIONLINE_CII_2325:
+      // Osterbrock & Ferland (2006), Table 3.9
+      // rate average of the 2325.4, 2326.9, 2328.1, 2323.6 and 2324.7 angstrom
+      // transitions
+      return 2326.2e-10;
+    case EMISSIONLINE_CIII_1908:
+      // Osterbrock & Ferland (2006), Table 3.8
+      // rate average of the 1906.7 and 1908.7 angstrom transitions
+      return 1908.7e-10;
+    case EMISSIONLINE_OII_7325:
+      // Osterbrock & Ferland (2006), Table 3.13
+      // rate average of the 7318.8, 7319.9, 7329.6 and 7330.7 angstrom
+      // transitions
+      return 7324.5e-10;
+    case EMISSIONLINE_SIV_10mu:
+      // Osterbrock & Ferland (2006), Table 3.10
+      return 10.514e-6;
+    case EMISSIONLINE_HeI_5876:
+      // Osterbrock & Ferland (2006), Table 4.6
+      // no detailed wavelength info available
+      return 5876e-10;
+    case EMISSIONLINE_Hrec_s:
+      // pseudo-line
+      return 0.;
+    case EMISSIONLINE_WFC2_F439W:
+      // pseudo-line
+      return 0.;
+    case EMISSIONLINE_WFC2_F555W:
+      // pseudo-line
+      return 0.;
+    case EMISSIONLINE_WFC2_F675W:
+      // pseudo-line
+      return 0.;
+    default:
+      cmac_error("Unknown EmissionLine: %" PRIiFAST32 "!", line);
+      return 0.;
     }
   }
 };

@@ -40,3 +40,7 @@ EmissivityValues:
   avg_T_count: false # (default value)
   avg_nH_nHe: false # (default value)
   avg_nH_nHe_count: false # (default value)
+Spectrum:
+  compute full spectrum: true
+  minimum wavelength: 4000. angstrom
+  maximum wavelength: 8000. angstrom

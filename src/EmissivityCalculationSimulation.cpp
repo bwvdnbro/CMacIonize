@@ -67,10 +67,28 @@ int EmissivityCalculationSimulation::do_simulation(CommandLineParser &parser,
   const std::string parameterfile_name =
       parser.get_value< std::string >("params");
   ParameterFile params(parameterfile_name);
-  bool do_line[NUMBER_OF_EMISSIONLINES];
+
+  const bool full_spectrum =
+      params.get_value< bool >("Spectrum:compute full spectrum", false);
+  const double minimum_wavelength =
+      params.get_physical_value< QUANTITY_LENGTH >(
+          "Spectrum:minimum wavelength", "1000. angstrom");
+  const double maximum_wavelength =
+      params.get_physical_value< QUANTITY_LENGTH >(
+          "Spectrum:maximum wavelength", "2.e-4 m");
+  const uint_fast32_t number_of_spectral_bins =
+      params.get_value< uint_fast32_t >("Spectrum:number of bins", 1000u);
+
+  bool compute_line[NUMBER_OF_EMISSIONLINES];
+  bool output_line[NUMBER_OF_EMISSIONLINES];
   for (int_fast32_t i = 0; i < NUMBER_OF_EMISSIONLINES; ++i) {
-    do_line[i] = params.get_value< bool >(
+    output_line[i] = params.get_value< bool >(
         "EmissivityValues:" + EmissivityValues::get_name(i), false);
+    // if we want the full spectrum, we need to compute all lines that are not
+    // pseudo-lines
+    compute_line[i] =
+        output_line[i] ||
+        (full_spectrum && EmissivityValues::get_central_wavelength(i) > 0.);
   }
 
   // we are done reading the parameter file
@@ -152,7 +170,7 @@ int EmissivityCalculationSimulation::do_simulation(CommandLineParser &parser,
 
   // make sure we read the abundances in the right way:
   //  - old parameter file: directly
-  //  - new paramter file: using the AbundanceModel
+  //  - new parameter file: using the AbundanceModel
   Abundances abundances;
   if (simulation_parameters.has_value("Abundances:helium")) {
     abundances = Abundances(simulation_parameters);
@@ -181,7 +199,7 @@ int EmissivityCalculationSimulation::do_simulation(CommandLineParser &parser,
       number_of_cells.x() * number_of_cells.y() * number_of_cells.z();
 
   for (int_fast32_t i = 0; i < NUMBER_OF_EMISSIONLINES; ++i) {
-    if (do_line[i]) {
+    if (output_line[i]) {
       if (HDF5Tools::group_exists(parttype0, EmissivityValues::get_name(i))) {
         if (log) {
           log->write_warning("Dataset \"", EmissivityValues::get_name(i),
@@ -228,7 +246,7 @@ int EmissivityCalculationSimulation::do_simulation(CommandLineParser &parser,
     // prepare output arrays
     std::vector< double > emissivities[NUMBER_OF_EMISSIONLINES];
     for (int_fast32_t line = 0; line < NUMBER_OF_EMISSIONLINES; ++line) {
-      if (do_line[line]) {
+      if (compute_line[line]) {
         emissivities[line].resize(size);
       }
     }
@@ -246,17 +264,155 @@ int EmissivityCalculationSimulation::do_simulation(CommandLineParser &parser,
         ionization_variables.set_ionic_fraction(ion, neutral_fractions[ion][i]);
       }
       double output[NUMBER_OF_EMISSIONLINES];
-      calculator.calculate_emissivities(ionization_variables, do_line, output);
+      calculator.calculate_emissivities(ionization_variables, compute_line,
+                                        output);
       for (int_fast32_t line = 0; line < NUMBER_OF_EMISSIONLINES; ++line) {
-        if (do_line[line]) {
+        if (compute_line[line]) {
           emissivities[line][i] = output[line];
         }
       }
     }
+
+    // output the lines
     for (int_fast32_t line = 0; line < NUMBER_OF_EMISSIONLINES; ++line) {
-      if (do_line[line]) {
+      if (output_line[line]) {
         HDF5Tools::append_dataset< double >(
             parttype0, EmissivityValues::get_name(line), 0, emissivities[line]);
+      }
+    }
+
+    // output the full spectrum
+    if (full_spectrum) {
+
+      // set up an empty spectrum
+      std::vector< double > spectrum(
+          temperature.size() * number_of_spectral_bins, 0.);
+
+      const double clight =
+          PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_LIGHTSPEED);
+
+      // construct the wavelength bins (we store the bin edges in frequency
+      // space, since this makes more sense
+      std::vector< double > frequency_edges(number_of_spectral_bins + 1, 0.);
+      std::vector< double > wavelength_edges(number_of_spectral_bins + 1, 0.);
+      std::vector< double > wavelengths_mid(number_of_spectral_bins, 0.);
+      const double log_minimum_wavelength = std::log10(minimum_wavelength);
+      const double log_maximum_wavelength = std::log10(maximum_wavelength);
+      const double minimum_frequency = clight / maximum_wavelength;
+      const double maximum_frequency = clight / minimum_wavelength;
+      const double dlog_wavelength =
+          (log_maximum_wavelength - log_minimum_wavelength) /
+          number_of_spectral_bins;
+      wavelength_edges[0] = minimum_wavelength;
+      frequency_edges[0] = clight / wavelength_edges[0];
+      for (uint_fast32_t ibin = 0; ibin < number_of_spectral_bins; ++ibin) {
+        wavelength_edges[ibin + 1] = std::pow(
+            10., log_minimum_wavelength + (ibin + 1.) * dlog_wavelength);
+        wavelengths_mid[ibin] =
+            0.5 * (wavelength_edges[ibin] + wavelength_edges[ibin + 1]);
+        frequency_edges[ibin + 1] = clight / wavelength_edges[ibin + 1];
+      }
+      // set up a sorted copy of the frequencies for later use
+      std::vector< double > inverse_frequency_edges(frequency_edges);
+      std::sort(inverse_frequency_edges.begin(), inverse_frequency_edges.end());
+
+      // precompute the Doppler broadening factor
+      const double doppler_factor = std::sqrt(
+          2. *
+          PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_BOLTZMANN) /
+          (PhysicalConstants::get_physical_constant(
+               PHYSICALCONSTANT_PROTON_MASS) *
+           clight * clight));
+
+      // loop over all lines
+      for (int_fast32_t line = 0; line < NUMBER_OF_EMISSIONLINES; ++line) {
+        const double lambda_line =
+            EmissivityValues::get_central_wavelength(line);
+        if (lambda_line > 0.) {
+          const double nu_line = clight / lambda_line;
+          for (uint_fast32_t i = 0; i < temperature.size(); ++i) {
+            // delta_nu is the standard deviation of the Gaussian line profile
+            const double delta_nu =
+                doppler_factor * std::sqrt(temperature[i]) * nu_line;
+            // we only include a 3 sigma interval around the central wavelength
+            const double nu_min = nu_line - 3. * delta_nu;
+            const double nu_max = nu_line + 3. * delta_nu;
+            if (nu_max > minimum_frequency && nu_min < maximum_frequency) {
+              // the line profile overlaps with the desired spectral range
+              // add the line to the corresponding bins
+              // first, figure out the indices of the overlapping bins
+              const uint_fast32_t imin =
+                  number_of_spectral_bins -
+                  Utilities::locate(nu_min, &inverse_frequency_edges[0],
+                                    number_of_spectral_bins + 1);
+              const uint_fast32_t imax =
+                  number_of_spectral_bins -
+                  Utilities::locate(nu_max, &inverse_frequency_edges[0],
+                                    number_of_spectral_bins + 1);
+              if (imin == imax) {
+                // the line completely overlaps with a single bin
+                // add the full strength to the spectrum
+                spectrum[i * number_of_spectral_bins + imin] +=
+                    emissivities[line][i];
+              } else {
+                // multiple bins overlap, loop over them
+                for (uint_fast32_t ibin = imin; ibin <= imax; ++ibin) {
+                  // determine the fraction of the line strength to contribute
+                  // to this bin
+                  const double lower_limit =
+                      std::max(frequency_edges[imin], nu_min);
+                  const double upper_limit =
+                      std::min(frequency_edges[imax], nu_max);
+                  const double cdf_min =
+                      0.5 * (1. + std::erf((lower_limit - nu_line) /
+                                           (std::sqrt(2.) * delta_nu)));
+                  const double cdf_max =
+                      0.5 * (1. + std::erf((upper_limit - nu_line) /
+                                           (std::sqrt(2.) * delta_nu)));
+                  spectrum[i * number_of_spectral_bins + ibin] +=
+                      (cdf_max - cdf_min) * emissivities[line][i];
+                }
+              }
+            }
+          }
+        }
+      }
+
+      // normalise the spectrum by dividing by the wavelength bin size
+      for (uint_fast32_t ibin = 0; ibin < number_of_spectral_bins; ++ibin) {
+        const double dlambda =
+            wavelength_edges[ibin + 1] - wavelength_edges[ibin];
+        for (uint_fast32_t i = 0; i < temperature.size(); ++i) {
+          spectrum[i * number_of_spectral_bins + ibin] /= dlambda;
+        }
+      }
+
+      if (HDF5Tools::group_exists(parttype0, "Spectrum wavelengths")) {
+        if (log) {
+          log->write_warning("Dataset \"Spectrum wavelengths\" already exists! "
+                             "Values will be overwritten!");
+        }
+      } else {
+        HDF5Tools::create_dataset< double >(parttype0, "Spectrum wavelengths",
+                                            number_of_spectral_bins, true);
+      }
+      HDF5Tools::append_dataset(parttype0, "Spectrum wavelengths", 0,
+                                wavelengths_mid);
+      if (HDF5Tools::group_exists(parttype0, "Spectrum")) {
+        if (log) {
+          log->write_warning("Dataset \"Spectrum\" already exists! Values will "
+                             "be overwritten!");
+        }
+      } else {
+        HDF5Tools::create_datatable< double >(parttype0, "Spectrum",
+                                              temperature.size(),
+                                              number_of_spectral_bins, true);
+      }
+      for (uint_fast32_t i = 0; i < temperature.size(); ++i) {
+        std::vector< double > row_copy(
+            spectrum.begin() + i * number_of_spectral_bins,
+            spectrum.begin() + (i + 1) * number_of_spectral_bins);
+        HDF5Tools::fill_row< double >(parttype0, "Spectrum", i, row_copy);
       }
     }
   }
