@@ -349,27 +349,33 @@ int EmissivityCalculationSimulation::do_simulation(CommandLineParser &parser,
                   number_of_spectral_bins -
                   Utilities::locate(nu_max, &inverse_frequency_edges[0],
                                     number_of_spectral_bins + 1);
+              cmac_assert(imin > 0);
+              cmac_assert(imin < number_of_spectral_bins + 1);
+              cmac_assert(imax > 0);
+              cmac_assert(imax < number_of_spectral_bins + 1);
               if (imin == imax) {
                 // the line completely overlaps with a single bin
                 // add the full strength to the spectrum
-                spectrum[i * number_of_spectral_bins + imin] +=
+                spectrum[i * number_of_spectral_bins + imin - 1] +=
                     emissivities[line][i];
               } else {
                 // multiple bins overlap, loop over them
-                for (uint_fast32_t ibin = imin; ibin <= imax; ++ibin) {
+                // note that imin > imax, since the frequencies are sorted
+                // backwards
+                for (uint_fast32_t ibin = imax; ibin <= imin; ++ibin) {
                   // determine the fraction of the line strength to contribute
                   // to this bin
                   const double lower_limit =
-                      std::max(frequency_edges[imin], nu_min);
+                      std::max(frequency_edges[ibin], nu_min);
                   const double upper_limit =
-                      std::min(frequency_edges[imax], nu_max);
+                      std::min(frequency_edges[ibin - 1], nu_max);
                   const double cdf_min =
                       0.5 * (1. + std::erf((lower_limit - nu_line) /
                                            (std::sqrt(2.) * delta_nu)));
                   const double cdf_max =
                       0.5 * (1. + std::erf((upper_limit - nu_line) /
                                            (std::sqrt(2.) * delta_nu)));
-                  spectrum[i * number_of_spectral_bins + ibin] +=
+                  spectrum[i * number_of_spectral_bins + ibin - 1] +=
                       (cdf_max - cdf_min) * emissivities[line][i];
                 }
               }
