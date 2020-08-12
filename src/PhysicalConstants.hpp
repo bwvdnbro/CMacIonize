@@ -28,6 +28,8 @@
 
 #include "Error.hpp"
 
+#include <cmath>
+
 /**
  * @brief Names for physical constants.
  */
@@ -52,6 +54,15 @@ enum PhysicalConstantName {
   PHYSICALCONSTANT_SOLAR_MASS,
   /*! @brief Astronomical unit (in m). */
   PHYSICALCONSTANT_ASTRONOMICAL_UNIT,
+  /*! @brief Charge of the electron (in A s). */
+  PHYSICALCONSTANT_ELECTRON_CHARGE,
+  /*! @brief Electric constant or vacuum permittivity
+   *  (in A^2 s^4 kg^-1 m^-3). */
+  PHYSICALCONSTANT_ELECTRIC_CONSTANT,
+  /*! @brief Fine structure constant. */
+  PHYSICALCONSTANT_FINE_STRUCTURE_CONSTANT,
+  /*! @brief Bohr radius (in m). */
+  PHYSICALCONSTANT_BOHR_RADIUS,
   /*! @brief Counter (should always be last element!). */
   NUMBER_OF_PHYSICALCONSTANTS
 };
@@ -120,6 +131,33 @@ public:
       // http://asa.usno.navy.mil/static/files/2014/Astronomical_Constants_2014.pdf
       // in m
       return 149597870700.;
+
+    case PHYSICALCONSTANT_ELECTRON_CHARGE:
+      // NIST 2018 CODATA: https://physics.nist.gov/cgi-bin/cuu/Value?e
+      // in A s
+      // exact!
+      return 1.602176634e-19;
+
+    case PHYSICALCONSTANT_ELECTRIC_CONSTANT:
+      // NIST 2018 CODATA: https://physics.nist.gov/cgi-bin/cuu/Value?ep0
+      // in A^2 s^4 kg^-1 m^-3
+      return 8.8541878128e-12;
+
+    case PHYSICALCONSTANT_FINE_STRUCTURE_CONSTANT:
+      // e^2 / (2 * epsilon0 * c * h)
+      return get_physical_constant(PHYSICALCONSTANT_ELECTRON_CHARGE) *
+             get_physical_constant(PHYSICALCONSTANT_ELECTRON_CHARGE) /
+             (2. * get_physical_constant(PHYSICALCONSTANT_ELECTRIC_CONSTANT) *
+              get_physical_constant(PHYSICALCONSTANT_LIGHTSPEED) *
+              get_physical_constant(PHYSICALCONSTANT_PLANCK));
+
+    case PHYSICALCONSTANT_BOHR_RADIUS:
+      // h / (2 * pi * m_e * c * alpha)
+      return get_physical_constant(PHYSICALCONSTANT_PLANCK) /
+             (2. * M_PI *
+              get_physical_constant(PHYSICALCONSTANT_ELECTRON_MASS) *
+              get_physical_constant(PHYSICALCONSTANT_LIGHTSPEED) *
+              get_physical_constant(PHYSICALCONSTANT_FINE_STRUCTURE_CONSTANT));
 
     default:
       cmac_error("Unknown physical constant: %i!", name);

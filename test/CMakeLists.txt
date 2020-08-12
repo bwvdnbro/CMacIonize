@@ -1817,6 +1817,13 @@ if(HAVE_HDF5)
                 LIBS ${HDF5_LIBRARIES})
 endif(HAVE_HDF5)
 
+## Unit test for ContinuumEmission
+set(TESTCONTINUUMEMISSION_SOURCES
+    testContinuumEmission.cpp
+    )
+add_unit_test(NAME testContinuumEmission
+              SOURCES ${TESTCONTINUUMEMISSION_SOURCES})
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME)
