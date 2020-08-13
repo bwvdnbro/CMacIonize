@@ -414,8 +414,10 @@ int EmissivityCalculationSimulation::do_simulation(CommandLineParser &parser,
           const double ne = nHp + nHep;
           // convert Hz^-1 to m^-1 by multiplying with dnu/dlambda
           spectrum[i * number_of_spectral_bins + ibin] +=
-              pifac * ne * nHp * continuum_emission.gamma_HI(lambda, T) * dnu /
-              dlambda;
+              pifac * ne * nHp *
+              (continuum_emission.gamma_HI(lambda, T) +
+               ContinuumEmission::gamma_2q(lambda, T, ne, nHp)) *
+              dnu / dlambda;
         }
       }
 

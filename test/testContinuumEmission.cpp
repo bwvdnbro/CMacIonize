@@ -46,11 +46,11 @@ int main() {
         1.e4;
 
     std::ofstream ofile("test_continuum_emission.txt");
-    ofile
-        << "# lambda (m)\tnu (Hz)\thnu "
-           "(J)\tepsilon1\tgauntII(1)\tepsilon2\tgauntII(2)\tgauntIII\ta1 "
-           "(m^2)\ta2 (m^2)\tgamma1 (J m^3 s^-1 Hz^-1)\tgamma2 (J m^3 s^-1 "
-           "Hz^-1)\tgamma_bf (J m^3 s^-1 Hz^-1)\tgamma_HI (J m^3 s^-1 Hz^-1)\n";
+    ofile << "# lambda (m)\tnu (Hz)\thnu "
+             "(J)\tepsilon1\tgauntII(1)\tepsilon2\tgauntII(2)\tgauntIII\ta1 "
+             "(m^2)\ta2 (m^2)\tgamma1 (J m^3 s^-1 Hz^-1)\tgamma2 (J m^3 s^-1 "
+             "Hz^-1)\tgamma_bf (J m^3 s^-1 Hz^-1)\tgamma_HI (J m^3 s^-1 "
+             "Hz^-1)\tg_nu (J Hz^-1)\tgamma_2q (J m^3 s^-1 Hz^-1)\n";
     for (uint_fast32_t i = 0; i < 1000u; ++i) {
       const double lambda = 1.e-8 + i * 1.e-9;
       const double nu = PhysicalConstants::get_physical_constant(
@@ -79,11 +79,13 @@ int main() {
       const double gamma_ff =
           continuum_emission.gamma_free_free(1, hnu, kT10000);
       const double gamma_HI = continuum_emission.gamma_HI(lambda, 1.e4);
+      const double g_nu = ContinuumEmission::g_nu(nu);
+      const double gamma_2q = ContinuumEmission::gamma_2q(lambda, 1.e4, 0., 0.);
       ofile << lambda << "\t" << nu << "\t" << hnu << "\t" << epsilon1 << "\t"
             << gauntII1 << "\t" << epsilon2 << "\t" << gauntII2 << "\t"
             << gauntIII << "\t" << a1 << "\t" << a2 << "\t" << gamma1 << "\t"
             << gamma2 << "\t" << gamma_bf << "\t" << gamma_ff << "\t"
-            << gamma_HI << "\n";
+            << gamma_HI << "\t" << g_nu << "\t" << gamma_2q << "\n";
     }
   }
 
@@ -110,6 +112,19 @@ int main() {
       // a somewhat longer wavelength and increased the allowed relative
       // difference to 0.003.
       assert_values_equal_rel(gamma, gamma_HI, 3.e-3);
+    }
+  }
+
+  /// visual inspection of temperature dependent fits
+  {
+    std::ofstream ofile("test_continuum_emission_T.txt");
+    ofile << "# T (K)\talpha_2_2S (m^3 s^-1)\tq_p (m^3 s^-1)\tq_e (m^3 s^-1)\n";
+    for (uint_fast32_t i = 0; i < 101u; ++i) {
+      const double T = 5000. + i * 150.;
+      const double alpha_2_2S = ContinuumEmission::alpha_2_2S(T);
+      const double q_p = ContinuumEmission::q_p(T);
+      const double q_e = ContinuumEmission::q_e(T);
+      ofile << T << "\t" << alpha_2_2S << "\t" << q_p << "\t" << q_e << "\n";
     }
   }
 

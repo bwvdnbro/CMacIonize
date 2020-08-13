@@ -320,4 +320,111 @@ public:
 
     return gamma_bound_free(1, hnu, kT) + gamma_free_free(1, hnu, kT);
   }
+
+  /**
+   * @brief Logarithmic fit to Osterbrock & Ferland (2006), Table 4.11
+   *
+   * @param T Temperature (in K).
+   * @return Effective recombination rate for populating the hydrogen @f$2^2S@f$
+   * level (in m^3 s^-1).
+   */
+  static inline double alpha_2_2S(const double T) {
+
+    cmac_assert(T > 0.);
+
+    const double a = -16.18477815;
+    const double b = -0.72314959;
+    return std::pow(10., a + b * std::log10(T));
+  }
+
+  /**
+   * @brief Logarithmic fit to Osterbrock & Ferland (2006), Table 4.12
+   *
+   * Note that g_nu() is only defined for @f$\nu < \nu{}_{12}@f$, with
+   * @f$\nu{}_{12} = 1.234\times{}10^{15}@f$ Hz. g_nu() is furthermore symmetric
+   * around @f$\nu{}_{12}/2@f$, with (Osterbrock & Ferland, 2006):
+   * @f[
+   *   g_\nu{}(\nu{} > \nu{}_{12}/2) = \frac{\nu{}}{\nu{}_{12} - \nu{}}
+   *     g_{\nu{}}(\nu{}_{12} - \nu{}).
+   * @f]
+   *
+   * @param nu Photon frequency (in Hz).
+   * @return Spectral distribution of HI two-photon emission (in J Hz^-1).
+   */
+  static inline double g_nu(const double nu) {
+
+    cmac_assert(nu > 0.);
+
+    // check if we are within the validity range of the two-photon emission
+    // spectrum
+    const double nu12 = 1.234e15;
+    if (nu >= 2. * nu12) {
+      return 0.;
+    }
+
+    // determine in which half of the spectrum we are
+    const double nuprime = (nu > nu12) ? 2. * nu12 - nu : nu;
+    const double factor = (nu > nu12) ? nu / nuprime : 1.;
+
+    // now apply the logarithmic fit
+    const double a = -133.57015742;
+    const double b = 12.23297999;
+    const double c = -0.36928204;
+    const double lognu = std::log10(nuprime);
+    return factor * std::pow(10., a + b * lognu + c * lognu * lognu);
+  }
+
+  /**
+   * @brief Linear fit to Osterbrock & Ferland (2006), Table 4.10.
+   *
+   * @param T Temperature (in K).
+   * @return Collisional transition rate coefficient for transitions from the
+   * @f$2^2S@f$ to @f$2^2P@f$ level of hydrogen due to collisions with free
+   * protons (in m^3 s^-1).
+   */
+  static inline double q_p(const double T) {
+    const double a = 5.21e-10;
+    const double b = -4.70e-15;
+    return a + b * T;
+  }
+
+  /**
+   * @brief Linear fit to Osterbrock & Ferland (2006), Table 4.10.
+   *
+   * @param T Temperature (in K).
+   * @return Collisional transition rate coefficient for transitions from the
+   * @f$2^2S@f$ to @f$2^2P@f$ level of hydrogen due to collisions with free
+   * electrons (in m^3 s^-1).
+   */
+  static inline double q_e(const double T) {
+    const double a = 7.0e-11;
+    const double b = -1.3e-15;
+    return a + b * T;
+  }
+
+  /**
+   * @brief Emission coefficient for hydrogen two-photon decay.
+   *
+   * @param lambda Photon wavelength (in m).
+   * @param T Temperature (in K).
+   * @param n_e Electron density (in m^-3).
+   * @param n_p Proton density (in m^-3).
+   * @return Emission coefficient for two-photon decay (J  m^3 s^-1 Hz^-1).
+   */
+  static inline double gamma_2q(const double lambda, const double T,
+                                const double n_e, const double n_p) {
+
+    cmac_assert(lambda > 0.);
+    cmac_assert(T > 0.);
+    cmac_assert(n_e >= 0.);
+    cmac_assert(n_p >= 0.);
+
+    const double nu =
+        PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_LIGHTSPEED) /
+        lambda;
+
+    // transition probability for two-photon decay
+    const double A = 8.23;
+    return alpha_2_2S(T) * g_nu(nu) * A / (A + n_p * q_p(T) + n_e * q_e(T));
+  }
 };
