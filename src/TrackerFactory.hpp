@@ -30,6 +30,7 @@
 #include "YAMLDictionary.hpp"
 
 // implementations
+#include "AbsorptionTracker.hpp"
 #include "MultiTracker.hpp"
 #include "SpectrumTracker.hpp"
 #include "WeightedSpectrumTracker.hpp"
@@ -44,8 +45,10 @@ public:
    * YAMLDictionary.
    *
    * Supported types are:
+   *  - Absorption: Absorption tracker that tracks the absorption per ion in
+   *    each cell.
    *  - Multi: Dummy that allows attaching multiple trackers to a single cell.
-   *  - Spectrum: Spectrum tracker
+   *  - Spectrum: Spectrum tracker.
    *  - WeightedSpectrum: Spectrum tracker that weighs contributions according
    *    to the projected surface area for incoming photon packets.
    *
@@ -59,7 +62,9 @@ public:
 
     const std::string type = blocks.get_value< std::string >(name + "type");
 
-    if (type == "Multi") {
+    if (type == "Absorption") {
+      return new AbsorptionTracker(name, blocks);
+    } else if (type == "Multi") {
       return new MultiTracker(name, blocks);
     } else if (type == "Spectrum") {
       return new SpectrumTracker(name, blocks);

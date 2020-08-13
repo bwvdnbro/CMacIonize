@@ -146,6 +146,13 @@ public:
    * @param stream std::ostream to write to.
    */
   virtual void describe(const std::string prefix, std::ostream &stream) const {}
+
+  /**
+   * @brief Is this tracker a MultiTracker?
+   *
+   * @return False.
+   */
+  virtual bool is_multi_tracker() const { return false; }
 };
 
 #endif // TRACKER_HPP
