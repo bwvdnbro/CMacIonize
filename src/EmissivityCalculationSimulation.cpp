@@ -29,6 +29,7 @@
 #include "AbundanceModelFactory.hpp"
 #include "Abundances.hpp"
 #include "CommandLineParser.hpp"
+#include "ContinuumEmission.hpp"
 #include "EmissivityCalculator.hpp"
 #include "HDF5Tools.hpp"
 #include "Log.hpp"
@@ -384,12 +385,37 @@ int EmissivityCalculationSimulation::do_simulation(CommandLineParser &parser,
         }
       }
 
-      // normalise the spectrum by dividing by the wavelength bin size
+      // normalise the line spectrum by dividing by the wavelength bin size
       for (uint_fast32_t ibin = 0; ibin < number_of_spectral_bins; ++ibin) {
         const double dlambda =
             wavelength_edges[ibin + 1] - wavelength_edges[ibin];
         for (uint_fast32_t i = 0; i < temperature.size(); ++i) {
           spectrum[i * number_of_spectral_bins + ibin] /= dlambda;
+        }
+      }
+
+      // add the continuum
+      const double pifac = 0.25 / M_PI;
+      ContinuumEmission continuum_emission;
+      for (uint_fast32_t ibin = 0; ibin < number_of_spectral_bins; ++ibin) {
+        const double lambda = wavelengths_mid[ibin];
+        const double dlambda =
+            wavelength_edges[ibin + 1] - wavelength_edges[ibin];
+        const double dnu = frequency_edges[ibin] - frequency_edges[ibin + 1];
+        cmac_assert(dnu > 0.);
+        for (uint_fast32_t i = 0; i < temperature.size(); ++i) {
+          const double T = temperature[i];
+          const double nH = number_density[i];
+          const double xH = neutral_fractions[ION_H_n][i];
+          const double xHe = neutral_fractions[ION_He_n][i];
+          const double nHp = (1. - xH) * nH;
+          const double nHep =
+              (1. - xHe) * abundances.get_abundance(ELEMENT_He) * nH;
+          const double ne = nHp + nHep;
+          // convert Hz^-1 to m^-1 by multiplying with dnu/dlambda
+          spectrum[i * number_of_spectral_bins + ibin] +=
+              pifac * ne * nHp * continuum_emission.gamma_HI(lambda, T) * dnu /
+              dlambda;
         }
       }
 
