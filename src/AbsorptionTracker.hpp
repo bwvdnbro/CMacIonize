@@ -183,6 +183,10 @@ public:
    */
   virtual void create_group(const HDF5Tools::HDF5Group group,
                             const uint_fast32_t group_size) {
+
+    std::string type_string = "Absorption";
+    HDF5Tools::write_attribute< std::string >(group, "type", type_string);
+
     std::vector< std::string > ion_names(NUMBER_OF_IONNAMES);
     for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; i++) {
       ion_names[i] = get_ion_name(i);

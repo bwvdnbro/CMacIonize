@@ -51,6 +51,9 @@ private:
   /*! @brief List of trackers. */
   std::vector< Tracker * > _trackers;
 
+  /*! @brief List of multi-trackers (for cells with more than one tracker). */
+  std::vector< MultiTracker * > _multi_trackers;
+
   /*! @brief Indices of the original tracker corresponding to each copy. */
   std::vector< size_t > _originals;
 
@@ -193,6 +196,10 @@ public:
     for (uint_fast32_t i = 0; i < _trackers.size(); ++i) {
       delete _trackers[i];
     }
+    for (uint_fast32_t i = 0; i < _multi_trackers.size(); ++i) {
+      _multi_trackers[i]->erase_trackers();
+      delete _multi_trackers[i];
+    }
   }
 
   /**
@@ -206,12 +213,23 @@ public:
         cmac_error("Tracker is not inside grid!");
       }
       auto it = grid.get_cell(_tracker_positions[i]);
+      _trackers[i]->normalize_for_cell(it);
       IonizationVariables &ionization_variables = it.get_ionization_variables();
       if (ionization_variables.get_tracker() != nullptr) {
-        cmac_error("Cell already has a tracker!");
+        MultiTracker *multi_tracker;
+        if (ionization_variables.get_tracker()->is_multi_tracker()) {
+          multi_tracker =
+              static_cast< MultiTracker * >(ionization_variables.get_tracker());
+        } else {
+          multi_tracker = new MultiTracker();
+          multi_tracker->add_tracker(ionization_variables.get_tracker());
+          ionization_variables.add_tracker(multi_tracker);
+          _multi_trackers.push_back(multi_tracker);
+        }
+        multi_tracker->add_tracker(_trackers[i]);
+      } else {
+        ionization_variables.add_tracker(_trackers[i]);
       }
-      _trackers[i]->normalize_for_cell(it);
-      ionization_variables.add_tracker(_trackers[i]);
     }
   }
 
@@ -229,13 +247,24 @@ public:
       auto gridit = grid.get_subgrid(_tracker_positions[i]);
       {
         auto cellit = (*gridit).get_cell(_tracker_positions[i]);
+        _trackers[i]->normalize_for_cell(cellit);
         IonizationVariables &ionization_variables =
             cellit.get_ionization_variables();
         if (ionization_variables.get_tracker() != nullptr) {
-          cmac_error("Cell already has a tracker!");
+          MultiTracker *multi_tracker;
+          if (ionization_variables.get_tracker()->is_multi_tracker()) {
+            multi_tracker = static_cast< MultiTracker * >(
+                ionization_variables.get_tracker());
+          } else {
+            multi_tracker = new MultiTracker();
+            multi_tracker->add_tracker(ionization_variables.get_tracker());
+            ionization_variables.add_tracker(multi_tracker);
+            _multi_trackers.push_back(multi_tracker);
+          }
+          multi_tracker->add_tracker(_trackers[i]);
+        } else {
+          ionization_variables.add_tracker(_trackers[i]);
         }
-        _trackers[i]->normalize_for_cell(cellit);
-        ionization_variables.add_tracker(_trackers[i]);
       }
       auto copies = gridit.get_copies();
       bool first = true;
@@ -244,9 +273,6 @@ public:
             (*copyit)
                 .get_cell(_tracker_positions[i])
                 .get_ionization_variables();
-        if (ionization_variables.get_tracker() != nullptr) {
-          cmac_error("Cell already has a tracker!");
-        }
         Tracker *new_tracker = _trackers[i]->duplicate();
         _trackers.push_back(new_tracker);
         _originals.push_back(i);

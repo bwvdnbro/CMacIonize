@@ -28,6 +28,7 @@
 
 #include "Tracker.hpp"
 
+#include <sstream>
 #include <vector>
 
 class Photon;
@@ -55,6 +56,34 @@ public:
 
   virtual ~MultiTracker();
 
+  /**
+   * @brief Add the given tracker to the list of stored trackers.
+   *
+   * @param tracker Tracker to add.
+   * @param name Name for this tracker (default: tracker X, where X is the index
+   * of this tracker in the list).
+   */
+  inline void add_tracker(Tracker *tracker, std::string name = "") {
+
+    if (name == "") {
+      std::stringstream namestr;
+      namestr << "tracker " << _trackers.size();
+      name = namestr.str();
+    }
+    _trackers.push_back(tracker);
+    _output_names.push_back(name);
+  }
+
+  /**
+   * @brief Erase the internally stored trackers to make sure they are not
+   * deleted twice.
+   */
+  inline void erase_trackers() {
+    for (uint_fast32_t i = 0; i < _trackers.size(); ++i) {
+      _trackers[i] = nullptr;
+    }
+  }
+
   virtual Tracker *duplicate();
   virtual void merge(Tracker *tracker);
 
@@ -63,6 +92,13 @@ public:
                             const double *absorption);
 
   virtual void output_tracker(const std::string filename) const;
+
+  /**
+   * @brief Is this tracker a MultiTracker?
+   *
+   * @return True.
+   */
+  virtual bool is_multi_tracker() const { return true; }
 };
 
 #endif // MULTITRACKER_HPP
