@@ -52,6 +52,80 @@ private:
   /*! @brief Constant factor in the first equation of Brown & Mathews (1970). */
   const double _gamma_n_factor;
 
+  /*! @brief Constant factor in the second equation of Brown & Mathews
+   *  (1970). */
+  const double _free_free_factor;
+
+  /**
+   * @brief Compute the constant prefactor in the Seaton (1960) cross section
+   * expression.
+   *
+   * @return Constant prefactor.
+   */
+  static inline double compute_Seaton_factor() {
+
+    const double alpha = PhysicalConstants::get_physical_constant(
+        PHYSICALCONSTANT_FINE_STRUCTURE_CONSTANT);
+    const double a0 =
+        PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_BOHR_RADIUS);
+
+    return 64. * alpha * M_PI * a0 * a0 / (3. * std::sqrt(3.));
+  }
+
+  /**
+   * @brief Compute the constant prefactor in the expression for bound-free
+   * emission.
+   *
+   * @return Constant prefactor.
+   */
+  static inline double compute_gamma_n_factor() {
+
+    const double h =
+        PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_PLANCK);
+    const double c =
+        PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_LIGHTSPEED);
+    const double m_e = PhysicalConstants::get_physical_constant(
+        PHYSICALCONSTANT_ELECTRON_MASS);
+    return std::sqrt(2. / M_PI) * 2. * h / (c * c * m_e * std::sqrt(m_e));
+  }
+
+  /**
+   * @brief Compute the constant prefactor in the expression for free-free
+   * emission.
+   *
+   * @param IH Ionization energy of hydrogen (in J).
+   * @return Constant prefactor.
+   */
+  static inline double compute_free_free_factor(const double IH) {
+
+    // note that the Brown & Mathews (1970) and Osterbrock & Ferland (2006)
+    // equations use Gaussian CGS units. In these units, the electric
+    // constant epsilon0 is set to 1, and a 4*pi factor is missing from the
+    // Maxwell equations. As a result, the electron charge e has units of
+    // statC, with 1 statC = 1 g^(1/2) cm^(3/2) s^-1
+    // We convert the electron charge in SI units (C = A s) to the equivalent
+    // "Gaussian SI" units kg^(1/2) m^(3/2) s^-1 and use the same expression
+    // as in the works mentioned above.
+
+    // electron charge in SI units: A s
+    const double eSI = PhysicalConstants::get_physical_constant(
+        PHYSICALCONSTANT_ELECTRON_CHARGE);
+    // electron charge in "Gaussian SI" units: kg^(1/2) m^(3/2) s^-1
+    const double e = eSI / std::sqrt(4. * M_PI *
+                                     PhysicalConstants::get_physical_constant(
+                                         PHYSICALCONSTANT_ELECTRIC_CONSTANT));
+    const double e2 = e * e;
+    const double m_e = PhysicalConstants::get_physical_constant(
+        PHYSICALCONSTANT_ELECTRON_MASS);
+    const double c =
+        PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_LIGHTSPEED);
+    const double h =
+        PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_PLANCK);
+
+    return 32. * e2 * e2 * h / (3. * m_e * m_e * c * c * c) *
+           std::sqrt(M_PI * IH / 3.);
+  }
+
 public:
   /**
    * @brief Constructor.
@@ -59,26 +133,9 @@ public:
   ContinuumEmission()
       : _IH(13.6 * PhysicalConstants::get_physical_constant(
                        PHYSICALCONSTANT_ELECTRONVOLT)),
-        _Seaton_factor(64. *
-                       PhysicalConstants::get_physical_constant(
-                           PHYSICALCONSTANT_FINE_STRUCTURE_CONSTANT) *
-                       M_PI *
-                       PhysicalConstants::get_physical_constant(
-                           PHYSICALCONSTANT_BOHR_RADIUS) *
-                       PhysicalConstants::get_physical_constant(
-                           PHYSICALCONSTANT_BOHR_RADIUS) /
-                       (3. * std::sqrt(3.))),
-        _gamma_n_factor(
-            std::sqrt(2. / M_PI) * 2. *
-            PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_PLANCK) /
-            (PhysicalConstants::get_physical_constant(
-                 PHYSICALCONSTANT_LIGHTSPEED) *
-             PhysicalConstants::get_physical_constant(
-                 PHYSICALCONSTANT_LIGHTSPEED) *
-             PhysicalConstants::get_physical_constant(
-                 PHYSICALCONSTANT_ELECTRON_MASS) *
-             std::sqrt(PhysicalConstants::get_physical_constant(
-                 PHYSICALCONSTANT_ELECTRON_MASS)))) {}
+        _Seaton_factor(compute_Seaton_factor()),
+        _gamma_n_factor(compute_gamma_n_factor()),
+        _free_free_factor(compute_free_free_factor(_IH)) {}
 
   /**
    * @brief Asymptotic fit to the Kramers-Gaunt factor from Seaton (1960),
@@ -148,10 +205,11 @@ public:
     cmac_assert(hnu >= 0.);
 
     const double epsilon = hnu / (Z * Z * _IH) - 1.0 / (n * n);
-    return (epsilon >= 0.) ? _Seaton_factor * n /
-                                 (Z * Z * std::cbrt(1. + n * n * epsilon)) *
-                                 gauntII(n, epsilon)
-                           : 0.;
+    const double nnepsp1 = 1. + n * n * epsilon;
+    return (epsilon >= 0.)
+               ? _Seaton_factor * n / (Z * Z * nnepsp1 * nnepsp1 * nnepsp1) *
+                     gauntII(n, epsilon)
+               : 0.;
   }
 
   /**
@@ -182,5 +240,84 @@ public:
     return _gamma_n_factor * n2 * std::exp((In - hnu) / kT) * hnu_sqrtkT *
            hnu_sqrtkT * hnu_sqrtkT *
            level_photoionization_cross_section(Z, n, hnu);
+  }
+
+  /**
+   * @brief Get the total emission coefficient for continuous emission at photon
+   * energy @f$h\nu{}@f$ due to recombination to all excited states of the
+   * hydrogenic ion with charge @f$Z@f$.
+   *
+   * This is simply a sum over gamma_n() values for a sufficient number of
+   * levels.
+   *
+   * @param Z Charge number of the ion.
+   * @param hnu Photon energy (in J).
+   * @param kT Energy of the electron gas (in J).
+   * @return Corresponding total bound-free continuous emission coefficient
+   * (in J m^3 s^-1 Hz^-1).
+   */
+  inline double gamma_bound_free(const uint_fast32_t Z, const double hnu,
+                                 const double kT) const {
+
+    cmac_assert(Z > 0);
+    cmac_assert(hnu > 0.);
+    cmac_assert(kT > 0.);
+
+    double result = 0.;
+    for (uint_fast32_t n = 1; n < 1000u; ++n) {
+      result += gamma_n(Z, n, hnu, kT);
+    }
+    return result;
+  }
+
+  /**
+   * @brief Get the total emission coefficient for continuous emission at photon
+   * energy @f$h\nu{}@f$ due to free-free Brehmsstrahlung.
+   *
+   * This corresponds to the second equation in Brown & Mathews (1970).
+   *
+   * @param Z Charge number of the ion.
+   * @param hnu Photon energy (in J).
+   * @param kT Energy of the electron gas (in J).
+   * @return Corresponding total free-free continuous emission coefficient
+   * (in J m^3 s^-1 Hz^-1).
+   */
+  inline double gamma_free_free(const uint_fast32_t Z, const double hnu,
+                                const double kT) const {
+
+    cmac_assert(Z > 0);
+    cmac_assert(hnu > 0.);
+    cmac_assert(kT > 0.);
+
+    return _free_free_factor * Z * Z / std::sqrt(kT) * std::exp(-hnu / kT) *
+           gauntIII(Z, hnu, kT);
+  }
+
+  /**
+   * @brief Get the continuous emission coefficient for emission by neutral
+   * hydrogen at the given wavelength and the given electron gas temperature.
+   *
+   * This is simply the sum of gamma_bound_free() and gamma_free_free() for
+   * @f$Z=1@f$.
+   *
+   * @param lambda Wavelength of emission (in m).
+   * @param T Temperature of the electron gas (in K).
+   * @return Continuous emission coefficient (in J m^3 s^-1 Hz^-1).
+   */
+  inline double gamma_HI(const double lambda, const double T) const {
+
+    cmac_assert(lambda > 0.);
+    cmac_assert(T > 0.);
+
+    const double nu =
+        PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_LIGHTSPEED) /
+        lambda;
+    const double hnu =
+        PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_PLANCK) * nu;
+    const double kT =
+        PhysicalConstants::get_physical_constant(PHYSICALCONSTANT_BOLTZMANN) *
+        T;
+
+    return gamma_bound_free(1, hnu, kT) + gamma_free_free(1, hnu, kT);
   }
 };

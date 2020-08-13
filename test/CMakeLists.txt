@@ -1823,6 +1823,9 @@ set(TESTCONTINUUMEMISSION_SOURCES
     )
 add_unit_test(NAME testContinuumEmission
               SOURCES ${TESTCONTINUUMEMISSION_SOURCES})
+configure_file(${PROJECT_SOURCE_DIR}/test/1970BrownMathews_HI.txt
+               ${PROJECT_BINARY_DIR}/rundir/test/1970BrownMathews_HI.txt
+               COPYONLY)
 
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
