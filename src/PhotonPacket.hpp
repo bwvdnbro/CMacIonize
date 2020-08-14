@@ -178,6 +178,8 @@ public:
    */
   inline void set_direction(const CoordinateVector<> direction) {
     _direction = direction;
+    // make sure the direction is properly normalised
+    _direction /= _direction.norm();
   }
 
   /**

@@ -91,9 +91,17 @@ int main(int argc, char **argv) {
   {
     RandomGenerator rg(42);
     for (uint_fast32_t i = 0; i < 1e6; ++i) {
-      CoordinateVector<> direction(rg.get_uniform_random_double(),
-                                   rg.get_uniform_random_double(),
-                                   rg.get_uniform_random_double());
+      // draw two pseudo random numbers
+      const double cost = 2. * rg.get_uniform_random_double() - 1.;
+      const double phi = 2. * M_PI * rg.get_uniform_random_double();
+
+      // now use them to get all directional angles
+      const double sint = std::sqrt(std::max(1. - cost * cost, 0.));
+      const double cosp = std::cos(phi);
+      const double sinp = std::sin(phi);
+
+      // set the direction...
+      CoordinateVector<> direction(sint * cosp, sint * sinp, cost);
       direction /= direction.norm();
       const double area =
           WeightedSpectrumTracker::get_projected_area(direction);

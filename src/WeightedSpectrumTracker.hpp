@@ -254,10 +254,13 @@ public:
         CoordinateVector<>::dot_product(p110_111, p110_011);
     const double p110_011_p110_010 =
         CoordinateVector<>::dot_product(p110_011, p110_010);
-    const double ay1 = std::sqrt(p110_111.norm2() * p110_011.norm2() -
-                                 p110_111_p110_011 * p110_111_p110_011);
-    const double ay2 = std::sqrt(p110_011.norm2() * p110_010.norm2() -
-                                 p110_011_p110_010 * p110_011_p110_010);
+    // make sure we don't get NaN
+    const double ay1_2 = p110_111.norm2() * p110_011.norm2() -
+                         p110_111_p110_011 * p110_111_p110_011;
+    const double ay1 = (ay1_2 > 0.) ? std::sqrt(ay1_2) : 0.;
+    const double ay2_2 = p110_011.norm2() * p110_010.norm2() -
+                         p110_011_p110_010 * p110_011_p110_010;
+    const double ay2 = (ay2_2 > 0.) ? std::sqrt(ay2_2) : 0.;
 
     const CoordinateVector<> p101_001 = p001 - p101;
     const CoordinateVector<> p101_011 = p011 - p101;
@@ -266,12 +269,22 @@ public:
         CoordinateVector<>::dot_product(p101_001, p101_011);
     const double p101_011_p101_111 =
         CoordinateVector<>::dot_product(p101_011, p101_111);
-    const double az1 = std::sqrt(p101_001.norm2() * p101_011.norm2() -
-                                 p101_001_p101_011 * p101_001_p101_011);
-    const double az2 = std::sqrt(p101_011.norm2() * p101_111.norm2() -
-                                 p101_011_p101_111 * p101_011_p101_111);
+    // make sure we don't get NaN
+    const double az1_2 = p101_001.norm2() * p101_011.norm2() -
+                         p101_001_p101_011 * p101_001_p101_011;
+    const double az1 = (az1_2 > 0.) ? std::sqrt(az1_2) : 0.;
+    const double az2_2 = p101_011.norm2() * p101_111.norm2() -
+                         p101_011_p101_111 * p101_011_p101_111;
+    const double az2 = (az2_2 > 0.) ? std::sqrt(az2_2) : 0.;
 
-    return 0.5 * (ax1 + ax2 + ay1 + ay2 + az1 + az2);
+    const double weight = 0.5 * (ax1 + ax2 + ay1 + ay2 + az1 + az2);
+
+    cmac_assert_message(
+        weight == weight, "direction: %g %g %g (%lu %lu %lu)", direction.x(),
+        direction.y(), direction.z(), Utilities::as_bytes(direction.x()),
+        Utilities::as_bytes(direction.y()), Utilities::as_bytes(direction.z()));
+
+    return weight;
   }
 
   /**
@@ -290,10 +303,6 @@ public:
     cmac_assert(index < _number_counts[0].size());
 
     const double weight = get_projected_area(photon.get_direction());
-
-    cmac_assert_message(weight == weight, "direction: %g %g %g",
-                        photon.get_direction().x(), photon.get_direction().y(),
-                        photon.get_direction().z());
 
     const double inverse_weight = 1. / weight;
     cmac_assert(!std::isinf(inverse_weight));
@@ -320,10 +329,6 @@ public:
     cmac_assert(index < _number_counts[0].size());
 
     const double weight = get_projected_area(photon.get_direction());
-
-    cmac_assert_message(weight == weight, "direction: %g %g %g",
-                        photon.get_direction().x(), photon.get_direction().y(),
-                        photon.get_direction().z());
 
     const double inverse_weight = 1. / weight;
     cmac_assert(!std::isinf(inverse_weight));
