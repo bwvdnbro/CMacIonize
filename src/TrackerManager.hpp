@@ -269,10 +269,6 @@ public:
       auto copies = gridit.get_copies();
       bool first = true;
       for (auto copyit = copies.first; copyit != copies.second; ++copyit) {
-        IonizationVariables &ionization_variables =
-            (*copyit)
-                .get_cell(_tracker_positions[i])
-                .get_ionization_variables();
         Tracker *new_tracker = _trackers[i]->duplicate();
         _trackers.push_back(new_tracker);
         _originals.push_back(i);
@@ -280,7 +276,25 @@ public:
           _copies[i] = _trackers.size() - 1;
           first = false;
         }
-        ionization_variables.add_tracker(new_tracker);
+        IonizationVariables &ionization_variables =
+            (*copyit)
+                .get_cell(_tracker_positions[i])
+                .get_ionization_variables();
+        if (ionization_variables.get_tracker() != nullptr) {
+          MultiTracker *multi_tracker;
+          if (ionization_variables.get_tracker()->is_multi_tracker()) {
+            multi_tracker = static_cast< MultiTracker * >(
+                ionization_variables.get_tracker());
+          } else {
+            multi_tracker = new MultiTracker();
+            multi_tracker->add_tracker(ionization_variables.get_tracker());
+            ionization_variables.add_tracker(multi_tracker);
+            _multi_trackers.push_back(multi_tracker);
+          }
+          multi_tracker->add_tracker(_trackers[i]);
+        } else {
+          ionization_variables.add_tracker(_trackers[i]);
+        }
       }
     }
   }
