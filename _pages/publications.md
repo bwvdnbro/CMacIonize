@@ -4,6 +4,23 @@ title: Publications
 permalink: /publications/
 
 publications:
+  - doi: 10.1051/0004-6361/202038364
+    inpress: false
+    ads: 2020A%26A...641A..66V
+    title: >-
+      CMACIONIZE 2.0: a novel task-based approach to Monte Carlo 
+      radiation transfer
+    authors:
+      - name: Vandenbroucke B.
+      - name: Camps P.
+    journal: Astronomy &amp; Astrophysics
+    volume: 641
+    page: A66
+    month: 9
+    year: 2020
+    description: >-
+      Paper that describes the new task-based Monte Carlo radiative transfer
+      algorithm that underlies CMacIonize version 2.0.
   - doi: 10.1093/mnras/stz1841
     inpress: false
     ads: 2019MNRAS.488.1977V
