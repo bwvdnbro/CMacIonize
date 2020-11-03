@@ -32,3 +32,5 @@
 .idea*
 cmake-build-debug*
 
+# User build directory
+build*
