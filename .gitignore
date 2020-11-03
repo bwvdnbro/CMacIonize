@@ -27,3 +27,8 @@
 *.exe
 *.out
 *.app
+
+# Clion directories
+.idea*
+cmake-build-debug*
+
