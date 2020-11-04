@@ -427,7 +427,6 @@ public:
    * @brief Reduce the given variable across all processes.
    *
    * @param value Variable to reduce.
-   * @return Reduced variable.
    */
   template < MPIOperatorType _operatortype_, typename _datatype_ >
   void reduce(_datatype_ &value) const {

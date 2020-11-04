@@ -1011,8 +1011,6 @@ void NewVoronoiCellConstructor::n_to_2n_flip(uint_fast32_t new_vertex,
  * @param top1 Index of the vertex of the second tetrahedron opposite the first
  * tetrahedron.
  * @param tn Array to store the indices of the newly created tetrahedra in.
- * @return First tetrahedron in the stack that needs to be tested after the
- * flip.
  */
 void NewVoronoiCellConstructor::two_to_three_flip(uint_fast32_t tetrahedron0,
                                                   uint_fast32_t tetrahedron1,
@@ -1167,8 +1165,6 @@ void NewVoronoiCellConstructor::two_to_three_flip(uint_fast32_t tetrahedron0,
  * @param tetrahedron2 Third tetrahedron.
  * @param tetrahedron3 Fourth tetrahedron.
  * @param tn Array to store the indices of the newly created tetrahedra in.
- * @return First tetrahedron in the stack that needs to be tested after the
- * flip.
  */
 void NewVoronoiCellConstructor::four_to_four_flip(uint_fast32_t tetrahedron0,
                                                   uint_fast32_t tetrahedron1,
@@ -1380,8 +1376,6 @@ void NewVoronoiCellConstructor::four_to_four_flip(uint_fast32_t tetrahedron0,
  * @param tetrahedron1 Second tetrahedron.
  * @param tetrahedron2 Third tetrahedron.
  * @param tn Array to store the indices of the newly created tetrahedra in.
- * @return First tetrahedron in the stack that needs to be tested after the
- * flip.
  */
 void NewVoronoiCellConstructor::three_to_two_flip(uint_fast32_t tetrahedron0,
                                                   uint_fast32_t tetrahedron1,
