@@ -322,8 +322,8 @@ public:
       _conserved[i] = other._conserved[i];
       _delta_conserved[i] = other._delta_conserved[i];
       _primitive_gradients[i] = other._primitive_gradients[i];
-      _gravitational_acceleration[i] = other._gravitational_acceleration[i];
     }
+    _gravitational_acceleration = other._gravitational_acceleration;
 
     _energy_rate_term = other._energy_rate_term;
     _energy_term = other._energy_term;

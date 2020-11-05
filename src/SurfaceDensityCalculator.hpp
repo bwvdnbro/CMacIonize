@@ -126,7 +126,6 @@ public:
    * @param number_of_subgrids Number of subgrids in each coordinate direction.
    * @param number_of_cells Number of cells per coordinate direction for a
    * single subgrid.
-   * @param number_of_cells
    */
   inline SurfaceDensityCalculator(
       const CoordinateVector< int_fast32_t > number_of_subgrids,
