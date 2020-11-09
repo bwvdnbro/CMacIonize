@@ -757,17 +757,6 @@ add_unit_test(NAME testParallelCartesianDensityGrid
               LIBS ${HDF5_LIBRARIES})
 endif(HAVE_HDF5)
 
-## PhotonPool test
-set(TESTPHOTONPOOL_SOURCES
-    testPhotonPool.cpp
-
-    ../src/PhotonBatch.hpp
-    ../src/PhotonBucket.hpp
-    ../src/PhotonPool.hpp
-)
-add_unit_test(NAME testPhotonPool
-              SOURCES ${TESTPHOTONPOOL_SOURCES})
-
 ## AsciiFileDensityGridWriter test
 set(TESTASCIIFILEDENSITYGRIDWRITER_SOURCES
     testAsciiFileDensityGridWriter.cpp
