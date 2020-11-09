@@ -691,21 +691,6 @@ add_unit_test(NAME testAtomic
               SOURCES ${TESTATOMIC_SOURCES})
 endif(HAVE_OPENMP)
 
-## Unit test for MPIMessage
-if(HAVE_MPI)
-set(TESTMPIMESSAGE_SOURCES
-    testMPIMessage.cpp
-
-    ../src/MPICommunicator.hpp
-    ../src/MPIMessage.hpp
-    ../src/MPIMessageBox.hpp
-    ../src/MPIUtilities.hpp
-)
-add_unit_test(NAME testMPIMessage
-              SOURCES ${TESTMPIMESSAGE_SOURCES}
-              PARALLEL)
-endif(HAVE_MPI)
-
 ## RiemannSolver test
 set(TESTRIEMANNSOLVER_SOURCES
     testRiemannSolver.cpp
