@@ -743,20 +743,6 @@ else(HAVE_HDF5)
                 SOURCES ${TESTHYDROINTEGRATOR_SOURCES})
 endif(HAVE_HDF5)
 
-## ParallelCartesianDensityGrid test
-if(HAVE_HDF5)
-set(TESTPARALLELCARTESIANDENSITYGRID_SOURCES
-    testParallelCartesianDensityGrid.cpp
-
-    ../src/ParallelCartesianDensityGrid.hpp
-    ../src/ParallelCartesianDensitySubGrid.hpp
-    ../src/ParameterFile.cpp
-)
-add_unit_test(NAME testParallelCartesianDensityGrid
-              SOURCES ${TESTPARALLELCARTESIANDENSITYGRID_SOURCES}
-              LIBS ${HDF5_LIBRARIES})
-endif(HAVE_HDF5)
-
 ## AsciiFileDensityGridWriter test
 set(TESTASCIIFILEDENSITYGRIDWRITER_SOURCES
     testAsciiFileDensityGridWriter.cpp
