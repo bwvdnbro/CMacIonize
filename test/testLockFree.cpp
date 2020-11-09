@@ -17,14 +17,14 @@
  ******************************************************************************/
 
 /**
- * @file testAtomic.cpp
+ * @file testLockFree.cpp
  *
- * @brief Unit test for the Atomic class.
+ * @brief Unit test for the LockFree class.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
 #include "Assert.hpp"
-#include "Atomic.hpp"
+#include "LockFree.hpp"
 #include <omp.h>
 
 /**
@@ -47,7 +47,7 @@ int main(int argc, char **argv) {
 #pragma omp parallel shared(sum, nthread)
     {
       double this_thread = omp_get_thread_num();
-      Atomic::add(sum, this_thread);
+      LockFree::add(sum, this_thread);
 #pragma omp single
       { nthread = omp_get_num_threads(); }
     }
@@ -71,7 +71,7 @@ int main(int argc, char **argv) {
 #pragma omp parallel shared(sum, nthread)
     {
       double this_thread = omp_get_thread_num();
-      Atomic::add(sum, this_thread);
+      LockFree::add(sum, this_thread);
 #pragma omp single
       { nthread = omp_get_num_threads(); }
     }

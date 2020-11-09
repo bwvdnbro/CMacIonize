@@ -680,15 +680,15 @@ add_unit_test(NAME testMPICommunicator
               PARALLEL)
 endif(HAVE_MPI)
 
-## Unit test for Atomic
+## Unit test for LockFree
 if(HAVE_OPENMP)
-set(TESTATOMIC_SOURCES
-    testAtomic.cpp
+set(TESTLOCKFREE_SOURCES
+    testLockFree.cpp
 
-    ../src/Atomic.hpp
+    ../src/LockFree.hpp
 )
-add_unit_test(NAME testAtomic
-              SOURCES ${TESTATOMIC_SOURCES})
+add_unit_test(NAME testLockFree
+              SOURCES ${TESTLOCKFREE_SOURCES})
 endif(HAVE_OPENMP)
 
 ## RiemannSolver test

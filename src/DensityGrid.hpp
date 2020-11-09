@@ -47,7 +47,7 @@
 #include "WorkDistributor.hpp"
 
 #ifdef USE_LOCKFREE
-#include "Atomic.hpp"
+#include "LockFree.hpp"
 #endif
 
 #include <cmath>

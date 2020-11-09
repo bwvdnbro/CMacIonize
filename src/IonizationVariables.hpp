@@ -37,7 +37,7 @@
 #endif
 
 #ifdef USE_LOCKFREE
-#include "Atomic.hpp"
+#include "LockFree.hpp"
 #endif
 
 /**
@@ -304,7 +304,7 @@ public:
   inline void increase_mean_intensity(const int_fast32_t ion,
                                       const double increment) {
 #ifdef USE_LOCKFREE
-    Atomic::add(_mean_intensity[ion], increment);
+    LockFree::add(_mean_intensity[ion], increment);
 #else
     _mean_intensity[ion] += increment;
 #endif
@@ -362,7 +362,7 @@ public:
   inline void increase_heating(const int_fast32_t name,
                                const double increment) {
 #ifdef USE_LOCKFREE
-    Atomic::add(_heating[name], increment);
+    LockFree::add(_heating[name], increment);
 #else
     _heating[name] += increment;
 #endif
