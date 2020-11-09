@@ -680,31 +680,16 @@ add_unit_test(NAME testMPICommunicator
               PARALLEL)
 endif(HAVE_MPI)
 
-## Unit test for Atomic
+## Unit test for LockFree
 if(HAVE_OPENMP)
-set(TESTATOMIC_SOURCES
-    testAtomic.cpp
+set(TESTLOCKFREE_SOURCES
+    testLockFree.cpp
 
-    ../src/Atomic.hpp
+    ../src/LockFree.hpp
 )
-add_unit_test(NAME testAtomic
-              SOURCES ${TESTATOMIC_SOURCES})
+add_unit_test(NAME testLockFree
+              SOURCES ${TESTLOCKFREE_SOURCES})
 endif(HAVE_OPENMP)
-
-## Unit test for MPIMessage
-if(HAVE_MPI)
-set(TESTMPIMESSAGE_SOURCES
-    testMPIMessage.cpp
-
-    ../src/MPICommunicator.hpp
-    ../src/MPIMessage.hpp
-    ../src/MPIMessageBox.hpp
-    ../src/MPIUtilities.hpp
-)
-add_unit_test(NAME testMPIMessage
-              SOURCES ${TESTMPIMESSAGE_SOURCES}
-              PARALLEL)
-endif(HAVE_MPI)
 
 ## RiemannSolver test
 set(TESTRIEMANNSOLVER_SOURCES
@@ -743,31 +728,6 @@ else(HAVE_HDF5)
                 SOURCES ${TESTHYDROINTEGRATOR_SOURCES})
 endif(HAVE_HDF5)
 
-## ParallelCartesianDensityGrid test
-if(HAVE_HDF5)
-set(TESTPARALLELCARTESIANDENSITYGRID_SOURCES
-    testParallelCartesianDensityGrid.cpp
-
-    ../src/ParallelCartesianDensityGrid.hpp
-    ../src/ParallelCartesianDensitySubGrid.hpp
-    ../src/ParameterFile.cpp
-)
-add_unit_test(NAME testParallelCartesianDensityGrid
-              SOURCES ${TESTPARALLELCARTESIANDENSITYGRID_SOURCES}
-              LIBS ${HDF5_LIBRARIES})
-endif(HAVE_HDF5)
-
-## PhotonPool test
-set(TESTPHOTONPOOL_SOURCES
-    testPhotonPool.cpp
-
-    ../src/PhotonBatch.hpp
-    ../src/PhotonBucket.hpp
-    ../src/PhotonPool.hpp
-)
-add_unit_test(NAME testPhotonPool
-              SOURCES ${TESTPHOTONPOOL_SOURCES})
-
 ## AsciiFileDensityGridWriter test
 set(TESTASCIIFILEDENSITYGRIDWRITER_SOURCES
     testAsciiFileDensityGridWriter.cpp
@@ -803,15 +763,6 @@ set(TESTPOINTLOCATIONS_SOURCES
 )
 add_unit_test(NAME testPointLocations
               SOURCES ${TESTPOINTLOCATIONS_SOURCES})
-
-## BinarySearchTree test
-set(TESTBINARYSEARCHTREE_SOURCES
-    testBinarySearchTree.cpp
-
-    ../src/BinarySearchTree.hpp
-)
-add_unit_test(NAME testBinarySearchTree
-              SOURCES ${TESTBINARYSEARCHTREE_SOURCES})
 
 ## WMBasicPhotonSourceSpectrum test
 set(TESTWMBASICPHOTONSOURCESPECTRUM_SOURCES
@@ -921,15 +872,6 @@ if(HAVE_MULTIPRECISION)
   add_unit_test(NAME testExactGeometricTests
                 SOURCES ${TESTEXACTGEOMETRICTESTS_SOURCES})
 endif(HAVE_MULTIPRECISION)
-
-## Unit test for HilbertKeyGenerator
-set(TESTHILBERTKEYGENERATOR_SOURCES
-    testHilbertKeyGenerator.cpp
-
-    ../src/HilbertKeyGenerator.hpp
-)
-add_unit_test(NAME testHilbertKeyGenerator
-              SOURCES ${TESTHILBERTKEYGENERATOR_SOURCES})
 
 ## Unit test for SpiralGalaxyDensityFunction
 set(TESTSPIRALGALAXYDENSITYFUNCTION_SOURCES

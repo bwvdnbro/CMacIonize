@@ -17,14 +17,14 @@
  ******************************************************************************/
 
 /**
- * @file Atomic.hpp
+ * @file LockFree.hpp
  *
  * @brief Atomic (lock-free) operations.
  *
  * @author Bert Vandenbroucke (bv7@st-andrews.ac.uk)
  */
-#ifndef ATOMIC_HPP
-#define ATOMIC_HPP
+#ifndef LOCKFREE_HPP
+#define LOCKFREE_HPP
 
 #include "Configuration.hpp"
 
@@ -33,7 +33,7 @@
 /**
  * @brief Atomic (lock-free) operations.
  */
-class Atomic {
+class LockFree {
 public:
   /**
    * @brief Add the second argument to the first argument in a thread safe way.
@@ -80,7 +80,7 @@ static unsigned long add_floating_point(unsigned long a, double b) {
  * be atomically incremented.
  * @param b Double precision floating point value that should be added to a.
  */
-template <> inline void Atomic::add< double >(double &a, double b) {
+template <> inline void LockFree::add< double >(double &a, double b) {
   std::atomic< unsigned long > *atom = new (&a) std::atomic< unsigned long >;
   unsigned long old = *atom;
   while (!atom->compare_exchange_weak(old, add_floating_point(old, b))) {
