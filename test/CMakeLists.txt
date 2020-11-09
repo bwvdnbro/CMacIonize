@@ -779,15 +779,6 @@ set(TESTPOINTLOCATIONS_SOURCES
 add_unit_test(NAME testPointLocations
               SOURCES ${TESTPOINTLOCATIONS_SOURCES})
 
-## BinarySearchTree test
-set(TESTBINARYSEARCHTREE_SOURCES
-    testBinarySearchTree.cpp
-
-    ../src/BinarySearchTree.hpp
-)
-add_unit_test(NAME testBinarySearchTree
-              SOURCES ${TESTBINARYSEARCHTREE_SOURCES})
-
 ## WMBasicPhotonSourceSpectrum test
 set(TESTWMBASICPHOTONSOURCESPECTRUM_SOURCES
     testWMBasicPhotonSourceSpectrum.cpp
@@ -896,15 +887,6 @@ if(HAVE_MULTIPRECISION)
   add_unit_test(NAME testExactGeometricTests
                 SOURCES ${TESTEXACTGEOMETRICTESTS_SOURCES})
 endif(HAVE_MULTIPRECISION)
-
-## Unit test for HilbertKeyGenerator
-set(TESTHILBERTKEYGENERATOR_SOURCES
-    testHilbertKeyGenerator.cpp
-
-    ../src/HilbertKeyGenerator.hpp
-)
-add_unit_test(NAME testHilbertKeyGenerator
-              SOURCES ${TESTHILBERTKEYGENERATOR_SOURCES})
 
 ## Unit test for SpiralGalaxyDensityFunction
 set(TESTSPIRALGALAXYDENSITYFUNCTION_SOURCES
