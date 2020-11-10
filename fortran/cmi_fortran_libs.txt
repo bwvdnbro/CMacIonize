@@ -1,1 +1,1 @@
--L@PROJECT_BINARY_DIR@/lib -lCMIFortranLibrary -lCMILibrary -lIonizationSimulation @FortranLIBS_LDFLAGS_STRING@ -lstdc++ -lc
+-L@PROJECT_BINARY_DIR@/lib -lCMIFortranLibrary -lCMILibrary -lLegacyEngine -lSharedEngine @FortranLIBS_LDFLAGS_STRING@ -lstdc++ -lc
