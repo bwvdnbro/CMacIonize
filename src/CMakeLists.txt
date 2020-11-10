@@ -132,187 +132,122 @@ configure_file(${PROJECT_SOURCE_DIR}/src/ConfigurationInfo.cpp.in
 configure_file(${PROJECT_SOURCE_DIR}/src/ConfigurationInfo.hpp.in
                ${PROJECT_BINARY_DIR}/src/ConfigurationInfo.hpp @ONLY)
 
-set(LIBIONIZATIONSIMULATION_SOURCES
-    AsciiFileDensityFunction.cpp
-    AsciiFileDensityGridWriter.cpp
-    AsciiFileTablePhotonSourceDistribution.cpp
-    BimodalCrossSections.hpp
-    CartesianDensityGrid.cpp
-    ChargeTransferRates.cpp
-    DensityGrid.cpp
-    DiffuseReemissionHandlerFactory.hpp
-    FaucherGiguerePhotonSourceSpectrum.cpp
-    FixedValueDiffuseReemissionHandler.hpp
-    HeliumLymanContinuumSpectrum.cpp
-    HeliumTwoPhotonContinuumSpectrum.cpp
-    HydrogenLymanContinuumSpectrum.cpp
-    InterpolatedDensityFunction.cpp
-    IonizationSimulation.cpp
-    IonizationSimulation.hpp
-    IonizationStateCalculator.cpp
-    LineCoolingData.cpp
-    MaskedPhotonSourceSpectrum.cpp
-    MultiTracker.cpp
-    NewVoronoiCellConstructor.cpp
-    NewVoronoiGrid.cpp
-    OldVoronoiCell.cpp
-    OldVoronoiGrid.cpp
-    ParameterFile.cpp
-    Pegase3PhotonSourceSpectrum.cpp
-    PhantomSnapshotDensityFunction.cpp
-    PhotonSource.cpp
-    PhysicalDiffuseReemissionHandler.cpp
-    PlanckPhotonSourceSpectrum.cpp
-    PopStarPhotonSourceSpectrum.cpp
-    Signals.cpp
-    SPHNGSnapshotDensityFunction.cpp
-    SPHNGVoronoiGeneratorDistribution.cpp
-    TemperatureCalculator.cpp
-    VernerCrossSections.cpp
-    VernerRecombinationRates.cpp
-    VoronoiDensityGrid.cpp
-    WMBasicPhotonSourceSpectrum.cpp
+set(LIBSHAREDENGINE_SOURCES
+  AsciiFileDensityFunction.cpp
+  AsciiFileDensityGridWriter.cpp
+  AsciiFileTablePhotonSourceDistribution.cpp
+  BimodalCrossSections.hpp
+  ChargeTransferRates.cpp
+  CommandLineOption.cpp
+  CommandLineParser.cpp
+  DeRijckeRadiativeCooling.cpp
+  DiffuseReemissionHandlerFactory.hpp
+  FaucherGiguerePhotonSourceSpectrum.cpp
+  FixedValueDiffuseReemissionHandler.hpp
+  HeliumLymanContinuumSpectrum.cpp
+  HeliumTwoPhotonContinuumSpectrum.cpp
+  HydrogenLymanContinuumSpectrum.cpp
+  InterpolatedDensityFunction.cpp
+  IonizationStateCalculator.cpp
+  LineCoolingData.cpp
+  MaskedPhotonSourceSpectrum.cpp
+  MultiTracker.cpp
+  ParameterFile.cpp
+  Pegase3PhotonSourceSpectrum.cpp
+  PhantomSnapshotDensityFunction.cpp
+  PhotonSource.cpp
+  PhysicalDiffuseReemissionHandler.cpp
+  PlanckPhotonSourceSpectrum.cpp
+  PopStarPhotonSourceSpectrum.cpp
+  Signals.cpp
+  SPHNGSnapshotDensityFunction.cpp
+  SPHNGVoronoiGeneratorDistribution.cpp
+  TemperatureCalculator.cpp
+  VernerCrossSections.cpp
+  VernerRecombinationRates.cpp
+  WMBasicPhotonSourceSpectrum.cpp
 
-    ${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
-    ${PROJECT_BINARY_DIR}/src/ConfigurationInfo.cpp
-)
-if(HAVE_HDF5)
-  list(APPEND LIBIONIZATIONSIMULATION_SOURCES
-       ../src/AmunSnapshotDensityFunction.cpp
-       ../src/CastelliKuruczPhotonSourceSpectrum.cpp
-       ../src/CMacIonizeSnapshotDensityFunction.cpp
-       ../src/CMacIonizeVoronoiGeneratorDistribution.cpp
-       ../src/FLASHSnapshotDensityFunction.cpp
-       ../src/GadgetDensityGridWriter.cpp
-       ../src/GadgetSnapshotDensityFunction.cpp
-       ../src/GadgetSnapshotPhotonSourceDistribution.cpp
-       )
-endif(HAVE_HDF5)
-
-set(CMACIONIZE_SOURCES
-    CMacIonize.cpp
-    CommandLineOption.cpp
-    CommandLineParser.cpp
-    CompilerInfo.cpp.in
-    ConfigurationInfo.cpp.in
-    DeRijckeRadiativeCooling.cpp
-    DustScattering.cpp
-    DustSimulation.cpp
-    EmissivityCalculator.cpp
-    RadiationHydrodynamicsSimulation.cpp
-    Signals.cpp
-    TaskBasedRadiationHydrodynamicsSimulation.cpp
-
-    Abundances.hpp
-    AMRRefinementScheme.hpp
-    AMRRefinementSchemeFactory.hpp
-    AsciiFileDensityFunction.hpp
-    AsciiFileDensityGridWriter.hpp
-    AsciiFileTablePhotonSourceDistribution.hpp
-    Box.hpp
-    BondiProfileDensityFunction.hpp
-    CartesianDensityGrid.hpp
-    ChargeTransferRates.hpp
-    Configuration.hpp.in
-    ConfigurationInfo.hpp.in
-    ContinuousPhotonSourceFactory.hpp
-    CoordinateVector.hpp
-    CommandLineOption.hpp
-    CommandLineParser.hpp
-    CompilerInfo.hpp
-    CrossSections.hpp
-    CrossSectionsFactory.hpp
-    DensityFunction.hpp
-    DensityFunctionFactory.hpp
-    DensityGrid.hpp
-    DensityGridFactory.hpp
-    DensityGridTraversalJob.hpp
-    DensityGridTraversalJobMarket.hpp
-    DensityGridWriter.hpp
-    DensityGridWriterFactory.hpp
-    DensityMaskFactory.hpp
-    DensityValues.hpp
-    DiscICDensityFunction.hpp
-    DustPhotonShootJob.hpp
-    DustPhotonShootJobMarket.hpp
-    EmissivityCalculator.hpp
-    EmissivityValues.hpp
-    Error.hpp
-    ExternalPotentialFactory.hpp
-    FaucherGiguerePhotonSourceSpectrum.hpp
-    FixedValueCrossSections.hpp
-    FixedValueRecombinationRates.hpp
-    HeliumLymanContinuumSpectrum.hpp
-    HeliumTwoPhotonContinuumSpectrum.hpp
-    HLLCRiemannSolver.hpp
-    HydrogenLymanContinuumSpectrum.hpp
-    HydroMask.hpp
-    HydroMaskFactory.hpp
-    InterpolatedDensityFunction.hpp
-    IonizationPhotonShootJob.hpp
-    IonizationPhotonShootJobMarket.hpp
-    IonizationStateCalculator.hpp
-    IonizationVariablesPropertyAccessors.hpp
-    LineCoolingData.hpp
-    LiveOutputManager.hpp
-    Lock.hpp
-    MonochromaticPhotonSourceSpectrum.hpp
-    MPICommunicator.hpp
-    OperatingSystem.hpp
-    ParameterFile.hpp
-    PerturbedCartesianVoronoiGeneratorDistribution.hpp
-    Photon.hpp
-    PhotonSource.hpp
-    PhotonSourceDistribution.hpp
-    PhotonSourceDistributionFactory.hpp
-    PhotonSourceSpectrum.hpp
-    PhotonSourceSpectrumFactory.hpp
-    PhotonType.hpp
-    PhysicalConstants.hpp
-    PlanckPhotonSourceSpectrum.hpp
-    RadiationHydrodynamicsSimulation.hpp
-    RecombinationRates.hpp
-    RecombinationRatesFactory.hpp
-    RiemannSolverFactory.hpp
-    Signals.hpp
-    SILCCPhotonSourceDistribution.hpp
-    SimulationBox.hpp
-    SingleStarPhotonSourceDistribution.hpp
-    SpatialAMRRefinementScheme.hpp
-    SPHNGSnapshotDensityFunction.hpp
-    SPHVoronoiGeneratorDistribution.hpp
-    TaskBasedRadiationHydrodynamicsSimulation.hpp
-    TemperatureCalculator.hpp
-    Timer.hpp
-    Utilities.hpp
-    VernerCrossSections.hpp
-    VernerCrossSectionsDataLocation.hpp.in
-    VernerRecombinationRates.hpp
-    VernerRecombinationRatesDataLocation.hpp.in
-    VoronoiGeneratorDistributionFactory.hpp
-    WMBasicDataLocation.hpp.in
-    WMBasicPhotonSourceSpectrum.hpp
-    WorkDistributor.hpp
-    WorkEnvironment.hpp
-    Worker.hpp
+  ${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
+  ${PROJECT_BINARY_DIR}/src/ConfigurationInfo.cpp
 )
 
 set_source_files_properties(${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
                             PROPERTIES GENERATED TRUE)
 
-# add HDF5 dependent sources, if we have found HDF5
 if(HAVE_HDF5)
-    list(APPEND CMACIONIZE_SOURCES
-         EmissivityCalculationSimulation.cpp)
+  list(APPEND LIBSHAREDENGINE_SOURCES
+       AmunSnapshotDensityFunction.cpp
+       CastelliKuruczPhotonSourceSpectrum.cpp
+       CMacIonizeSnapshotDensityFunction.cpp
+       CMacIonizeVoronoiGeneratorDistribution.cpp
+       FLASHSnapshotDensityFunction.cpp
+       GadgetDensityGridWriter.cpp
+       GadgetSnapshotDensityFunction.cpp
+       GadgetSnapshotPhotonSourceDistribution.cpp
+       )
+endif(HAVE_HDF5)
+add_library(SharedEngine ${LIBSHAREDENGINE_SOURCES})
+add_dependencies(SharedEngine CompilerInfo)
+# link to HDF5, if we have found it
+if(HAVE_HDF5)
+    target_link_libraries(SharedEngine ${HDF5_LIBRARIES})
 endif(HAVE_HDF5)
 
-if(HAVE_WINDOWS)
-    list(APPEND CMACIONIZE_SOURCES
-         Windows.hpp)
-else(HAVE_WINDOWS)
-    list(APPEND CMACIONIZE_SOURCES
-         Unix.hpp)
-endif(HAVE_WINDOWS)
+# link to MPI, if we have found it
+if(HAVE_MPI)
+    target_link_libraries(SharedEngine ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
+endif(HAVE_MPI)
+
+set(LIBLEGACYENGINE_SOURCES
+  CartesianDensityGrid.cpp
+  DensityGrid.cpp
+  IonizationSimulation.cpp
+  NewVoronoiCellConstructor.cpp
+  NewVoronoiGrid.cpp
+  OldVoronoiCell.cpp
+  OldVoronoiGrid.cpp
+  RadiationHydrodynamicsSimulation.cpp
+  VoronoiDensityGrid.cpp
+)
+add_library(LegacyEngine ${LIBLEGACYENGINE_SOURCES})
+target_link_libraries(LegacyEngine SharedEngine)
+
+set(LIBTASKBASEDENGINE_SOURCES
+  TaskBasedIonizationSimulation.cpp
+  TaskBasedRadiationHydrodynamicsSimulation.cpp
+)
+add_library(TaskBasedEngine ${LIBTASKBASEDENGINE_SOURCES})
+target_link_libraries(TaskBasedEngine SharedEngine)
+
+set(LIBEMISSIONENGINE_SOURCES
+  EmissivityCalculator.cpp
+)
+# add HDF5 dependent sources, if we have found HDF5
+if(HAVE_HDF5)
+    list(APPEND LIBEMISSIONENGINE_SOURCES
+         EmissivityCalculationSimulation.cpp)
+endif(HAVE_HDF5)
+add_library(EmissionEngine ${LIBEMISSIONENGINE_SOURCES})
+target_link_libraries(EmissionEngine SharedEngine)
+
+set(LIBDUSTENGINE_SOURCES
+  DustScattering.cpp
+  DustSimulation.cpp
+)
+add_library(DustEngine ${LIBDUSTENGINE_SOURCES})
+target_link_libraries(DustEngine LegacyEngine)
+
+set(CMACIONIZE_SOURCES
+    CMacIonize.cpp
+)
+
+add_executable(CMacIonize ${CMACIONIZE_SOURCES})
+# Order is important here! SharedEngine is used by the other engines and needs
+# to be linked in last.
+target_link_libraries(CMacIonize LegacyEngine)
+target_link_libraries(CMacIonize TaskBasedEngine)
+target_link_libraries(CMacIonize EmissionEngine)
+target_link_libraries(CMacIonize DustEngine)
 
 set(LIBCMILIBRARY_SOURCES
     CMILibrary.cpp
@@ -321,98 +256,5 @@ set(LIBCMILIBRARY_SOURCES
     CMILibrary.hpp
 )
 
-add_library(IonizationSimulation ${LIBIONIZATIONSIMULATION_SOURCES})
-add_dependencies(IonizationSimulation CompilerInfo)
-
-# link to HDF5, if we have found it
-if(HAVE_HDF5)
-    target_link_libraries(IonizationSimulation ${HDF5_LIBRARIES})
-endif(HAVE_HDF5)
-
-# link to MPI, if we have found it
-if(HAVE_MPI)
-    target_link_libraries(IonizationSimulation ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
-endif(HAVE_MPI)
-
-set(LIBTASKBASEDIONIZATIONSIMULATION_SOURCES
-
-    AsciiFileDensityFunction.cpp
-    AsciiFileTablePhotonSourceDistribution.cpp
-    AtomicValue.hpp
-    ChargeTransferRates.cpp
-    CPUCycle.hpp
-    DensitySubGrid.hpp
-    FaucherGiguerePhotonSourceSpectrum.cpp
-    HeliumLymanContinuumSpectrum.cpp
-    HeliumTwoPhotonContinuumSpectrum.cpp
-    HydrogenLymanContinuumSpectrum.cpp
-    InterpolatedDensityFunction.cpp
-    IonizationStateCalculator.cpp
-    LineCoolingData.cpp
-    MaskedPhotonSourceSpectrum.cpp
-    MemorySpace.hpp
-    MultiTracker.cpp
-    Pegase3PhotonSourceSpectrum.cpp
-    PhantomSnapshotDensityFunction.cpp
-    PhotonBuffer.hpp
-    PhotonPacket.hpp
-    PhysicalDiffuseReemissionHandler.cpp
-    PlanckPhotonSourceSpectrum.cpp
-    PopStarPhotonSourceSpectrum.cpp
-    SPHNGSnapshotDensityFunction.cpp
-    SPHNGVoronoiGeneratorDistribution.cpp
-    Task.hpp
-    TaskBasedIonizationSimulation.cpp
-    TaskBasedIonizationSimulation.hpp
-    TaskQueue.hpp
-    TemperatureCalculator.cpp
-    ThreadLock.hpp
-    ThreadSafeVector.hpp
-    TravelDirections.hpp
-    VernerCrossSections.cpp
-    VernerRecombinationRates.cpp
-    WMBasicPhotonSourceSpectrum.cpp
-)
-
-# add HDF5 dependent sources, if we have found HDF5
-if(HAVE_HDF5)
-    list(APPEND LIBTASKBASEDIONIZATIONSIMULATION_SOURCES
-        AmunSnapshotDensityFunction.cpp
-        CastelliKuruczPhotonSourceSpectrum.cpp
-        CMacIonizeSnapshotDensityFunction.cpp
-        FLASHSnapshotDensityFunction.cpp
-        GadgetSnapshotDensityFunction.cpp
-        GadgetSnapshotPhotonSourceDistribution.cpp
-        HDF5Tools.hpp)
-endif(HAVE_HDF5)
-
-add_library(TaskBasedIonizationSimulation ${LIBTASKBASEDIONIZATIONSIMULATION_SOURCES})
-add_dependencies(TaskBasedIonizationSimulation CompilerInfo)
-
-# link to HDF5, if we have found it
-if(HAVE_HDF5)
-    target_link_libraries(TaskBasedIonizationSimulation ${HDF5_LIBRARIES})
-endif(HAVE_HDF5)
-
-# link to MPI, if we have found it
-if(HAVE_MPI)
-    target_link_libraries(TaskBasedIonizationSimulation ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
-endif(HAVE_MPI)
-
 add_library(CMILibrary ${LIBCMILIBRARY_SOURCES})
-target_link_libraries(CMILibrary IonizationSimulation)
-
-add_executable(CMacIonize ${CMACIONIZE_SOURCES})
-target_link_libraries(CMacIonize IonizationSimulation)
-target_link_libraries(CMacIonize TaskBasedIonizationSimulation)
-add_dependencies(CMacIonize CompilerInfo)
-
-# link to HDF5, if we have found it
-if(HAVE_HDF5)
-    target_link_libraries(CMacIonize ${HDF5_LIBRARIES})
-endif(HAVE_HDF5)
-
-# link to MPI, if we have found it
-if(HAVE_MPI)
-    target_link_libraries(CMacIonize ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
-endif(HAVE_MPI)
+target_link_libraries(CMILibrary LegacyEngine)

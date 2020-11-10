@@ -19,9 +19,6 @@
 ### Convenient macros to automate timing test generation #######################
 ### Do not touch the code below unless you know what you're doing! #############
 
-set_source_files_properties(${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
-                            PROPERTIES GENERATED TRUE)
-
 macro(add_timing_test)
   set(oneValueArgs NAME)
   set(multiValueArgs SOURCES LIBS)
@@ -29,13 +26,6 @@ macro(add_timing_test)
                         ${ARGN})
 
   message(STATUS "generating " ${TIME_NAME})
-
-  # add additional source files that are needed in every timing test
-  list(APPEND TIME_SOURCES
-       ../src/CommandLineOption.cpp
-       ../src/CommandLineParser.cpp
-       ${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
-       TimingTools.hpp)
 
   # create the timing test executable and set its properties
   add_executable(${TIME_NAME} EXCLUDE_FROM_ALL ${TIME_SOURCES})
@@ -63,37 +53,30 @@ endmacro(add_timing_test)
 ## Voronoi grid implementations comparison
 set(TIMEVORONOIGRIDS_SOURCES
     timeVoronoiGrids.cpp
-
-    ../src/NewVoronoiCellConstructor.cpp
-    ../src/NewVoronoiGrid.cpp
-    ../src/OldVoronoiCell.cpp
-    ../src/OldVoronoiGrid.cpp
 )
 add_timing_test(NAME timeVoronoiGrids
-                SOURCES ${TIMEVORONOIGRIDS_SOURCES})
+                SOURCES ${TIMEVORONOIGRIDS_SOURCES}
+                LIBS LegacyEngine)
 
 ## Riemann solver optimization timings
 set(TIMERIEMANNSOLVER_SOURCES
     timeRiemannSolver.cpp
 )
 add_timing_test(NAME timeRiemannSolver
-                SOURCES ${TIMERIEMANNSOLVER_SOURCES})
+                SOURCES ${TIMERIEMANNSOLVER_SOURCES}
+                LIBS SharedEngine)
 
 ## NewVoronoiGrid optimization timings
 set(TIMENEWVORONOIGRID_SOURCES
     timeNewVoronoiGrid.cpp
-
-    ../src/NewVoronoiCellConstructor.cpp
-    ../src/NewVoronoiGrid.cpp
 )
 add_timing_test(NAME timeNewVoronoiGrid
-                SOURCES ${TIMENEWVORONOIGRID_SOURCES})
+                SOURCES ${TIMENEWVORONOIGRID_SOURCES}
+                LIBS LegacyEngine)
 
 ## SPHArrayInterface mapping timings
 set(TIMESPHARRAYINTERFACE_SOURCES
     timeSPHArrayInterface.cpp
-
-    ../src/PhantomSnapshotDensityFunction.cpp
 )
 add_timing_test(NAME timeSPHArrayInterface
                 SOURCES ${TIMESPHARRAYINTERFACE_SOURCES}
