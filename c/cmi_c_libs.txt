@@ -1,1 +1,1 @@
--L@PROJECT_BINARY_DIR@/lib -lCMILibrary -lIonizationSimulation @CLIBS_LDFLAGS_STRING@ -lstdc++ -lc
+-L@PROJECT_BINARY_DIR@/lib -lCMILibrary -lLegacyEngine -lSharedEngine @CLIBS_LDFLAGS_STRING@ -lstdc++ -lc

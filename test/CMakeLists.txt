@@ -68,16 +68,11 @@ endmacro(add_unit_test)
 # This list contains ALL .cpp and .hpp files necessary to make the test work.
 set(TESTLINECOOLINGDATA_SOURCES
     testLineCoolingData.cpp
-
-    Assert.hpp
-
-    ../src/Error.hpp
-    ../src/LineCoolingData.cpp
-    ../src/LineCoolingData.hpp
 )
 # Call the macro that creates the unit test
 add_unit_test(NAME testLineCoolingData
-              SOURCES ${TESTLINECOOLINGDATA_SOURCES})
+              SOURCES ${TESTLINECOOLINGDATA_SOURCES}
+              LIBS SharedEngine)
 # Make sure the output file containing the Fortran data is put in place
 configure_file(${PROJECT_SOURCE_DIR}/test/linecool_fortran_data.txt
                ${PROJECT_BINARY_DIR}/rundir/test/linecool_fortran_data.txt
@@ -92,18 +87,10 @@ configure_file(${PROJECT_SOURCE_DIR}/test/linestr_testdata.txt
 ## Unit test for CommandLineParser
 set(TESTCOMMANDLINEPARSER_SOURCES
     testCommandLineParser.cpp
-
-    Assert.hpp
-
-    ../src/CommandLineOption.cpp
-    ../src/CommandLineParser.cpp
-    ../src/CommandLineOption.hpp
-    ../src/CommandLineParser.hpp
-    ../src/Error.hpp
-    ../src/Utilities.hpp
 )
 add_unit_test(NAME testCommandLineParser
-              SOURCES ${TESTCOMMANDLINEPARSER_SOURCES})
+              SOURCES ${TESTCOMMANDLINEPARSER_SOURCES}
+              LIBS SharedEngine)
 
 ## Unit test for CartesianDensityGrid
 configure_file(${PROJECT_SOURCE_DIR}/test/h0_testdata.txt
@@ -111,37 +98,10 @@ configure_file(${PROJECT_SOURCE_DIR}/test/h0_testdata.txt
                COPYONLY)
 set(TESTCARTESIANDENSITYGRID_SOURCES
     testCartesianDensityGrid.cpp
-
-    Assert.hpp
-
-    ../src/Box.hpp
-    ../src/CartesianDensityGrid.cpp
-    ../src/CartesianDensityGrid.hpp
-    ../src/Cell.hpp
-    ../src/ChargeTransferRates.cpp
-    ../src/CoordinateVector.hpp
-    ../src/CrossSections.hpp
-    ../src/DensityFunction.hpp
-    ../src/DensityGrid.cpp
-    ../src/DensityGrid.hpp
-    ../src/DensityValues.hpp
-    ../src/ElementNames.hpp
-    ../src/Error.hpp
-    ../src/Face.hpp
-    ../src/HomogeneousDensityFunction.hpp
-    ../src/IonizationStateCalculator.cpp
-    ../src/IonizationStateCalculator.hpp
-    ../src/IonizationVariables.hpp
-    ../src/Log.hpp
-    ../src/ParameterFile.cpp
-    ../src/ParameterFile.hpp
-    ../src/Photon.hpp
-    ../src/RecombinationRates.hpp
-    ../src/TerminalLog.hpp
-    ../src/Timer.hpp
 )
 add_unit_test(NAME testCartesianDensityGrid
-              SOURCES ${TESTCARTESIANDENSITYGRID_SOURCES})
+              SOURCES ${TESTCARTESIANDENSITYGRID_SOURCES}
+              LIBS LegacyEngine)
 
 ## Unit test for HDF5tools
 if(HAVE_HDF5)
@@ -151,12 +111,6 @@ configure_file(${PROJECT_SOURCE_DIR}/test/test.hdf5
                COPYONLY)
 set(TESTHDF5TOOLS_SOURCES
     testHDF5Tools.cpp
-
-    Assert.hpp
-
-    ../src/CoordinateVector.hpp
-    ../src/Error.hpp
-    ../src/HDF5Tools.hpp
 )
 add_unit_test(NAME testHDF5Tools
               SOURCES ${TESTHDF5TOOLS_SOURCES}
@@ -167,44 +121,15 @@ endif(HAVE_HDF5)
 if(HAVE_HDF5)
 set(TESTGADGETSNAPSHOTDENSITYFUNCTION_SOURCES
     testGadgetSnapshotDensityFunction.cpp
-
-    Assert.hpp
-
-    ../src/Box.hpp
-    ../src/CartesianDensityGrid.cpp
-    ../src/CartesianDensityGrid.hpp
-    ../src/ChargeTransferRates.cpp
-    ../src/CoordinateVector.hpp
-    ../src/CubicSplineKernel.hpp
-    ../src/DensityFunction.hpp
-    ../src/DensityGrid.cpp
-    ../src/DensityValues.hpp
-    ../src/ElementNames.hpp
-    ../src/Error.hpp
-    ../src/GadgetSnapshotDensityFunction.cpp
-    ../src/GadgetSnapshotDensityFunction.hpp
-    ../src/HDF5Tools.hpp
-    ../src/IonizationStateCalculator.cpp
-    ../src/IonizationStateCalculator.hpp
-    ../src/ParameterFile.cpp
-    ../src/ParameterFile.hpp
-    ../src/Photon.hpp
-    ../src/RecombinationRates.hpp
-    ../src/Timer.hpp
 )
 add_unit_test(NAME testGadgetSnapshotDensityFunction
               SOURCES ${TESTGADGETSNAPSHOTDENSITYFUNCTION_SOURCES}
-              LIBS ${HDF5_LIBRARIES})
+              LIBS LegacyEngine)
 endif(HAVE_HDF5)
 
 ## CoordinateVector test
 set(TESTCOORDINATEVECTOR_SOURCES
     testCoordinateVector.cpp
-
-    Assert.hpp
-
-    ../src/CoordinateVector.hpp
-    ../src/Error.hpp
 )
 add_unit_test(NAME testCoordinateVector
               SOURCES ${TESTCOORDINATEVECTOR_SOURCES})
@@ -212,59 +137,18 @@ add_unit_test(NAME testCoordinateVector
 ## PhotonSource test
 set(TESTPHOTONSOURCE_SOURCES
     testPhotonSource.cpp
-
-    Assert.hpp
-
-    ../src/CoordinateVector.hpp
-    ../src/CrossSections.hpp
-    ../src/DensityValues.hpp
-    ../src/ElementNames.hpp
-    ../src/Error.hpp
-    ../src/HydrogenLymanContinuumSpectrum.cpp
-    ../src/HydrogenLymanContinuumSpectrum.hpp
-    ../src/HeliumLymanContinuumSpectrum.cpp
-    ../src/HeliumLymanContinuumSpectrum.cpp
-    ../src/HeliumTwoPhotonContinuumSpectrum.cpp
-    ../src/HeliumTwoPhotonContinuumSpectrum.hpp
-    ../src/Photon.hpp
-    ../src/PhotonSource.cpp
-    ../src/PhotonSource.hpp
-    ../src/PhotonSourceDistribution.hpp
-    ../src/PhotonSourceSpectrum.hpp
-    ../src/PhysicalDiffuseReemissionHandler.cpp
-    ../src/SingleStarPhotonSourceDistribution.hpp
-    ../src/Utilities.hpp
 )
 add_unit_test(NAME testPhotonSource
-              SOURCES ${TESTPHOTONSOURCE_SOURCES})
+              SOURCES ${TESTPHOTONSOURCE_SOURCES}
+              LIBS SharedEngine)
 
 ## PhotonSourceSpectrum test
 set(TESTPHOTONSOURCESPECTRUM_SOURCES
     testPhotonSourceSpectrum.cpp
-
-    Assert.hpp
-
-    ../src/CrossSections.hpp
-    ../src/Error.hpp
-    ../src/FaucherGiguereDataLocation.hpp.in
-    ../src/FaucherGiguerePhotonSourceSpectrum.cpp
-    ../src/FaucherGiguerePhotonSourceSpectrum.hpp
-    ../src/HeliumLymanContinuumSpectrum.cpp
-    ../src/HeliumLymanContinuumSpectrum.hpp
-    ../src/HeliumTwoPhotonContinuumSpectrum.cpp
-    ../src/HeliumTwoPhotonContinuumSpectrum.hpp
-    ../src/HeliumTwoPhotonContinuumDataLocation.hpp.in
-    ../src/HydrogenLymanContinuumSpectrum.cpp
-    ../src/HydrogenLymanContinuumSpectrum.hpp
-    ../src/PhotonSourceSpectrum.hpp
-    ../src/PlanckPhotonSourceSpectrum.cpp
-    ../src/PlanckPhotonSourceSpectrum.hpp
-    ../src/Utilities.hpp
-    ../src/VernerCrossSections.cpp
-    ../src/VernerCrossSections.hpp
 )
 add_unit_test(NAME testPhotonSourceSpectrum
-              SOURCES ${TESTPHOTONSOURCESPECTRUM_SOURCES})
+              SOURCES ${TESTPHOTONSOURCESPECTRUM_SOURCES}
+              LIBS SharedEngine)
 
 ## VernerCrossSections test
 configure_file(${PROJECT_SOURCE_DIR}/test/verner_testdata.txt
@@ -272,34 +156,18 @@ configure_file(${PROJECT_SOURCE_DIR}/test/verner_testdata.txt
                COPYONLY)
 set(TESTVERNERCROSSSECTIONS_SOURCES
     testVernerCrossSections.cpp
-
-    Assert.hpp
-
-    ../src/CrossSections.hpp
-    ../src/ElementNames.hpp
-    ../src/Error.hpp
-    ../src/VernerCrossSections.cpp
-    ../src/VernerCrossSections.hpp
-    ../src/VernerCrossSectionsDataLocation.hpp.in
 )
 add_unit_test(NAME testVernerCrossSections
-              SOURCES ${TESTVERNERCROSSSECTIONS_SOURCES})
+              SOURCES ${TESTVERNERCROSSSECTIONS_SOURCES}
+              LIBS SharedEngine)
 
 ## ParameterFile test
 set(TESTPARAMETERFILE_SOURCES
     testParameterFile.cpp
-
-    Assert.hpp
-
-    ../src/CoordinateVector.hpp
-    ../src/Error.hpp
-    ../src/ParameterFile.cpp
-    ../src/ParameterFile.hpp
-    ../src/Utilities.hpp
-    ../src/YAMLDictionary.hpp
 )
 add_unit_test(NAME testParameterFile
-              SOURCES ${TESTPARAMETERFILE_SOURCES})
+              SOURCES ${TESTPARAMETERFILE_SOURCES}
+              LIBS SharedEngine)
 configure_file(${PROJECT_SOURCE_DIR}/test/test.param
                ${PROJECT_BINARY_DIR}/rundir/test/test.param
                COPYONLY)
@@ -310,25 +178,14 @@ configure_file(${PROJECT_SOURCE_DIR}/test/verner_rec_testdata.txt
                COPYONLY)
 set(TESTVERNERRECOMBINATIONRATES_SOURCES
     testVernerRecombinationRates.cpp
-
-    Assert.hpp
-
-    ../src/ElementNames.hpp
-    ../src/Error.hpp
-    ../src/RecombinationRates.hpp
-    ../src/VernerRecombinationRates.cpp
-    ../src/VernerRecombinationRates.hpp
 )
 add_unit_test(NAME testVernerRecombinationRates
-              SOURCES ${TESTVERNERRECOMBINATIONRATES_SOURCES})
+              SOURCES ${TESTVERNERRECOMBINATIONRATES_SOURCES}
+              LIBS SharedEngine)
 
 ## RandomGenerator test
 set(TESTRANDOMGENERATOR_SOURCES
     testRandomGenerator.cpp
-
-    Assert.hpp
-
-    ../src/RandomGenerator.hpp
 )
 add_unit_test(NAME testRandomGenerator
               SOURCES ${TESTRANDOMGENERATOR_SOURCES})
@@ -337,70 +194,25 @@ add_unit_test(NAME testRandomGenerator
 if(HAVE_HDF5)
 set(TESTGADGETDENSITYGRIDWRITER_SOURCES
     testGadgetDensityGridWriter.cpp
-
-    Assert.hpp
-
-    ../src/Box.hpp
-    ../src/CartesianDensityGrid.cpp
-    ../src/CartesianDensityGrid.hpp
-    ../src/ChargeTransferRates.cpp
-    ../src/CompilerInfo.hpp
-    ../src/CoordinateVector.hpp
-    ../src/DensityFunction.hpp
-    ../src/DensityGrid.cpp
-    ../src/DensityGridWriterFields.hpp
-    ../src/DensityValues.hpp
-    ../src/Error.hpp
-    ../src/GadgetDensityGridWriter.cpp
-    ../src/GadgetDensityGridWriter.hpp
-    ../src/IonizationStateCalculator.cpp
-    ../src/IonizationStateCalculator.hpp
-    ../src/ParameterFile.cpp
-    ../src/ParameterFile.hpp
-    ../src/RecombinationRates.hpp
-    ../src/Timer.hpp
-
-    ${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
-    ${PROJECT_BINARY_DIR}/src/ConfigurationInfo.cpp
 )
-set_source_files_properties(${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
-                            PROPERTIES GENERATED TRUE)
 add_unit_test(NAME testGadgetDensityGridWriter
               SOURCES ${TESTGADGETDENSITYGRIDWRITER_SOURCES}
-              LIBS ${HDF5_LIBRARIES})
-add_dependencies(testGadgetDensityGridWriter CompilerInfo)
+              LIBS LegacyEngine)
 endif(HAVE_HDF5)
 
 ## Unit test for GadgetSnapshotPhotonSourceDistribution
 if(HAVE_HDF5)
 set(TESTGADGETSNAPSHOTPHOTONSOURCEDISTRIBUTION_SOURCES
     testGadgetSnapshotPhotonSourceDistribution.cpp
-
-    ../src/GadgetSnapshotPhotonSourceDistribution.cpp
-    ../src/GadgetSnapshotPhotonSourceDistribution.hpp
-    ../src/HydrogenLymanContinuumSpectrum.cpp
-    ../src/HydrogenLymanContinuumSpectrum.hpp
-    ../src/HeliumLymanContinuumSpectrum.cpp
-    ../src/HeliumLymanContinuumSpectrum.hpp
-    ../src/HeliumTwoPhotonContinuumSpectrum.cpp
-    ../src/HeliumTwoPhotonContinuumSpectrum.hpp
-    ../src/PhotonSource.cpp
-    ../src/PhotonSource.hpp
-    ../src/PhotonSourceDistribution.hpp
-    ../src/PhysicalDiffuseReemissionHandler.cpp
 )
 add_unit_test(NAME testGadgetSnapshotPhotonSourceDistribution
               SOURCES ${TESTGADGETSNAPSHOTPHOTONSOURCEDISTRIBUTION_SOURCES}
-              LIBS ${HDF5_LIBRARIES})
+              LIBS SharedEngine)
 endif(HAVE_HDF5)
 
 ## Unit test for Log
 set(TESTLOG_SOURCES
     testLog.cpp
-
-    ../src/FileLog.hpp
-    ../src/Log.hpp
-    ../src/TerminalLog.hpp
 )
 add_unit_test(NAME testLog
               SOURCES ${TESTLOG_SOURCES})
@@ -408,9 +220,6 @@ add_unit_test(NAME testLog
 ## Unit test for UnitConverter
 set(TESTUNITCONVERTER_SOURCES
     testUnitConverter.cpp
-
-    ../src/Unit.hpp
-    ../src/UnitConverter.hpp
 )
 add_unit_test(NAME testUnitConverter
               SOURCES ${TESTUNITCONVERTER_SOURCES})
@@ -418,12 +227,10 @@ add_unit_test(NAME testUnitConverter
 ## Unit test for AsciiFileDensityFunction
 set(TESTASCIIFILEDENSITYFUNCTION_SOURCES
     testAsciiFileDensityFunction.cpp
-
-    ../src/AsciiFileDensityFunction.cpp
-    ../src/AsciiFileDensityFunction.hpp
 )
 add_unit_test(NAME testAsciiFileDensityFunction
-              SOURCES ${TESTASCIIFILEDENSITYFUNCTION_SOURCES})
+              SOURCES ${TESTASCIIFILEDENSITYFUNCTION_SOURCES}
+              LIBS SharedEngine)
 configure_file(${PROJECT_SOURCE_DIR}/test/testgrid.txt
                ${PROJECT_BINARY_DIR}/rundir/test/testgrid.txt
                COPYONLY)
@@ -431,9 +238,6 @@ configure_file(${PROJECT_SOURCE_DIR}/test/testgrid.txt
 ## Unit test for Octree
 set(TESTOCTREE_SOURCES
     testOctree.cpp
-
-    ../src/Octree.hpp
-    ../src/OctreeNode.hpp
 )
 add_unit_test(NAME testOctree
               SOURCES ${TESTOCTREE_SOURCES})
@@ -442,13 +246,10 @@ add_unit_test(NAME testOctree
 if(HAVE_HDF5)
 set(TESTFLASHSNAPSHOTDENSITYFUNCTION_SOURCES
     testFLASHSnapshotDensityFunction.cpp
-
-    ../src/FLASHSnapshotDensityFunction.cpp
-    ../src/FLASHSnapshotDensityFunction.hpp
 )
 add_unit_test(NAME testFLASHSnapshotDensityFunction
               SOURCES ${TESTFLASHSNAPSHOTDENSITYFUNCTION_SOURCES}
-              LIBS ${HDF5_LIBRARIES})
+              LIBS SharedEngine)
 endif(HAVE_HDF5)
 # we always configure this file, as we need it for the MD5 test
 configure_file(${PROJECT_SOURCE_DIR}/test/FLASHtest.hdf5
@@ -458,9 +259,6 @@ configure_file(${PROJECT_SOURCE_DIR}/test/FLASHtest.hdf5
 ## Unit test for AMRGrid
 set(TESTAMRGRID_SOURCES
     testAMRGrid.cpp
-
-    ../src/AMRGrid.hpp
-    ../src/AMRGridCell.hpp
 )
 add_unit_test(NAME testAMRGrid
               SOURCES ${TESTAMRGRID_SOURCES})
@@ -468,8 +266,6 @@ add_unit_test(NAME testAMRGrid
 ## Unit test for SILCCPhotonSourceDistribution
 set(TESTSILCCPHOTONSOURCEDISTRIBUTION_SOURCES
     testSILCCPhotonSourceDistribution.cpp
-
-    ../src/SILCCPhotonSourceDistribution.hpp
 )
 add_unit_test(NAME testSILCCPhotonSourceDistribution
               SOURCES ${TESTSILCCPHOTONSOURCEDISTRIBUTION_SOURCES})
@@ -477,59 +273,38 @@ add_unit_test(NAME testSILCCPhotonSourceDistribution
 ## Unit test for IonizationStateCalculator
 set(TESTIONIZATIONSTATECALCULATOR_SOURCES
     testIonizationStateCalculator.cpp
-
-    ../src/CartesianDensityGrid.cpp
-    ../src/CartesianDensityGrid.hpp
-    ../src/ChargeTransferRates.cpp
-    ../src/DensityGrid.cpp
-    ../src/IonizationStateCalculator.cpp
-    ../src/IonizationStateCalculator.hpp
-    ../src/Timer.hpp
-    ../src/VernerRecombinationRates.cpp
 )
 add_unit_test(NAME testIonizationStateCalculator
-              SOURCES ${TESTIONIZATIONSTATECALCULATOR_SOURCES})
+              SOURCES ${TESTIONIZATIONSTATECALCULATOR_SOURCES}
+              LIBS LegacyEngine)
 
 ## Unit test for AMRDensityGrid
 set(TESTAMRDENSITYGRID_SOURCES
     testAMRDensityGrid.cpp
-
-    ../src/AMRDensityGrid.hpp
-    ../src/AMRRefinementScheme.hpp
-    ../src/DensityGrid.cpp
-    ../src/Timer.hpp
 )
 add_unit_test(NAME testAMRDensityGrid
-              SOURCES ${TESTAMRDENSITYGRID_SOURCES})
+              SOURCES ${TESTAMRDENSITYGRID_SOURCES}
+              LIBS LegacyEngine)
 
 ## Unit test for SpatialAMRRefinementScheme
 set(TESTSPATIALAMRREFINEMENTSCHEME_SOURCES
     testSpatialAMRRefinementScheme.cpp
-
-    ../src/AMRRefinementScheme.hpp
-    ../src/DensityGrid.cpp
-    ../src/SpatialAMRRefinementScheme.hpp
 )
 add_unit_test(NAME testSpatialAMRRefinementScheme
-              SOURCES ${TESTSPATIALAMRREFINEMENTSCHEME_SOURCES})
+              SOURCES ${TESTSPATIALAMRREFINEMENTSCHEME_SOURCES}
+              LIBS LegacyEngine)
 
 ## Unit test for OpacityAMRRefinementScheme
 set(TESTOPACITYAMRREFINEMENTSCHEME_SOURCES
     testOpacityAMRRefinementScheme.cpp
-
-    ../src/AMRRefinementScheme.hpp
-    ../src/DensityGrid.cpp
-    ../src/OpacityAMRRefinementScheme.hpp
 )
 add_unit_test(NAME testOpacityAMRRefinementScheme
-              SOURCES ${TESTOPACITYAMRREFINEMENTSCHEME_SOURCES})
+              SOURCES ${TESTOPACITYAMRREFINEMENTSCHEME_SOURCES}
+              LIBS LegacyEngine)
 
 ## Unit test for IsotropicContinuousPhotonSource
 set(TESTISOTROPICCONTINUOUSPHOTONSOURCE_SOURCES
     testIsotropicContinuousPhotonSource.cpp
-
-    ../src/ContinuousPhotonSource.hpp
-    ../src/IsotropicContinuousPhotonSource.hpp
 )
 add_unit_test(NAME testIsotropicContinuousPhotonSource
               SOURCES ${TESTISOTROPICCONTINUOUSPHOTONSOURCE_SOURCES})
@@ -537,18 +312,10 @@ add_unit_test(NAME testIsotropicContinuousPhotonSource
 ## Unit test for BlockSyntaxDensityFunction
 set(TESTBLOCKSYNTAXDENSITYFUNCTION_SOURCES
     testBlockSyntaxDensityFunction.cpp
-
-    ../src/BlockSyntaxBlock.hpp
-    ../src/BlockSyntaxDensityFunction.hpp
-    ../src/CartesianDensityGrid.cpp
-    ../src/CartesianDensityGrid.hpp
-    ../src/DensityGrid.cpp
-    ../src/ParameterFile.cpp
-    ../src/ParameterFile.hpp
-    ../src/YAMLDictionary.hpp
 )
 add_unit_test(NAME testBlockSyntaxDensityFunction
-              SOURCES ${TESTBLOCKSYNTAXDENSITYFUNCTION_SOURCES})
+              SOURCES ${TESTBLOCKSYNTAXDENSITYFUNCTION_SOURCES}
+              LIBS LegacyEngine)
 configure_file(${PROJECT_SOURCE_DIR}/test/blocksyntaxtest.yml
                ${PROJECT_BINARY_DIR}/rundir/test/blocksyntaxtest.yml
                COPYONLY)
@@ -556,12 +323,10 @@ configure_file(${PROJECT_SOURCE_DIR}/test/blocksyntaxtest.yml
 ## Unit test for ChargeTransferRates
 set(TESTCHARGETRANSFERRATES_SOURCES
     testChargeTransferRates.cpp
-
-    ../src/ChargeTransferRates.cpp
-    ../src/ChargeTransferRates.hpp
 )
 add_unit_test(NAME testChargeTransferRates
-              SOURCES ${TESTCHARGETRANSFERRATES_SOURCES})
+              SOURCES ${TESTCHARGETRANSFERRATES_SOURCES}
+              LIBS SharedEngine)
 configure_file(${PROJECT_SOURCE_DIR}/test/KingdonFerland_testdata.txt
                ${PROJECT_BINARY_DIR}/rundir/test/KingdonFerland_testdata.txt
                COPYONLY)
@@ -569,19 +334,10 @@ configure_file(${PROJECT_SOURCE_DIR}/test/KingdonFerland_testdata.txt
 ## Unit test for TemperatureCalculator
 set(TESTTEMPERATURECALCULATOR_SOURCES
     testTemperatureCalculator.cpp
-
-    ../src/CartesianDensityGrid.cpp
-    ../src/ChargeTransferRates.cpp
-    ../src/DensityGrid.cpp
-    ../src/IonizationStateCalculator.cpp
-    ../src/LineCoolingData.cpp
-    ../src/SPHNGVoronoiGeneratorDistribution.cpp
-    ../src/TemperatureCalculator.cpp
-    ../src/TemperatureCalculator.hpp
-    ../src/VernerRecombinationRates.cpp
 )
 add_unit_test(NAME testTemperatureCalculator
-              SOURCES ${TESTTEMPERATURECALCULATOR_SOURCES})
+              SOURCES ${TESTTEMPERATURECALCULATOR_SOURCES}
+              LIBS LegacyEngine)
 configure_file(${PROJECT_SOURCE_DIR}/test/tbal_testdata.txt
                ${PROJECT_BINARY_DIR}/rundir/test/tbal_testdata.txt
                COPYONLY)
@@ -592,14 +348,10 @@ configure_file(${PROJECT_SOURCE_DIR}/test/ioneng_testdata.txt
 ## Unit test for EmissivityCalculator
 set(TESTEMISSIVITYCALCULATOR_SOURCES
     testEmissivityCalculator.cpp
-
-    ../src/EmissivityCalculator.cpp
-    ../src/EmissivityCalculator.hpp
-    ../src/EmissivityValues.hpp
-    ../src/LineCoolingData.cpp
 )
 add_unit_test(NAME testEmissivityCalculator
-              SOURCES ${TESTEMISSIVITYCALCULATOR_SOURCES})
+              SOURCES ${TESTEMISSIVITYCALCULATOR_SOURCES}
+              LIBS EmissionEngine)
 configure_file(${PROJECT_SOURCE_DIR}/test/bjump_testdata.txt
                ${PROJECT_BINARY_DIR}/rundir/test/bjump_testdata.txt
                COPYONLY)
@@ -610,8 +362,6 @@ configure_file(${PROJECT_SOURCE_DIR}/test/hiilines_testdata.txt
 ## Unit test for Utilities
 set(TESTUTILITIES_SOURCES
     testUtilities.cpp
-
-    ../src/Utilities.hpp
 )
 add_unit_test(NAME testUtilities
               SOURCES ${TESTUTILITIES_SOURCES})
@@ -619,10 +369,6 @@ add_unit_test(NAME testUtilities
 ## Unit test for Worker
 set(TESTWORKER_SOURCES
     testWorker.cpp
-
-    ../src/Lock.hpp
-    ../src/WorkDistributor.hpp
-    ../src/Worker.hpp
 )
 add_unit_test(NAME testWorker
               SOURCES ${TESTWORKER_SOURCES})
@@ -630,25 +376,18 @@ add_unit_test(NAME testWorker
 ## Unit test for MassAMRRefinementScheme
 set(TESTMASSAMRREFINEMENTSCHEME_SOURCES
     testMassAMRRefinementScheme.cpp
-
-    ../src/AMRRefinementScheme.hpp
-    ../src/DensityGrid.cpp
-    ../src/MassAMRRefinementScheme.hpp
 )
 add_unit_test(NAME testMassAMRRefinementScheme
-              SOURCES ${TESTMASSAMRREFINEMENTSCHEME_SOURCES})
+              SOURCES ${TESTMASSAMRREFINEMENTSCHEME_SOURCES}
+              LIBS LegacyEngine)
 
 ## Unit test for SPHNGSnapshotDensityFunction
 set(TESTSPHNGSNAPSHOTDENSITYFUNCTION_SOURCES
     testSPHNGSnapshotDensityFunction.cpp
-
-    ../src/SPHNGSnapshotDensityFunction.cpp
-    ../src/SPHNGSnapshotDensityFunction.hpp
-    ../src/SPHNGVoronoiGeneratorDistribution.cpp
-    ../src/SPHNGVoronoiGeneratorDistribution.hpp
 )
 add_unit_test(NAME testSPHNGSnapshotDensityFunction
-              SOURCES ${TESTSPHNGSNAPSHOTDENSITYFUNCTION_SOURCES})
+              SOURCES ${TESTSPHNGSNAPSHOTDENSITYFUNCTION_SOURCES}
+              LIBS SharedEngine)
 configure_file(${PROJECT_SOURCE_DIR}/test/SPHNGtest.dat
                ${PROJECT_BINARY_DIR}/rundir/test/SPHNGtest.dat COPYONLY)
 configure_file(${PROJECT_SOURCE_DIR}/test/SPHNGtest_notags.dat
@@ -659,9 +398,6 @@ configure_file(${PROJECT_SOURCE_DIR}/test/SPHNG_data.txt
 ## Unit test for DistantStarContinuousPhotonSource
 set(TESTDISTANTSTARCONTINUOUSPHOTONSOURCE_SOURCES
     testDistantStarContinuousPhotonSource.cpp
-
-    ../src/ContinuousPhotonSource.hpp
-    ../src/DistantStarContinuousPhotonSource.hpp
 )
 add_unit_test(NAME testDistantStarContinuousPhotonSource
               SOURCES ${TESTDISTANTSTARCONTINUOUSPHOTONSOURCE_SOURCES})
@@ -670,48 +406,25 @@ add_unit_test(NAME testDistantStarContinuousPhotonSource
 if(HAVE_MPI)
 set(TESTMPICOMMUNICATOR_SOURCES
     testMPICommunicator.cpp
-
-    ../src/CartesianDensityGrid.cpp
-    ../src/DensityGrid.cpp
-    ../src/MPICommunicator.hpp
 )
 add_unit_test(NAME testMPICommunicator
               SOURCES ${TESTMPICOMMUNICATOR_SOURCES}
+              LIBS LegacyEngine
               PARALLEL)
 endif(HAVE_MPI)
 
-## Unit test for Atomic
+## Unit test for LockFree
 if(HAVE_OPENMP)
-set(TESTATOMIC_SOURCES
-    testAtomic.cpp
-
-    ../src/Atomic.hpp
+set(TESTLOCKFREE_SOURCES
+    testLockFree.cpp
 )
-add_unit_test(NAME testAtomic
-              SOURCES ${TESTATOMIC_SOURCES})
+add_unit_test(NAME testLockFree
+              SOURCES ${TESTLOCKFREE_SOURCES})
 endif(HAVE_OPENMP)
-
-## Unit test for MPIMessage
-if(HAVE_MPI)
-set(TESTMPIMESSAGE_SOURCES
-    testMPIMessage.cpp
-
-    ../src/MPICommunicator.hpp
-    ../src/MPIMessage.hpp
-    ../src/MPIMessageBox.hpp
-    ../src/MPIUtilities.hpp
-)
-add_unit_test(NAME testMPIMessage
-              SOURCES ${TESTMPIMESSAGE_SOURCES}
-              PARALLEL)
-endif(HAVE_MPI)
 
 ## RiemannSolver test
 set(TESTRIEMANNSOLVER_SOURCES
     testRiemannSolver.cpp
-
-    ../src/ExactRiemannSolver.hpp
-    ../src/RiemannSolver.hpp
 )
 add_unit_test(NAME testRiemannSolver
               SOURCES ${TESTRIEMANNSOLVER_SOURCES})
@@ -719,120 +432,49 @@ add_unit_test(NAME testRiemannSolver
 ## HydroIntegrator test
 set(TESTHYDROINTEGRATOR_SOURCES
     testHydroIntegrator.cpp
-
-    ../src/CartesianDensityGrid.cpp
-    ../src/DensityGrid.cpp
-    ../src/HydroIntegrator.hpp
-    ../src/HydroVariables.hpp
-    ../src/NewVoronoiCellConstructor.cpp
-    ../src/NewVoronoiGrid.cpp
-    ../src/OldVoronoiCell.cpp
-    ../src/OldVoronoiGrid.cpp
-    ../src/SPHNGVoronoiGeneratorDistribution.cpp
-    ../src/VoronoiDensityGrid.cpp
 )
-if(HAVE_HDF5)
-  list(APPEND TESTHYDROINTEGRATOR_SOURCES
-       ../src/CMacIonizeVoronoiGeneratorDistribution.cpp
-       )
-  add_unit_test(NAME testHydroIntegrator
-                SOURCES ${TESTHYDROINTEGRATOR_SOURCES}
-                LIBS ${HDF5_LIBRARIES})
-else(HAVE_HDF5)
-  add_unit_test(NAME testHydroIntegrator
-                SOURCES ${TESTHYDROINTEGRATOR_SOURCES})
-endif(HAVE_HDF5)
-
-## ParallelCartesianDensityGrid test
-if(HAVE_HDF5)
-set(TESTPARALLELCARTESIANDENSITYGRID_SOURCES
-    testParallelCartesianDensityGrid.cpp
-
-    ../src/ParallelCartesianDensityGrid.hpp
-    ../src/ParallelCartesianDensitySubGrid.hpp
-    ../src/ParameterFile.cpp
-)
-add_unit_test(NAME testParallelCartesianDensityGrid
-              SOURCES ${TESTPARALLELCARTESIANDENSITYGRID_SOURCES}
-              LIBS ${HDF5_LIBRARIES})
-endif(HAVE_HDF5)
-
-## PhotonPool test
-set(TESTPHOTONPOOL_SOURCES
-    testPhotonPool.cpp
-
-    ../src/PhotonBatch.hpp
-    ../src/PhotonBucket.hpp
-    ../src/PhotonPool.hpp
-)
-add_unit_test(NAME testPhotonPool
-              SOURCES ${TESTPHOTONPOOL_SOURCES})
+add_unit_test(NAME testHydroIntegrator
+              SOURCES ${TESTHYDROINTEGRATOR_SOURCES}
+              LIBS LegacyEngine)
 
 ## AsciiFileDensityGridWriter test
 set(TESTASCIIFILEDENSITYGRIDWRITER_SOURCES
     testAsciiFileDensityGridWriter.cpp
-
-    ../src/AsciiFileDensityGridWriter.cpp
-    ../src/AsciiFileDensityGridWriter.hpp
-    ../src/CartesianDensityGrid.cpp
-    ../src/DensityGrid.cpp
-    ../src/ParameterFile.cpp
 )
 add_unit_test(NAME testAsciiFileDensityGridWriter
-              SOURCES ${TESTASCIIFILEDENSITYGRIDWRITER_SOURCES})
+              SOURCES ${TESTASCIIFILEDENSITYGRIDWRITER_SOURCES}
+              LIBS LegacyEngine)
 
 ## VoronoiGrid test
 set(TESTOLDVORONOIGRID_SOURCES
     testOldVoronoiGrid.cpp
-
-    ../src/OldVoronoiCell.cpp
-    ../src/OldVoronoiCell.hpp
-    ../src/OldVoronoiEdge.hpp
-    ../src/OldVoronoiGrid.cpp
-    ../src/OldVoronoiGrid.hpp
-    ../src/VoronoiFace.hpp
 )
 add_unit_test(NAME testOldVoronoiGrid
-              SOURCES ${TESTOLDVORONOIGRID_SOURCES})
+              SOURCES ${TESTOLDVORONOIGRID_SOURCES}
+              LIBS LegacyEngine)
 
 ## PointLocations test
 set(TESTPOINTLOCATIONS_SOURCES
     testPointLocations.cpp
-
-    ../src/PointLocations.hpp
 )
 add_unit_test(NAME testPointLocations
               SOURCES ${TESTPOINTLOCATIONS_SOURCES})
 
-## BinarySearchTree test
-set(TESTBINARYSEARCHTREE_SOURCES
-    testBinarySearchTree.cpp
-
-    ../src/BinarySearchTree.hpp
-)
-add_unit_test(NAME testBinarySearchTree
-              SOURCES ${TESTBINARYSEARCHTREE_SOURCES})
-
 ## WMBasicPhotonSourceSpectrum test
 set(TESTWMBASICPHOTONSOURCESPECTRUM_SOURCES
     testWMBasicPhotonSourceSpectrum.cpp
-
-    ../src/WMBasicDataLocation.hpp.in
-    ../src/WMBasicPhotonSourceSpectrum.cpp
-    ../src/WMBasicPhotonSourceSpectrum.hpp
 )
 add_unit_test(NAME testWMBasicPhotonSourceSpectrum
-              SOURCES ${TESTWMBASICPHOTONSOURCESPECTRUM_SOURCES})
+              SOURCES ${TESTWMBASICPHOTONSOURCESPECTRUM_SOURCES}
+              LIBS SharedEngine)
 
 ## InterpolatedDensityFunction test
 set(TESTINTERPOLATEDDENSITYFUNCTION_SOURCES
     testInterpolatedDensityFunction.cpp
-
-    ../src/InterpolatedDensityFunction.cpp
-    ../src/InterpolatedDensityFunction.cpp
 )
 add_unit_test(NAME testInterpolatedDensityFunction
-              SOURCES ${TESTINTERPOLATEDDENSITYFUNCTION_SOURCES})
+              SOURCES ${TESTINTERPOLATEDDENSITYFUNCTION_SOURCES}
+              LIBS SharedEngine)
 configure_file(${PROJECT_SOURCE_DIR}/test/test_interpolated_density.txt
                ${PROJECT_BINARY_DIR}/rundir/test/test_interpolated_density.txt
                COPYONLY)
@@ -840,115 +482,57 @@ configure_file(${PROJECT_SOURCE_DIR}/test/test_interpolated_density.txt
 ## FractalDistributionGenerator test
 set(TESTFRACTALDENSITYMASK_SOURCES
     testFractalDensityMask.cpp
-
-    ../src/AsciiFileDensityGridWriter.cpp
-    ../src/CartesianDensityGrid.cpp
-    ../src/DensityGrid.cpp
-    ../src/DensityMask.hpp
-    ../src/FractalDensityMask.hpp
 )
 add_unit_test(NAME testFractalDensityFunction
-              SOURCES ${TESTFRACTALDENSITYMASK_SOURCES})
+              SOURCES ${TESTFRACTALDENSITYMASK_SOURCES}
+              LIBS LegacyEngine)
 
 ## VoronoiDensityGrid test
 set(TESTVORONOIDENSITYGRID_SOURCES
     testVoronoiDensityGrid.cpp
-
-    ../src/DensityGrid.cpp
-    ../src/NewVoronoiCellConstructor.cpp
-    ../src/NewVoronoiGrid.cpp
-    ../src/OldVoronoiCell.cpp
-    ../src/OldVoronoiCell.hpp
-    ../src/OldVoronoiGrid.cpp
-    ../src/OldVoronoiGrid.hpp
-    ../src/SPHNGVoronoiGeneratorDistribution.cpp
-    ../src/UniformRandomVoronoiGeneratorDistribution.hpp
-    ../src/UniformRegularVoronoiGeneratorDistribution.hpp
-    ../src/VoronoiDensityGrid.cpp
-    ../src/VoronoiDensityGrid.hpp
-    ../src/VoronoiGeneratorDistribution.hpp
-    ../src/VoronoiGrid.hpp
-    ../src/VoronoiGridFactory.hpp
 )
-if(HAVE_HDF5)
-  list(APPEND TESTVORONOIDENSITYGRID_SOURCES
-       ../src/CMacIonizeVoronoiGeneratorDistribution.cpp
-       )
-  add_unit_test(NAME testVoronoiDensityGrid
-                SOURCES ${TESTVORONOIDENSITYGRID_SOURCES}
-                LIBS ${HDF5_LIBRARIES})
-else(HAVE_HDF5)
-  add_unit_test(NAME testVoronoiDensityGrid
-                SOURCES ${TESTVORONOIDENSITYGRID_SOURCES})
-endif(HAVE_HDF5)
+add_unit_test(NAME testVoronoiDensityGrid
+              SOURCES ${TESTVORONOIDENSITYGRID_SOURCES}
+              LIBS LegacyEngine)
 
 ## Unit test for OIAMRRefinementScheme
 set(TESTOIAMRREFINEMENTSCHEME_SOURCES
     testOIAMRRefinementScheme.cpp
-
-    ../src/AMRRefinementScheme.hpp
-    ../src/DensityGrid.cpp
-    ../src/OIAMRRefinementScheme.hpp
 )
 add_unit_test(NAME testOIAMRRefinementScheme
-              SOURCES ${TESTOIAMRREFINEMENTSCHEME_SOURCES})
+              SOURCES ${TESTOIAMRREFINEMENTSCHEME_SOURCES}
+              LIBS LegacyEngine)
 
 ## Unit test for NewVoronoiGrid
 if(HAVE_MULTIPRECISION)
   set(TESTNEWVORONOIGRID_SOURCES
       testNewVoronoiGrid.cpp
-
-      ../src/NewVoronoiBox.hpp
-      ../src/NewVoronoiCell.hpp
-      ../src/NewVoronoiCellConstructor.cpp
-      ../src/NewVoronoiCellConstructor.hpp
-      ../src/NewVoronoiGrid.cpp
-      ../src/NewVoronoiGrid.hpp
-      ../src/NewVoronoiTetrahedron.hpp
-      ../src/NewVoronoiVariables.hpp
   )
   add_unit_test(NAME testNewVoronoiGrid
-                SOURCES ${TESTNEWVORONOIGRID_SOURCES})
+                SOURCES ${TESTNEWVORONOIGRID_SOURCES}
+                LIBS LegacyEngine)
 endif(HAVE_MULTIPRECISION)
 
 ## Unit test for ExactGeometricTests
 if(HAVE_MULTIPRECISION)
   set(TESTEXACTGEOMETRICTESTS_SOURCES
       testExactGeometricTests.cpp
-
-      ../src/ExactGeometricTests.hpp
   )
   add_unit_test(NAME testExactGeometricTests
                 SOURCES ${TESTEXACTGEOMETRICTESTS_SOURCES})
 endif(HAVE_MULTIPRECISION)
 
-## Unit test for HilbertKeyGenerator
-set(TESTHILBERTKEYGENERATOR_SOURCES
-    testHilbertKeyGenerator.cpp
-
-    ../src/HilbertKeyGenerator.hpp
-)
-add_unit_test(NAME testHilbertKeyGenerator
-              SOURCES ${TESTHILBERTKEYGENERATOR_SOURCES})
-
 ## Unit test for SpiralGalaxyDensityFunction
 set(TESTSPIRALGALAXYDENSITYFUNCTION_SOURCES
     testSpiralGalaxyDensityFunction.cpp
-
-    ../src/AsciiFileDensityGridWriter.cpp
-    ../src/CartesianDensityGrid.cpp
-    ../src/DensityGrid.cpp
-    ../src/ParameterFile.cpp
-    ../src/SpiralGalaxyDensityFunction.hpp
 )
 add_unit_test(NAME testSpiralGalaxyDensityFunction
-              SOURCES ${TESTSPIRALGALAXYDENSITYFUNCTION_SOURCES})
+              SOURCES ${TESTSPIRALGALAXYDENSITYFUNCTION_SOURCES}
+              LIBS LegacyEngine)
 
 ## Unit test for SpiralGalaxyContinuousPhotonSource
 set(TESTSPIRALGALAXYCONTINUOUSPHOTONSOURCE_SOURCES
     testSpiralGalaxyContinuousPhotonSource.cpp
-
-    ../src/SpiralGalaxyContinuousPhotonSource.hpp
 )
 add_unit_test(NAME testSpiralGalaxyContinuousPhotonSource
               SOURCES ${TESTSPIRALGALAXYCONTINUOUSPHOTONSOURCE_SOURCES})
@@ -956,8 +540,6 @@ add_unit_test(NAME testSpiralGalaxyContinuousPhotonSource
 ## Unit test for CCDImage
 set(TESTCCDIMAGE_SOURCES
     testCCDImage.cpp
-
-    ../src/CCDImage.hpp
 )
 add_unit_test(NAME testCCDImage
               SOURCES ${TESTCCDIMAGE_SOURCES})
@@ -965,25 +547,10 @@ add_unit_test(NAME testCCDImage
 ## Unit test for DustSimulation
 set(TESTDUSTSIMULATION_SOURCES
     testDustSimulation.cpp
-
-    ../src/CartesianDensityGrid.cpp
-    ../src/CommandLineOption.cpp
-    ../src/CommandLineParser.cpp
-    ../src/DensityGrid.cpp
-    ../src/DustScattering.cpp
-    ../src/DustScattering.hpp
-    ../src/DustSimulation.cpp
-    ../src/DustSimulation.hpp
-    ../src/HeliumLymanContinuumSpectrum.cpp
-    ../src/HeliumTwoPhotonContinuumSpectrum.cpp
-    ../src/HydrogenLymanContinuumSpectrum.cpp
-    ../src/ParameterFile.cpp
-    ../src/PhotonSource.cpp
-    ../src/PhysicalDiffuseReemissionHandler.cpp
-    ../src/VernerCrossSections.cpp
 )
 add_unit_test(NAME testDustSimulation
-              SOURCES ${TESTDUSTSIMULATION_SOURCES})
+              SOURCES ${TESTDUSTSIMULATION_SOURCES}
+              LIBS DustEngine)
 configure_file(${PROJECT_SOURCE_DIR}/test/test_dustsimulation.param
                ${PROJECT_BINARY_DIR}/rundir/test/test_dustsimulation.param
                COPYONLY)
@@ -994,7 +561,7 @@ set(TESTIONIZATIONSIMULATION_SOURCES
 )
 add_unit_test(NAME testIonizationSimulation
               SOURCES ${TESTIONIZATIONSIMULATION_SOURCES}
-              LIBS IonizationSimulation)
+              LIBS LegacyEngine)
 configure_file(${PROJECT_SOURCE_DIR}/test/test_ionizationsimulation.param
                ${PROJECT_BINARY_DIR}/rundir/test/test_ionizationsimulation.param
                COPYONLY)
@@ -1031,17 +598,10 @@ add_unit_test(NAME testCMICLibrary
 ## Unit test for PhysicalDiffuseReemissionHandler
 set(TESTPHYSICALDIFFUSEREEMISSIONHANDLER_SOURCES
     testPhysicalDiffuseReemissionHandler.cpp
-
-    ../src/DiffuseReemissionHandler.hpp
-    ../src/HeliumLymanContinuumSpectrum.cpp
-    ../src/HeliumTwoPhotonContinuumSpectrum.cpp
-    ../src/HydrogenLymanContinuumSpectrum.cpp
-    ../src/PhysicalDiffuseReemissionHandler.cpp
-    ../src/PhysicalDiffuseReemissionHandler.hpp
-    ../src/VernerCrossSections.cpp
 )
 add_unit_test(NAME testPhysicalDiffuseReemissionHandler
-              SOURCES ${TESTPHYSICALDIFFUSEREEMISSIONHANDLER_SOURCES})
+              SOURCES ${TESTPHYSICALDIFFUSEREEMISSIONHANDLER_SOURCES}
+              LIBS SharedEngine)
 configure_file(${PROJECT_SOURCE_DIR}/test/probset_testdata.txt
                ${PROJECT_BINARY_DIR}/rundir/test/probset_testdata.txt
                COPYONLY)
@@ -1049,8 +609,6 @@ configure_file(${PROJECT_SOURCE_DIR}/test/probset_testdata.txt
 ## Unit test for TimeLine
 set(TESTTIMELINE_SOURCES
     testTimeLine.cpp
-
-    ../src/TimeLine.hpp
 )
 add_unit_test(NAME testTimeLine
               SOURCES ${TESTTIMELINE_SOURCES})
@@ -1058,75 +616,30 @@ add_unit_test(NAME testTimeLine
 ## Unit test for GradientCalculator
 set(TESTGRADIENTCALCULATOR_SOURCES
     testGradientCalculator.cpp
-
-    ../src/CartesianDensityGrid.cpp
-    ../src/DensityGrid.cpp
-    ../src/GradientCalculator.hpp
-    ../src/HydroBoundaryConditions.hpp
-    ../src/NewVoronoiCellConstructor.cpp
-    ../src/NewVoronoiGrid.cpp
-    ../src/OldVoronoiCell.cpp
-    ../src/OldVoronoiGrid.cpp
-    ../src/SPHNGVoronoiGeneratorDistribution.cpp
-    ../src/VoronoiDensityGrid.cpp
 )
-if(HAVE_HDF5)
-  list(APPEND TESTGRADIENTCALCULATOR_SOURCES
-       ../src/CMacIonizeVoronoiGeneratorDistribution.cpp
-       )
-  add_unit_test(NAME testGradientCalculator
-                SOURCES ${TESTGRADIENTCALCULATOR_SOURCES}
-                LIBS ${HDF5_LIBRARIES})
-else(HAVE_HDF5)
-  add_unit_test(NAME testGradientCalculator
-                SOURCES ${TESTGRADIENTCALCULATOR_SOURCES})
-endif(HAVE_HDF5)
+add_unit_test(NAME testGradientCalculator
+              SOURCES ${TESTGRADIENTCALCULATOR_SOURCES}
+              LIBS LegacyEngine)
 
 ## Unit test for MaskedPhotonSourceSpectrum
 set(TESTMASKEDPHOTONSOURCESPECTRUM_SOURCES
     testMaskedPhotonSourceSpectrum.cpp
-
-    ../src/FaucherGiguerePhotonSourceSpectrum.cpp
-    ../src/LinearPhotonSourceSpectrumMask.hpp
-    ../src/MaskedPhotonSourceSpectrum.cpp
-    ../src/MaskedPhotonSourceSpectrum.hpp
-    ../src/Pegase3PhotonSourceSpectrum.cpp
-    ../src/PhotonSourceSpectrumMask.hpp
-    ../src/PhotonSourceSpectrumMaskFactory.hpp
-    ../src/PlanckPhotonSourceSpectrum.cpp
-    ../src/PopStarPhotonSourceSpectrum.cpp
-    ../src/WMBasicPhotonSourceSpectrum.cpp
 )
-if(HAVE_HDF5)
-  list(APPEND TESTMASKEDPHOTONSOURCESPECTRUM_SOURCES
-       ../src/CastelliKuruczPhotonSourceSpectrum.cpp
-       )
-  add_unit_test(NAME testMaskedPhotonSourceSpectrum
-                SOURCES ${TESTMASKEDPHOTONSOURCESPECTRUM_SOURCES}
-                LIBS ${HDF5_LIBRARIES})
-else(HAVE_HDF5)
-  add_unit_test(NAME testMaskedPhotonSourceSpectrum
-                SOURCES ${TESTMASKEDPHOTONSOURCESPECTRUM_SOURCES})
-endif(HAVE_HDF5)
+add_unit_test(NAME testMaskedPhotonSourceSpectrum
+              SOURCES ${TESTMASKEDPHOTONSOURCESPECTRUM_SOURCES}
+              LIBS SharedEngine)
 
 ## Unit test for SPHArrayInterface
 set(TESTSPHARRAYINTERFACE_SOURCES
     testSPHArrayInterface.cpp
-
-    ../src/AsciiFileDensityGridWriter.cpp
-    ../src/CartesianDensityGrid.cpp
-    ../src/DensityGrid.cpp
-    ../src/SPHArrayInterface.cpp
-    ../src/SPHArrayInterface.hpp
 )
 add_unit_test(NAME testSPHArrayInterface
-              SOURCES ${TESTSPHARRAYINTERFACE_SOURCES})
+              SOURCES ${TESTSPHARRAYINTERFACE_SOURCES}
+              LIBS CMILibrary)
 
 ## Unit test for LambertW
 set(TESTLAMBERTW_SOURCES
     testLambertW.cpp
-
-    ../src/LambertW.hpp
 )
 add_unit_test(NAME testLambertW
               SOURCES ${TESTLAMBERTW_SOURCES})
@@ -1137,8 +650,6 @@ configure_file(${PROJECT_SOURCE_DIR}/test/test_lambertw_input.txt
 ## Unit test for BondiProfile
 set(TESTBONDIPROFILE_SOURCES
     testBondiProfile.cpp
-
-    ../src/BondiProfile.hpp
 )
 add_unit_test(NAME testBondiProfile
               SOURCES ${TESTBONDIPROFILE_SOURCES})
@@ -1146,31 +657,22 @@ add_unit_test(NAME testBondiProfile
 ## Unit test for BlockSyntaxHydroMask
 set(TESTBLOCKSYNTAXHYDROMASK_SOURCES
     testBlockSyntaxHydroMask.cpp
-
-    ../src/CartesianDensityGrid.cpp
-    ../src/DensityGrid.cpp
-    ../src/BlockSyntaxHydroMask.hpp
 )
 add_unit_test(NAME testBlockSyntaxHydroMask
-              SOURCES ${TESTBLOCKSYNTAXHYDROMASK_SOURCES})
+              SOURCES ${TESTBLOCKSYNTAXHYDROMASK_SOURCES}
+              LIBS LegacyEngine)
 
 ## Unit test for RescaledICHydroMask
 set(TESTRESCALEDICHYDROMASK
     testRescaledICHydroMask.cpp
-
-    ../src/CartesianDensityGrid.cpp
-    ../src/DensityGrid.cpp
-    ../src/RescaledICHydroMask.hpp
 )
 add_unit_test(NAME testRescaledICHydroMask
-              SOURCES ${TESTRESCALEDICHYDROMASK})
+              SOURCES ${TESTRESCALEDICHYDROMASK}
+              LIBS LegacyEngine)
 
 ## Unit test for PointMassExternalPotential
 set(TESTPOINTMASSEXTERNALPOTENTIAL_SOURCES
     testPointMassExternalPotential.cpp
-
-    ../src/ExternalPotential.hpp
-    ../src/PointMassExternalPotential.hpp
 )
 add_unit_test(NAME testPointMassExternalPotential
               SOURCES ${TESTPOINTMASSEXTERNALPOTENTIAL_SOURCES})
@@ -1178,8 +680,6 @@ add_unit_test(NAME testPointMassExternalPotential
 ## Unit test for MD5Sum
 set(TESTMD5SUM_SOURCES
     testMD5Sum.cpp
-
-    ../src/MD5Sum.hpp
 )
 add_unit_test(NAME testMD5Sum
               SOURCES ${TESTMD5SUM_SOURCES})
@@ -1187,9 +687,6 @@ add_unit_test(NAME testMD5Sum
 ## Unit test for DiscPatchExternalPotential
 set(TESTDISCPATCHEXTERNALPOTENTIAL_SOURCES
     testDiscPatchExternalPotential.cpp
-
-    ../src/DiscPatchDensityFunction.hpp
-    ../src/DiscPatchExternalPotential.hpp
 )
 add_unit_test(NAME testDiscPatchExternalPotential
               SOURCES ${TESTDISCPATCHEXTERNALPOTENTIAL_SOURCES})
@@ -1197,8 +694,6 @@ add_unit_test(NAME testDiscPatchExternalPotential
 ## Unit test for DiscPatchPhotonSourceDistribution
 set(TESTDISCPATCHPHOTONSOURCEDISTRIBUTION_SOURCES
     testDiscPatchPhotonSourceDistribution.cpp
-
-    ../src/DiscPatchPhotonSourceDistribution.hpp
 )
 add_unit_test(NAME testDiscPatchPhotonSourceDistribution
               SOURCES ${TESTDISCPATCHPHOTONSOURCEDISTRIBUTION_SOURCES})
@@ -1206,8 +701,6 @@ add_unit_test(NAME testDiscPatchPhotonSourceDistribution
 ## Unit test for InternalHydroUnits
 set(TESTINTERNALHYDROUNITS_SOURCES
     testInternalHydroUnits.cpp
-
-    ../src/InternalHydroUnits.hpp
 )
 add_unit_test(NAME testInternalHydroUnits
               SOURCES ${TESTINTERNALHYDROUNITS_SOURCES})
@@ -1215,19 +708,14 @@ add_unit_test(NAME testInternalHydroUnits
 ## Unit test for TreeSelfGravity
 set(TESTTREESELFGRAVITY_SOURCES
     testTreeSelfGravity.cpp
-
-    ../src/CartesianDensityGrid.cpp
-    ../src/DensityGrid.cpp
-    ../src/TreeSelfGravity.hpp
 )
 add_unit_test(NAME testTreeSelfGravity
-              SOURCES ${TESTTREESELFGRAVITY_SOURCES})
+              SOURCES ${TESTTREESELFGRAVITY_SOURCES}
+              LIBS LegacyEngine)
 
 ## Unit test for MortonKeyGenerator
 set(TESTMORTONKEYGENERATOR_SOURCES
     testMortonKeyGenerator.cpp
-
-    ../src/MortonKeyGenerator.hpp
 )
 add_unit_test(NAME testMortonKeyGenerator
               SOURCES ${TESTMORTONKEYGENERATOR_SOURCES})
@@ -1235,20 +723,14 @@ add_unit_test(NAME testMortonKeyGenerator
 ## Unit test for DeRijckeRadiativeCooling
 set(TESTDERIJCKERADIATIVECOOLING_SOURCES
     testDeRijckeRadiativeCooling.cpp
-
-    ../src/DeRijckeDataLocation.hpp.in
-    ../src/DeRijckeRadiativeCooling.cpp
-    ../src/DeRijckeRadiativeCooling.hpp
 )
 add_unit_test(NAME testDeRijckeRadiativeCooling
-              SOURCES ${TESTDERIJCKERADIATIVECOOLING_SOURCES})
+              SOURCES ${TESTDERIJCKERADIATIVECOOLING_SOURCES}
+              LIBS SharedEngine)
 
 ## Unit test for CoredDMProfileExternalPotential
 set(TESTCOREDDMPROFILEEXTERNALPOTENTIAL_SOURCES
     testCoredDMProfileExternalPotential.cpp
-
-    ../src/CoredDMProfileDensityFunction.hpp
-    ../src/CoredDMProfileExternalPotential.hpp
 )
 add_unit_test(NAME testCoredDMProfileExternalPotential
               SOURCES ${TESTCOREDDMPROFILEEXTERNALPOTENTIAL_SOURCES})
@@ -1256,8 +738,6 @@ add_unit_test(NAME testCoredDMProfileExternalPotential
 ## Unit test for DwarfGalaxyPhotonSourceDistribution
 set(TESTDWARFGALAXYPHOTONSOURCEDISTRIBUTION_SOURCES
     testDwarfGalaxyPhotonSourceDistribution.cpp
-
-    ../src/DwarfGalaxyPhotonSourceDistribution.hpp
 )
 add_unit_test(NAME testDwarfGalaxyPhotonSourceDistribution
               SOURCES ${TESTDWARFGALAXYPHOTONSOURCEDISTRIBUTION_SOURCES})
@@ -1265,68 +745,35 @@ add_unit_test(NAME testDwarfGalaxyPhotonSourceDistribution
 ## Unit test for CaproniPhotonSourceDistribution
 set(TESTCAPRONIPHOTONSOURCEDISTRIBUTION_SOURCES
     testCaproniPhotonSourceDistribution.cpp
-
-    ../src/CaproniPhotonSourceDistribution.hpp
-    ../src/CartesianDensityGrid.cpp
-    ../src/DensityGrid.cpp
 )
 add_unit_test(NAME testCaproniPhotonSourceDistribution
-              SOURCES ${TESTCAPRONIPHOTONSOURCEDISTRIBUTION_SOURCES})
+              SOURCES ${TESTCAPRONIPHOTONSOURCEDISTRIBUTION_SOURCES}
+              LIBS LegacyEngine)
 
 ## Unit test for SingleSupernovaPhotonSourceDistribution
 set(TESTSINGLESUPERNOVAPHOTONSOURCEDISTRIBUTION_SOURCES
     testSingleSupernovaPhotonSourceDistribution.cpp
-
-    ../src/CartesianDensityGrid.cpp
-    ../src/DensityGrid.cpp
-    ../src/SingleSupernovaPhotonSourceDistribution.hpp
 )
 add_unit_test(NAME testSingleSupernovaPhotonSourceDistribution
-              SOURCES ${TESTSINGLESUPERNOVAPHOTONSOURCEDISTRIBUTION_SOURCES})
+              SOURCES ${TESTSINGLESUPERNOVAPHOTONSOURCEDISTRIBUTION_SOURCES}
+              LIBS LegacyEngine)
 
 ## Unit test for RestartManager
 set(TESTRESTARTMANAGER_SOURCES
     testRestartManager.cpp
-
-    ../src/RestartManager.hpp
-    ../src/RestartReader.hpp
-    ../src/RestartWriter.hpp
 )
 add_unit_test(NAME testRestartManager
-              SOURCES ${TESTRESTARTMANAGER_SOURCES})
+              SOURCES ${TESTRESTARTMANAGER_SOURCES}
+              LIBS SharedEngine)
 
 ## Unit test for AmunSnapshotDensityFunction
 if(HAVE_HDF5)
 set(TESTAMUNSNAPSHOTDENSITYFUNCTION_SOURCES
     testAmunSnapshotDensityFunction.cpp
-
-    Assert.hpp
-
-    ../src/AmunSnapshotDensityFunction.cpp
-    ../src/AmunSnapshotDensityFunction.hpp
-    ../src/Box.hpp
-    ../src/CartesianDensityGrid.cpp
-    ../src/CartesianDensityGrid.hpp
-    ../src/ChargeTransferRates.cpp
-    ../src/CoordinateVector.hpp
-    ../src/CubicSplineKernel.hpp
-    ../src/DensityFunction.hpp
-    ../src/DensityGrid.cpp
-    ../src/DensityValues.hpp
-    ../src/ElementNames.hpp
-    ../src/Error.hpp
-    ../src/HDF5Tools.hpp
-    ../src/IonizationStateCalculator.cpp
-    ../src/IonizationStateCalculator.hpp
-    ../src/ParameterFile.cpp
-    ../src/ParameterFile.hpp
-    ../src/Photon.hpp
-    ../src/RecombinationRates.hpp
-    ../src/Timer.hpp
 )
 add_unit_test(NAME testAmunSnapshotDensityFunction
               SOURCES ${TESTAMUNSNAPSHOTDENSITYFUNCTION_SOURCES}
-              LIBS ${HDF5_LIBRARIES})
+              LIBS LegacyEngine)
 configure_file(${PROJECT_SOURCE_DIR}/test/Amun_test_00.h5
                ${PROJECT_BINARY_DIR}/rundir/test/Amun_test_00.h5
                COPYONLY)
@@ -1344,30 +791,18 @@ endif(HAVE_HDF5)
 ## Unit test for SpectrumTracker
 set(TESTSPECTRUMTRACKER_SOURCES
     testSpectrumTracker.cpp
-
-    ../src/SpectrumTracker.hpp
-    ../src/Tracker.hpp
-    ../src/TrackerFactory.hpp
-    ../src/WMBasicPhotonSourceSpectrum.cpp
 )
 add_unit_test(NAME testSpectrumTracker
-              SOURCES ${TESTSPECTRUMTRACKER_SOURCES})
+              SOURCES ${TESTSPECTRUMTRACKER_SOURCES}
+              LIBS SharedEngine)
 
 ## Unit test for TrackerManager
 set(TESTTRACKERMANAGER_SOURCES
     testTrackerManager.cpp
-
-    ../src/CartesianDensityGrid.cpp
-    ../src/DensityGrid.cpp
-    ../src/MultiTracker.cpp
-    ../src/TrackerManager.hpp
 )
-if(HAVE_HDF5)
-  set(TESTTRACKERMANAGER_LIBS ${HDF5_LIBRARIES})
-endif(HAVE_HDF5)
 add_unit_test(NAME testTrackerManager
               SOURCES ${TESTTRACKERMANAGER_SOURCES}
-              LIBS ${TESTTRACKERMANAGER_LIBS})
+              LIBS LegacyEngine)
 configure_file(
   ${PROJECT_SOURCE_DIR}/test/test_tracker_manager.yml
   ${PROJECT_BINARY_DIR}/rundir/test/test_tracker_manager.yml @ONLY)
@@ -1375,16 +810,10 @@ configure_file(
 ## Unit test for MultiTracker
 set(TESTMULTITRACKER_SOURCES
     testMultiTracker.cpp
-
-    ../src/MultiTracker.cpp
-    ../src/MultiTracker.hpp
 )
-if(HAVE_HDF5)
-  set(TESTMULTITRACKER_LIBS ${HDF5_LIBRARIES})
-endif(HAVE_HDF5)
 add_unit_test(NAME testMultiTracker
               SOURCES ${TESTMULTITRACKER_SOURCES}
-              LIBS ${TESTMULTITRACKER_LIBS})
+              LIBS SharedEngine)
 configure_file(
   ${PROJECT_SOURCE_DIR}/test/test_multi_tracker.yml
   ${PROJECT_BINARY_DIR}/rundir/test/test_multi_tracker.yml @ONLY)
@@ -1393,18 +822,10 @@ configure_file(
 if(HAVE_HDF5)
 set(TESTEMISSIVITYCALCULATIONSIMULATION_SOURCES
     testEmissivityCalculationSimulation.cpp
-
-    ../src/CommandLineOption.cpp
-    ../src/CommandLineParser.cpp
-    ../src/EmissivityCalculationSimulation.cpp
-    ../src/EmissivityCalculationSimulation.hpp
-    ../src/EmissivityCalculator.cpp
-    ../src/LineCoolingData.cpp
-    ../src/ParameterFile.cpp
 )
 add_unit_test(NAME testEmissivityCalculationSimulation
               SOURCES ${TESTEMISSIVITYCALCULATIONSIMULATION_SOURCES}
-              LIBS ${HDF5_LIBRARIES})
+              LIBS EmissionEngine)
 configure_file(
   ${PROJECT_SOURCE_DIR}/test/test_emissivitycalculationsimulation.param
   ${PROJECT_BINARY_DIR}/rundir/test/test_emissivitycalculationsimulation.param
@@ -1416,19 +837,14 @@ endif(HAVE_HDF5)
 ## Unit test for StatisticsLogger
 set(TESTSTATISTICSLOGGER_SOURCES
     testStatisticsLogger.cpp
-
-    ../src/CartesianDensityGrid.cpp
-    ../src/DensityGrid.cpp
-    ../src/StatisticsLogger.hpp
 )
 add_unit_test(NAME testStatisticsLogger
-              SOURCES ${TESTSTATISTICSLOGGER_SOURCES})
+              SOURCES ${TESTSTATISTICSLOGGER_SOURCES}
+              LIBS LegacyEngine)
 
 ## Unit test for PlanarContinuousPhotonSource
 set(TESTPLANARCONTINUOUSPHOTONSOURCE_SOURCES
     testPlanarContinuousPhotonSource.cpp
-
-    ../src/PlanarContinuousPhotonSource.hpp
 )
 add_unit_test(NAME testPlanarContinuousPhotonSource
               SOURCES ${TESTPLANARCONTINUOUSPHOTONSOURCE_SOURCES})
@@ -1436,8 +852,6 @@ add_unit_test(NAME testPlanarContinuousPhotonSource
 ## Unit test for ExtendedDiscContinuousPhotonSource
 set(TESTEXTENDEDDISCCONTINUOUSPHOTONSOURCE_SOURCES
     testExtendedDiscContinuousPhotonSource.cpp
-
-    ../src/ExtendedDiscContinuousPhotonSource.hpp
 )
 add_unit_test(NAME testExtendedDiscContinuousPhotonSource
               SOURCES ${TESTEXTENDEDDISCCONTINUOUSPHOTONSOURCE_SOURCES})
@@ -1445,8 +859,6 @@ add_unit_test(NAME testExtendedDiscContinuousPhotonSource
 ## Unit test for UniformPhotonSourceSpectrum
 set(TESTUNIFORMPHOTONSOURCESPECTRUM_SOURCES
     testUniformPhotonSourceSpectrum.cpp
-
-    ../src/UniformPhotonSourceSpectrum.hpp
 )
 add_unit_test(NAME testUniformPhotonSourceSpectrum
               SOURCES ${TESTUNIFORMPHOTONSOURCESPECTRUM_SOURCES})
@@ -1454,10 +866,6 @@ add_unit_test(NAME testUniformPhotonSourceSpectrum
 ## Unit test for RateBasedUVLuminosityFunction
 set(TESTRATEBASEDUVLUMINOSITYFUNCTION_SOURCES
     testRateBasedUVLuminosityFunction.cpp
-
-    ../src/RateBasedUVLuminosityFunction.hpp
-    ../src/UVLuminosityFunction.hpp
-    ../src/UVLuminosityFunctionFactory.hpp
 )
 add_unit_test(NAME testRateBasedUVLuminosityFunction
               SOURCES ${TESTRATEBASEDUVLUMINOSITYFUNCTION_SOURCES})
@@ -1465,8 +873,6 @@ add_unit_test(NAME testRateBasedUVLuminosityFunction
 ## Unit test for IMFBasedUVLuminosityFunction
 set(TESTIMFBASEDUVLUMINOSITYFUNCTION_SOURCES
     testIMFBasedUVLuminosityFunction.cpp
-
-    ../src/IMFBasedUVLuminosityFunction.hpp
 )
 add_unit_test(NAME testIMFBasedUVLuminosityFunction
               SOURCES ${TESTIMFBASEDUVLUMINOSITYFUNCTION_SOURCES})
@@ -1475,8 +881,6 @@ add_unit_test(NAME testIMFBasedUVLuminosityFunction
 if(HAVE_OPENMP)
 set(TESTATOMICVALUE_SOURCES
     testAtomicValue.cpp
-
-    ../src/AtomicValue.hpp
 )
 add_unit_test(NAME testAtomicValue
               SOURCES ${TESTATOMICVALUE_SOURCES})
@@ -1486,8 +890,6 @@ endif(HAVE_OPENMP)
 if(HAVE_OPENMP)
 set(TESTTHREADSAFEVECTOR_SOURCES
     testThreadSafeVector.cpp
-
-    ../src/ThreadSafeVector.hpp
 )
 add_unit_test(NAME testThreadSafeVector
               SOURCES ${TESTTHREADSAFEVECTOR_SOURCES})
@@ -1497,8 +899,6 @@ endif(HAVE_OPENMP)
 if(HAVE_OPENMP)
 set(TESTTHREADLOCK_SOURCES
     testThreadLock.cpp
-
-    ../src/ThreadLock.hpp
 )
 add_unit_test(NAME testThreadLock
               SOURCES ${TESTTHREADLOCK_SOURCES})
@@ -1508,9 +908,6 @@ endif(HAVE_OPENMP)
 if(HAVE_OPENMP)
 set(TESTTASKQUEUE_SOURCES
     testTaskQueue.cpp
-
-    ../src/Task.hpp
-    ../src/TaskQueue.hpp
 )
 add_unit_test(NAME testTaskQueue
               SOURCES ${TESTTASKQUEUE_SOURCES})
@@ -1520,9 +917,6 @@ endif(HAVE_OPENMP)
 if(HAVE_MPI)
   set(TESTPHOTONBUFFER_SOURCES
       testPhotonBuffer.cpp
-
-      ../src/PhotonBuffer.hpp
-      ../src/PhotonPacket.hpp
   )
   add_unit_test(NAME testPhotonBuffer
                 SOURCES ${TESTPHOTONBUFFER_SOURCES}
@@ -1533,8 +927,6 @@ endif(HAVE_MPI)
 if(HAVE_OPENMP)
 set(TESTMEMORYSPACE_SOURCES
     testMemorySpace.cpp
-
-    ../src/MemorySpace.hpp
 )
 add_unit_test(NAME testMemorySpace
               SOURCES ${TESTMEMORYSPACE_SOURCES})
@@ -1543,21 +935,15 @@ endif(HAVE_OPENMP)
 ## Unit test for DensitySubGrid
 set(TESTDENSITYSUBGRID_SOURCES
     testDensitySubGrid.cpp
-
-    ../src/ChargeTransferRates.cpp
-    ../src/DensitySubGrid.hpp
-    ../src/IonizationStateCalculator.cpp
 )
 add_unit_test(NAME testDensitySubGrid
-              SOURCES ${TESTDENSITYSUBGRID_SOURCES})
+              SOURCES ${TESTDENSITYSUBGRID_SOURCES}
+              LIBS SharedEngine)
 
 ## Unit test for DensitySubGrid MPI communication
 if(HAVE_MPI)
 set(TESTDENSITYSUBGRID_MPI_SOURCES
     testDensitySubGrid_MPI.cpp
-
-    ../src/DensitySubGrid.hpp
-    ../src/MPITypes.hpp
 )
 add_unit_test(NAME testDensitySubGrid_MPI
               SOURCES ${TESTDENSITYSUBGRID_MPI_SOURCES}
@@ -1567,8 +953,6 @@ endif(HAVE_MPI)
 ## Unit test for DensitySubGridCreator
 set(TESTDENSITYSUBGRIDCREATOR_SOURCES
     testDensitySubGridCreator.cpp
-
-    ../src/DensitySubGridCreator.hpp
 )
 add_unit_test(NAME testDensitySubGridCreator
               SOURCES ${TESTDENSITYSUBGRIDCREATOR_SOURCES})
@@ -1576,23 +960,10 @@ add_unit_test(NAME testDensitySubGridCreator
 ## Unit test for TaskBasedIonizationSimulation
 set(TESTTASKBASEDIONIZATIONSIMULATION_SOURCES
     testTaskBasedIonizationSimulation.cpp
-
-    ../src/AsciiFileDensityGridWriter.cpp
-    ../src/ParameterFile.cpp
-    ../src/Signals.cpp
-
-    ${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
-    ${PROJECT_BINARY_DIR}/src/ConfigurationInfo.cpp
 )
-if(HAVE_HDF5)
-  list(APPEND TESTTASKBASEDIONIZATIONSIMULATION_SOURCES
-       ../src/GadgetDensityGridWriter.cpp)
-endif(HAVE_HDF5)
-set_source_files_properties(${PROJECT_BINARY_DIR}/src/CompilerInfo.cpp
-                            PROPERTIES GENERATED TRUE)
 add_unit_test(NAME testTaskBasedIonizationSimulation
               SOURCES ${TESTTASKBASEDIONIZATIONSIMULATION_SOURCES}
-              LIBS TaskBasedIonizationSimulation)
+              LIBS TaskBasedEngine)
 configure_file(
   ${PROJECT_SOURCE_DIR}/test/test_taskbasedionizationsimulation.param
   ${PROJECT_BINARY_DIR}/rundir/test/test_taskbasedionizationsimulation.param
@@ -1601,8 +972,6 @@ configure_file(
 ## Unit test for DistributedPhotonSource
 set(TESTDISTRIBUTEDPHOTONSOURCE_SOURCES
     testDistributedPhotonSource.cpp
-
-    ../src/DistributedPhotonSource.hpp
 )
 add_unit_test(NAME testDistributedPhotonSource
               SOURCES ${TESTDISTRIBUTEDPHOTONSOURCE_SOURCES})
@@ -1610,10 +979,6 @@ add_unit_test(NAME testDistributedPhotonSource
 ## Unit test for HydroDensitySubGrid
 set(TESTHYDRODENSITYSUBGRID_SOURCES
     testHydroDensitySubGrid.cpp
-
-    ../src/HydroBoundary.hpp
-    ../src/HydroBoundaryManager.hpp
-    ../src/HydroDensitySubGrid.hpp
 )
 add_unit_test(NAME testHydroDensitySubGrid
               SOURCES ${TESTHYDRODENSITYSUBGRID_SOURCES})
@@ -1621,8 +986,6 @@ add_unit_test(NAME testHydroDensitySubGrid
 ## Unit test for Hydro
 set(TESTHYDRO_SOURCES
     testHydro.cpp
-
-    ../src/Hydro.hpp
 )
 add_unit_test(NAME testHydro
               SOURCES ${TESTHYDRO_SOURCES})
@@ -1630,8 +993,6 @@ add_unit_test(NAME testHydro
 ## Unit test for AlveliusTurbulenceForcing
 set(TESTALVELIUSTURBULENCEFORCING_SOURCES
     testAlveliusTurbulenceForcing.cpp
-
-    ../src/AlveliusTurbulenceForcing.hpp
 )
 add_unit_test(NAME testAlveliusTurbulenceForcing
               SOURCES ${TESTALVELIUSTURBULENCEFORCING_SOURCES})
@@ -1639,8 +1000,6 @@ add_unit_test(NAME testAlveliusTurbulenceForcing
 # Unit test for MemoryLogger
 set(TESTMEMORYLOGGER_SOURCES
     testMemoryLogger.cpp
-
-    ../src/MemoryLogger.hpp
 )
 add_unit_test(NAME testMemoryLogger
               SOURCES ${TESTMEMORYLOGGER_SOURCES})
@@ -1648,8 +1007,6 @@ add_unit_test(NAME testMemoryLogger
 ## Unit test for BondiHydroBoundary
 set(TESTBONDIHYDROBOUNDARY_SOURCES
     testBondiHydroBoundary.cpp
-
-    ../src/BondiHydroBoundary.hpp
 )
 add_unit_test(NAME testBondiHydroBoundary
               SOURCES ${TESTBONDIHYDROBOUNDARY_SOURCES})
@@ -1657,8 +1014,6 @@ add_unit_test(NAME testBondiHydroBoundary
 ## Unit test for UniformRandomPhotonSourceDistribution
 set(TESTUNIFORMRANDOMPHOTONSOURCEDISTRIBUTION_SOURCES
     testUniformRandomPhotonSourceDistribution.cpp
-
-    ../src/UniformRandomPhotonSourceDistribution.hpp
 )
 add_unit_test(NAME testUniformRandomPhotonSourceDistribution
               SOURCES ${TESTUNIFORMRANDOMPHOTONSOURCEDISTRIBUTION_SOURCES})
@@ -1666,8 +1021,6 @@ add_unit_test(NAME testUniformRandomPhotonSourceDistribution
 ## Unit test for AsciiFilePhotonSourceDistribution
 set(TESTASCIIFILEPHOTONSOURCEDISTRIBUTION_SOURCES
     testAsciiFilePhotonSourceDistribution.cpp
-
-    ../src/AsciiFilePhotonSourceDistribution.hpp
 )
 add_unit_test(NAME testAsciiFilePhotonSourceDistribution
               SOURCES ${TESTASCIIFILEPHOTONSOURCEDISTRIBUTION_SOURCES})
@@ -1679,8 +1032,6 @@ configure_file(
 ## Unit test for SurfaceDensityCalculator
 set(TESTSURFACEDENSITYCALCULATOR_SOURCES
     testSurfaceDensityCalculator.cpp
-
-    ../src/SurfaceDensityCalculator.hpp
 )
 add_unit_test(NAME testSurfaceDensityCalculator
               SOURCES ${TESTSURFACEDENSITYCALCULATOR_SOURCES})
@@ -1688,8 +1039,6 @@ add_unit_test(NAME testSurfaceDensityCalculator
 ## Unit test for SurfaceDensityIonizedCalculator
 set(TESTSURFACEDENSITYIONIZEDCALCULATOR_SOURCES
     testSurfaceDensityIonizedCalculator.cpp
-
-    ../src/SurfaceDensityIonizedCalculator.hpp
 )
 add_unit_test(NAME testSurfaceDensityIonizedCalculator
               SOURCES ${TESTSURFACEDENSITYIONIZEDCALCULATOR_SOURCES})
@@ -1697,8 +1046,6 @@ add_unit_test(NAME testSurfaceDensityIonizedCalculator
 ## Unit test for DensityPDFCalculator
 set(TESTDENSITYPDFCALCULATOR_SOURCES
     testDensityPDFCalculator.cpp
-
-    ../src/DensityPDFCalculator.hpp
 )
 add_unit_test(NAME testDensityPDFCalculator
               SOURCES ${TESTDENSITYPDFCALCULATOR_SOURCES})
@@ -1706,8 +1053,6 @@ add_unit_test(NAME testDensityPDFCalculator
 ## Unit test for VelocityPDFCalculator
 set(TESTVELOCITYPDFCALCULATOR_SOURCES
     testVelocityPDFCalculator.cpp
-
-    ../src/VelocityPDFCalculator.hpp
 )
 add_unit_test(NAME testVelocityPDFCalculator
               SOURCES ${TESTVELOCITYPDFCALCULATOR_SOURCES})
@@ -1715,8 +1060,6 @@ add_unit_test(NAME testVelocityPDFCalculator
 ## Unit test for TimeLogger
 set(TESTTIMELOGGER_SOURCES
     testTimeLogger.cpp
-
-    ../src/TimeLogger.hpp
 )
 add_unit_test(NAME testTimeLogger
               SOURCES ${TESTTIMELOGGER_SOURCES})
@@ -1724,12 +1067,10 @@ add_unit_test(NAME testTimeLogger
 ## Unit test for PhantomSnapshotDensityFunction
 set(TESTPHANTOMSNAPSHOTDENSITYFUNCTION_SOURCES
     testPhantomSnapshotDensityFunction.cpp
-
-    ../src/PhantomSnapshotDensityFunction.cpp
-    ../src/PhantomSnapshotDensityFunction.hpp
 )
 add_unit_test(NAME testPhantomSnapshotDensityFunction
-              SOURCES ${TESTPHANTOMSNAPSHOTDENSITYFUNCTION_SOURCES})
+              SOURCES ${TESTPHANTOMSNAPSHOTDENSITYFUNCTION_SOURCES}
+              LIBS SharedEngine)
 configure_file(${PROJECT_SOURCE_DIR}/test/Phantomtest.dat
                ${PROJECT_BINARY_DIR}/rundir/test/Phantomtest.dat COPYONLY)
 configure_file(${PROJECT_SOURCE_DIR}/test/Phantom_data.txt
@@ -1738,42 +1079,30 @@ configure_file(${PROJECT_SOURCE_DIR}/test/Phantom_data.txt
 ## Pegase3PhotonSourceSpectrum test
 set(TESTPEGASE3PHOTONSOURCESPECTRUM_SOURCES
     testPegase3PhotonSourceSpectrum.cpp
-
-    ../src/Pegase3DataLocation.hpp.in
-    ../src/Pegase3PhotonSourceSpectrum.cpp
-    ../src/Pegase3PhotonSourceSpectrum.hpp
 )
 add_unit_test(NAME testPegase3PhotonSourceSpectrum
-             SOURCES ${TESTPEGASE3PHOTONSOURCESPECTRUM_SOURCES})
+              SOURCES ${TESTPEGASE3PHOTONSOURCESPECTRUM_SOURCES}
+              LIBS SharedEngine)
 
 ## PopStarPhotonSourceSpectrum test
 set(TESTPOPSTARPHOTONSOURCESPECTRUM_SOURCES
     testPopStarPhotonSourceSpectrum.cpp
-
-    ../src/PopStarDataLocation.hpp.in
-    ../src/PopStarPhotonSourceSpectrum.cpp
-    ../src/PopStarPhotonSourceSpectrum.hpp
 )
 add_unit_test(NAME testPopStarPhotonSourceSpectrum
-              SOURCES ${TESTPOPSTARPHOTONSOURCESPECTRUM_SOURCES})
+              SOURCES ${TESTPOPSTARPHOTONSOURCESPECTRUM_SOURCES}
+              LIBS SharedEngine)
 
 ## AbundanceModel test
 set(TESTABUNDANCEMODEL_SOURCES
     testAbundanceModel.cpp
-
-    ../src/AbundanceModel.hpp
-    ../src/FixedValueAbundanceModel.hpp
-    ../src/ParameterFile.cpp
-    ../src/SolarMetallicityAbundanceModel.hpp
 )
 add_unit_test(NAME testAbundanceModel
-              SOURCES ${TESTABUNDANCEMODEL_SOURCES})
+              SOURCES ${TESTABUNDANCEMODEL_SOURCES}
+              LIBS SharedEngine)
 
 ## Unit test for WeightedSpectrumTracker
 set(TESTWEIGHTEDSPECTRUMTRACKER_SOURCES
     testWeightedSpectrumTracker.cpp
-
-    ../src/WeightedSpectrumTracker.hpp
 )
 add_unit_test(NAME testWeightedSpectrumTracker
               SOURCES ${TESTWEIGHTEDSPECTRUMTRACKER_SOURCES})
@@ -1781,15 +1110,10 @@ add_unit_test(NAME testWeightedSpectrumTracker
 ## Unit test for AbsorptionTracker
 set(TESTABSORPTIONTRACKER_SOURCES
     testAbsorptionTracker.cpp
-
-    ../src/AbsorptionTracker.hpp
 )
-if(HAVE_HDF5)
-  set(TESTABSORPTIONTRACKER_LIBS ${HDF5_LIBRARIES})
-endif(HAVE_HDF5)
 add_unit_test(NAME testAbsorptionTracker
               SOURCES ${TESTABSORPTIONTRACKER_SOURCES}
-              LIBS ${TESTABSORPTIONTRACKER_LIBS})
+              LIBS SharedEngine)
 
 ## Unit test for BufferedCMacIonizeSnapshotDensityFunction
 if(HAVE_HDF5)
@@ -1809,17 +1133,15 @@ endif(HAVE_HDF5)
 if(HAVE_HDF5)
   set(TESTCASTELLIKURUCZPHOTONSOURCESPECTRUM_SOURCES
       testCastelliKuruczPhotonSourceSpectrum.cpp
-
-      ../src/CastelliKuruczPhotonSourceSpectrum.cpp
-      )
+  )
   add_unit_test(NAME testCastelliKuruczPhotonSourceSpectrum
                 SOURCES ${TESTCASTELLIKURUCZPHOTONSOURCESPECTRUM_SOURCES}
-                LIBS ${HDF5_LIBRARIES})
+                LIBS SharedEngine)
 endif(HAVE_HDF5)
 
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
-    set(oneValueArgs NAME)
+    set(oneValueArgs NAME MODULE)
     cmake_parse_arguments(TEST "${options}" "${oneValueArgs}"
                                "${multiValueArgs}" ${ARGN})
     message(STATUS "generating python test " ${TEST_NAME})
@@ -1839,6 +1161,10 @@ macro(add_python_unit_test)
                       COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
                               -R ${TEST_NAME}
                       DEPENDS ${TEST_NAME})
+    add_dependencies(check_${TEST_NAME} linecoolingdata)
+    add_dependencies(check_${TEST_NAME} densitygrid)
+    add_dependencies(check_${TEST_NAME} emissivitycalculator)
+    add_dependencies(check_${TEST_NAME} flashsnapshotdensityfunction)
 endmacro(add_python_unit_test)
 
 if(HAVE_PYTHON)

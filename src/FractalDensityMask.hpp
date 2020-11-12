@@ -27,10 +27,10 @@
 #ifndef FRACTALDENSITYMASK_HPP
 #define FRACTALDENSITYMASK_HPP
 
-#include "Atomic.hpp"
 #include "Box.hpp"
 #include "DensityGrid.hpp"
 #include "DensityMask.hpp"
+#include "LockFree.hpp"
 #include "Log.hpp"
 #include "ParameterFile.hpp"
 #include "RandomGenerator.hpp"
@@ -145,7 +145,7 @@ private:
       // use an atomic operation to add the point, to make this method thread
       // safe
       const uint_least64_t add = 1;
-      Atomic::add(_distribution[ix][iy][iz], add);
+      LockFree::add(_distribution[ix][iy][iz], add);
       cmac_assert(_distribution[ix][iy][iz] < 0xffffffffffffffff);
     }
   }

@@ -30,8 +30,6 @@
 
 #include "Configuration.hpp"
 #include "Error.hpp"
-#include "MPIMessage.hpp"
-#include "MPIMessageBox.hpp"
 #include "MPIUtilities.hpp"
 
 #include <vector>
@@ -804,113 +802,6 @@ public:
 
       // check that we did all elements
       cmac_assert(it == global_end);
-    }
-#endif
-  }
-
-  /**
-   * @brief Send the given message to the given process.
-   *
-   * @param destination MPI process that should receive the message.
-   * @param message Pointer to the message that should be sent. Memory
-   * management for this pointer will be taken over by the MPIMessageBox.
-   * @param message_box MessageBox to use.
-   */
-  inline void send_message(int_fast32_t destination, MPIMessage *message,
-                           MPIMessageBox &message_box) const {
-
-#ifdef HAVE_MPI
-    MPITagSizeMessage *announcement = message_box.get_announcement(message);
-    int_fast32_t status =
-        MPI_Isend(announcement->get_array_handle(), 3, MPI_INT, destination, 0,
-                  MPI_COMM_WORLD, announcement->get_request_handle());
-    if (status != MPI_SUCCESS) {
-      cmac_error("Failed to send MPITagSizeMessage!");
-    }
-    status =
-        MPI_Isend(message->get_buffer_handle(), message->get_buffer_size(),
-                  message->get_datatype(), destination, announcement->get_tag(),
-                  MPI_COMM_WORLD, message->get_request_handle());
-    if (status != MPI_SUCCESS) {
-      cmac_error("Failed to send MPIMessage!");
-    }
-#endif
-  }
-
-  /**
-   * @brief Send a semi ready MPITagSizeMessage to the given process.
-   *
-   * @param destination MPI process that should receive the announcement.
-   * @param message_box MessageBox to use.
-   */
-  inline void send_semi_ready(int_fast32_t destination,
-                              MPIMessageBox &message_box) const {
-
-#ifdef HAVE_MPI
-    MPITagSizeMessage *announcement = message_box.get_announcement_semi_ready();
-    const int_fast32_t status =
-        MPI_Isend(announcement->get_array_handle(), 3, MPI_INT, destination, 0,
-                  MPI_COMM_WORLD, announcement->get_request_handle());
-    if (status != MPI_SUCCESS) {
-      cmac_error("Failed to send semi ready MPITagSizeMessage!");
-    }
-#endif
-  }
-
-  /**
-   * @brief Send a ready MPITagSizeMessage to the given process.
-   *
-   * @param destination MPI process that should receive the announcement.
-   * @param message_box MessageBox to use.
-   */
-  inline void send_ready(int_fast32_t destination,
-                         MPIMessageBox &message_box) const {
-
-#ifdef HAVE_MPI
-    MPITagSizeMessage *announcement = message_box.get_announcement_ready();
-    const int_fast32_t status =
-        MPI_Isend(announcement->get_array_handle(), 3, MPI_INT, destination, 0,
-                  MPI_COMM_WORLD, announcement->get_request_handle());
-    if (status != MPI_SUCCESS) {
-      cmac_error("Failed to send ready MPITagSizeMessage!");
-    }
-#endif
-  }
-
-  /**
-   * @brief Check if there is a pending message that can be received.
-   *
-   * @param message_box MPIMessageBox that generates a draft message for a given
-   * message tag.
-   */
-  inline void check_for_message(MPIMessageBox &message_box) const {
-
-#ifdef HAVE_MPI
-    MPI_Status probestatus;
-    int flag;
-    int_fast32_t status =
-        MPI_Iprobe(MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &flag, &probestatus);
-    if (status != MPI_SUCCESS) {
-      cmac_error("Failed to probe for incoming message!");
-    }
-    if (flag > 0) {
-      const int_fast32_t source = probestatus.MPI_SOURCE;
-      MPITagSizeMessage announcement;
-      status = MPI_Recv(announcement.get_array_handle(), 3, MPI_INT, source, 0,
-                        MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-      if (status != MPI_SUCCESS) {
-        cmac_error("Failed to receive incoming MPITagSizeMessage!");
-      }
-      MPIMessage *message = message_box.get_message(source, announcement);
-      if (message != nullptr) {
-        status =
-            MPI_Irecv(message->get_buffer_handle(), message->get_buffer_size(),
-                      message->get_datatype(), source, announcement.get_tag(),
-                      MPI_COMM_WORLD, message->get_request_handle());
-        if (status != MPI_SUCCESS) {
-          cmac_error("Failed to set up non-blocking receive for MPIMessage!");
-        }
-      }
     }
 #endif
   }
