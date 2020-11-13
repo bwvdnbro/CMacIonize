@@ -41,7 +41,7 @@ int main(int argc, char **argv) {
   HomogeneousDensityFunction density_function(1.);
   density_function.initialize();
 
-  CartesianDensityGrid grid(box, 32, false, true);
+  CartesianDensityGrid grid(box, 16, false, true);
   std::pair< cellsize_t, cellsize_t > block =
       std::make_pair(0, grid.get_number_of_cells());
   grid.initialize(block, density_function);

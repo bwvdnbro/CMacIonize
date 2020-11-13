@@ -63,7 +63,7 @@ public:
 int main(int argc, char **argv) {
 
   Box<> box(CoordinateVector<>(0.), CoordinateVector<>(1.));
-  CartesianDensityGrid grid(box, 32);
+  CartesianDensityGrid grid(box, 16);
   std::pair< cellsize_t, cellsize_t > block =
       std::make_pair(0, grid.get_number_of_cells());
   ParameterFile params;
@@ -92,7 +92,7 @@ int main(int argc, char **argv) {
     grid.initialize(block, interface);
 
     cmac_status("Ntot: %g.", grid.get_total_hydrogen_number());
-    assert_values_equal_rel(grid.get_total_hydrogen_number(), 1.68285e+27,
+    assert_values_equal_rel(grid.get_total_hydrogen_number(), 8.89848e+26,
                             1.e-6);
     AsciiFileDensityGridWriter writer("test_SPH_array_density_function_double",
                                       ".");
@@ -120,7 +120,7 @@ int main(int argc, char **argv) {
     grid.initialize(block, interface);
 
     cmac_status("Ntot: %g.", grid.get_total_hydrogen_number());
-    assert_values_equal_rel(grid.get_total_hydrogen_number(), 1.6572e+27,
+    assert_values_equal_rel(grid.get_total_hydrogen_number(), 8.76356e+26,
                             1.e-5);
     AsciiFileDensityGridWriter writer("test_SPH_array_density_function_dfloat",
                                       ".");
@@ -148,7 +148,7 @@ int main(int argc, char **argv) {
     grid.initialize(block, interface);
 
     cmac_status("Ntot: %g.", grid.get_total_hydrogen_number());
-    assert_values_equal_rel(grid.get_total_hydrogen_number(), 1.68544e+27,
+    assert_values_equal_rel(grid.get_total_hydrogen_number(), 8.90243e+26,
                             1.e-6);
     AsciiFileDensityGridWriter writer("test_SPH_array_density_function_float",
                                       ".");

@@ -18,7 +18,7 @@ DensityFunction:
   central density: 1. cm^-3
   scale length ISM: 6.0 kpc
 DensityGrid:
-  number of cells: [100, 100, 100]
+  number of cells: [32, 32, 32]
   periodicity: [false, false, false]
 SimulationBox:
   anchor: [-12. kpc, -12. kpc, -12. kpc]
