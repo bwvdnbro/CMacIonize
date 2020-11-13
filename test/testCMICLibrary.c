@@ -29,7 +29,7 @@
 
 /*! @brief Number of particles in a single coordinate direction (change as you
  *  wish). */
-#define TEST_CMICLIBRARY_NPART1D 10
+#define TEST_CMICLIBRARY_NPART1D 3
 
 /*! @brief Number of particles in a plane of the particle grid. */
 #define TEST_CMICLIBRARY_NPART2D                                               \

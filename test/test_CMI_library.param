@@ -12,7 +12,7 @@ DensityGrid:
   # periodicity of the box
   periodicity: [false, false, false]
   # number of cells in each dimension
-  number of cells: [32, 32, 32]
+  number of cells: [16, 16, 16]
 
 # density function that sets up the density field in the box
 DensityFunction:
