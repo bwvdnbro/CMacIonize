@@ -104,9 +104,9 @@ int main(int argc, char **argv) {
 
   /// Flux symmetry check
   {
-    const uint_fast32_t nrho = 100;
-    const uint_fast32_t nu = 100;
-    const uint_fast32_t nP = 100;
+    const uint_fast32_t nrho = 10;
+    const uint_fast32_t nu = 10;
+    const uint_fast32_t nP = 10;
 
     const double rhoL = 1.;
     const CoordinateVector<> uL(1.);

@@ -35,11 +35,11 @@
  */
 int main(int argc, char **argv) {
 
-  SILCCPhotonSourceDistribution distribution(10000000, 0., 1., 0., 1., 0., 0.2,
+  SILCCPhotonSourceDistribution distribution(1000000, 0., 1., 0., 1., 0., 0.2,
                                              4.26e49);
 
-  assert_condition(distribution.get_number_of_sources() == 10000000);
-  assert_condition(distribution.get_total_luminosity() == 4.26e56);
+  assert_condition(distribution.get_number_of_sources() == 1000000);
+  assert_condition(distribution.get_total_luminosity() == 4.26e55);
 
   CoordinateVector<> mean_x;
   double std_z = 0.;
@@ -53,11 +53,11 @@ int main(int argc, char **argv) {
   }
   mean_x /= distribution.get_number_of_sources();
   std_z = std::sqrt(std_z / distribution.get_number_of_sources());
-  assert_values_equal_rel(mean_x.x(), 0.5, 2.e-4);
-  assert_values_equal_rel(mean_x.y(), 0.5, 2.e-4);
-  assert_values_equal(mean_x.z(), 0.);
-  assert_values_equal_rel(std_z, 0.2, 2.e-4);
-  assert_values_equal_rel(tot_weight, 1., 2.e-4);
+  assert_values_equal_rel(mean_x.x(), 0.5, 2.e-3);
+  assert_values_equal_rel(mean_x.y(), 0.5, 2.e-3);
+  assert_condition(std::abs(mean_x.z()) < 2.e-3);
+  assert_values_equal_rel(std_z, 0.2, 2.e-3);
+  assert_values_equal_rel(tot_weight, 1., 2.e-3);
 
   return 0;
 }
