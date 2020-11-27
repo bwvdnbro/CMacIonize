@@ -272,12 +272,12 @@ EmissivityValues EmissivityCalculator::calculate_emissivities(
     // note that Kenny's version wrongly included the 497.1 um transition as
     // well...
     eval.set_emissivity(EMISSIONLINE_OII_3726,
-                        ntot * line_strengths[OII][TRANSITION_0_to_1]);
+                        ntot * line_strengths[OII][TRANSITION_0_to_2]);
     eval.set_emissivity(EMISSIONLINE_OII_3727,
                         ntot * (line_strengths[OII][TRANSITION_0_to_1] +
                                 line_strengths[OII][TRANSITION_0_to_2]));
     eval.set_emissivity(EMISSIONLINE_OII_3729,
-                        ntot * line_strengths[OII][TRANSITION_0_to_2]);
+                        ntot * line_strengths[OII][TRANSITION_0_to_1]);
     // this is the sum of the transitions at 7319.9, 7330.7, 7318.8 and 7329.6
     // angstrom
     eval.set_emissivity(EMISSIONLINE_OII_7325,
