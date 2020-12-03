@@ -322,9 +322,13 @@ EmissivityValues EmissivityCalculator::calculate_emissivities(
                                 line_strengths[SII][TRANSITION_0_to_4]));
     // this is the sum of the 6716.5 and 6730.8 angstrom transitions
     // note that Kenny's version wrongly includes the 314.5 um transition...
+    eval.set_emissivity(EMISSIONLINE_SII_6716,
+                        ntot * line_strengths[SII][TRANSITION_0_to_2]);
     eval.set_emissivity(EMISSIONLINE_SII_6725,
                         ntot * (line_strengths[SII][TRANSITION_0_to_1] +
                                 line_strengths[SII][TRANSITION_0_to_2]));
+    eval.set_emissivity(EMISSIONLINE_SII_6731,
+                        ntot * line_strengths[SII][TRANSITION_0_to_1]);
 
     // SIII
     // Osterbrock & Ferland (2006), table 3.12
