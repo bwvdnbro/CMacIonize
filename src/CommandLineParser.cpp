@@ -88,15 +88,24 @@ void CommandLineParser::add_option(std::string long_name, char short_name,
  * @param stream std::ostream to write to.
  */
 void CommandLineParser::print_description(std::ostream &stream) const {
+
+  std::vector< uint_fast32_t > idx(_options.size());
+  for (size_t i = 0; i < _options.size(); ++i) {
+    idx[i] = i;
+  }
+  std::sort(idx.begin(), idx.end(), [this](size_t i1, size_t i2) {
+    return CommandLineOption::compare(this->_options[i1], this->_options[i2]);
+  });
+
   stream << "Usage:\n\n";
   stream << "    " << _program_name;
-  for (auto it = _options.begin(); it != _options.end(); ++it) {
+  for (uint_fast32_t i = 0; i < _options.size(); ++i) {
     stream << " ";
-    it->print_usage(stream);
+    _options[idx[i]].print_usage(stream);
   }
   stream << "\n\nPossible options:\n\n";
-  for (auto it = _options.begin(); it != _options.end(); ++it) {
-    it->print_description(stream);
+  for (uint_fast32_t i = 0; i < _options.size(); ++i) {
+    _options[idx[i]].print_description(stream);
   }
 }
 
