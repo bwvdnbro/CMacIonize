@@ -291,16 +291,44 @@ TaskBasedIonizationSimulation::TaskBasedIonizationSimulation(
 
   _total_luminosity = 0.;
   if (_photon_source_distribution) {
-    _total_luminosity += _photon_source_distribution->get_total_luminosity();
+    const double discrete_luminosity =
+        _photon_source_distribution->get_total_luminosity();
+    if (discrete_luminosity == 0.) {
+      if (_log) {
+        _log->write_warning(
+            "No discrete source luminosity! Disabling discrete sources.");
+      }
+      delete _photon_source_distribution;
+      _photon_source_distribution = nullptr;
+    } else {
+      _total_luminosity += discrete_luminosity;
+    }
   }
   if (_continuous_photon_source) {
+    double continuous_luminosity;
     if (_continuous_photon_source->has_total_luminosity()) {
-      _total_luminosity += _continuous_photon_source->get_total_luminosity();
+      continuous_luminosity = _continuous_photon_source->get_total_luminosity();
     } else {
-      _total_luminosity +=
+      continuous_luminosity =
           _continuous_photon_source_spectrum->get_total_flux() *
           _continuous_photon_source->get_total_surface_area();
     }
+    if (continuous_luminosity == 0.) {
+      if (_log) {
+        _log->write_warning(
+            "No continuous source luminosity! Disabling continuous source.");
+      }
+      delete _continuous_photon_source;
+      _continuous_photon_source = nullptr;
+    } else {
+      _total_luminosity += continuous_luminosity;
+    }
+  }
+  if (_total_luminosity == 0.) {
+    if (_log) {
+      _log->write_error("No luminosity!");
+    }
+    cmac_error("No luminosity!");
   }
   // used to calculate both the ionization state and the temperature
   _temperature_calculator = new TemperatureCalculator(
