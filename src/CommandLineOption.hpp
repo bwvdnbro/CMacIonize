@@ -29,6 +29,7 @@
 #include <cstdlib>
 #include <ostream>
 #include <string>
+#include <vector>
 
 /**
  * @brief Possible types of arguments for a command line option.
@@ -90,6 +91,19 @@ public:
   bool matches(std::string option) const;
   std::string parse_argument(std::string argument) const;
   std::string get_default_value() const;
+
+  /**
+   * @brief Comparison function that can be used to lexicographically sort
+   * command line options.
+   *
+   * @param a First command line option.
+   * @param b Second command line option.
+   * @return True if
+   */
+  inline static bool compare(const CommandLineOption &a,
+                             const CommandLineOption &b) {
+    return a.get_long_name().compare(b.get_long_name()) <= 0;
+  }
 };
 
 #endif // COMMANDLINEOPTION_HPP
