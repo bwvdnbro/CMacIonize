@@ -39,14 +39,14 @@ macro(add_unit_test)
                             ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES})
     endif(HAVE_MPI)
 
-    if(TEST_PARALLEL AND HAVE_MPI)
+    if(PARALLEL AND HAVE_MPI)
       set(TESTCOMMAND ${MPIEXEC})
       set(TESTARGS ${MPIEXEC_NUMPROC_FLAG} 3 ${MPIEXEC_PREFLAGS}
                    "./${TEST_NAME}" ${MPIEXEC_POSTFLAGS})
       set(TESTCOMMAND ${TESTCOMMAND} ${TESTARGS})
-    else(TEST_PARALLEL AND HAVE_MPI)
+    else()
       set(TESTCOMMAND ${TEST_NAME})
-    endif(TEST_PARALLEL AND HAVE_MPI)
+    endif()
     add_test(NAME ${TEST_NAME}
              WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/rundir/test
              COMMAND ${TESTCOMMAND})
