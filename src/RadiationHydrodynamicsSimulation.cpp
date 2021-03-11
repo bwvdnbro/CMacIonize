@@ -95,12 +95,14 @@
  */
 void RadiationHydrodynamicsSimulation::add_command_line_parameters(
     CommandLineParser &parser) {
-  parser.add_option("output-time-unit", 0,
-                    "Unit for time stat output to the terminal.",
-                    COMMANDLINEOPTION_STRINGARGUMENT, "s");
-  parser.add_option("restart", 0,
-                    "Restart from the restart file stored in the given folder.",
-                    COMMANDLINEOPTION_STRINGARGUMENT, ".");
+  // these options are now specified in
+  // TaskBasedRadiationHydrodynamicsSimulation::add_command_line_parameters()
+  //  parser.add_option("output-time-unit", 0,
+  //                    "Unit for time stat output to the terminal.",
+  //                    COMMANDLINEOPTION_STRINGARGUMENT, "s");
+  //  parser.add_option("restart", 0,
+  //                    "Restart from the restart file stored in the given
+  //                    folder.", COMMANDLINEOPTION_STRINGARGUMENT, ".");
 }
 
 /**

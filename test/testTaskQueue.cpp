@@ -27,9 +27,6 @@
 /*! @brief Number of tasks used during the test. */
 #define TESTTASKQUEUE_NTASK 10000
 
-/*! @brief Make sure we output the task plot for the unit test. */
-#define TASK_PLOT
-
 #include "Assert.hpp"
 #include "TaskQueue.hpp"
 #include "ThreadSafeVector.hpp"

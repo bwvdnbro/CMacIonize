@@ -26,9 +26,6 @@
 #ifndef TASK_HPP
 #define TASK_HPP
 
-/*! @brief Activate this to record the start and end time of each task. */
-#define TASK_PLOT
-
 #include "AtomicValue.hpp"
 #include "CPUCycle.hpp"
 #include "ThreadLock.hpp"
@@ -109,7 +106,6 @@ private:
   /*! @brief Dependencies (if any). */
   ThreadLock *_dependency[2];
 
-#ifdef TASK_PLOT
   /*! @brief Rank of the thread that executed the task. */
   int_least32_t _thread_id;
 
@@ -118,7 +114,6 @@ private:
 
   /*! @brief Time stamp for the end of the task. */
   uint_least64_t _end_time;
-#endif
 
 public:
   /**
@@ -127,11 +122,7 @@ public:
    * Used to flag unexecuted tasks and initialize the dependency.
    */
   Task() : _number_of_children(0), _dependency{nullptr, nullptr} {
-#ifdef TASK_PLOT
     _end_time = 0;
-#else
-    _type = TASKTYPE_NUMBER;
-#endif
   }
 
   /**
@@ -150,11 +141,7 @@ public:
     _dependency[0] = other._dependency[0];
     _dependency[1] = other._dependency[1];
 
-#ifdef TASK_PLOT
     _end_time = other._end_time;
-#else
-    _type = other._type;
-#endif
 
     return *this;
   }
@@ -165,38 +152,21 @@ public:
    * @param thread_id Thread that executes the task.
    */
   inline void start(const int_fast32_t thread_id) {
-#ifdef TASK_PLOT
     _thread_id = thread_id;
     cpucycle_tick(_start_time);
-#endif
   }
 
   /**
    * @brief Record the end time of the task.
    */
-  inline void stop() {
-#ifdef TASK_PLOT
-    cpucycle_tick(_end_time);
-#else
-    // we need another way to flag the end of the task
-    // since we do not care about what task this was (we don't plot it), we can
-    // overwrite the type variable
-    _type = -1;
-#endif
-  }
+  inline void stop() { cpucycle_tick(_end_time); }
 
   /**
    * @brief Check if the task was already done.
    *
    * @return True if the task was executed, false otherwise.
    */
-  inline bool done() const {
-#ifdef TASK_PLOT
-    return _end_time > 0;
-#else
-    return _type == -1;
-#endif
-  }
+  inline bool done() const { return _end_time > 0; }
 
   /**
    * @brief Set the dependency for the task.
@@ -372,7 +342,6 @@ public:
     _interaction_direction = interaction_direction;
   }
 
-#ifdef TASK_PLOT
   /**
    * @brief Get all information necessary to write the task to an output file.
    *
@@ -392,7 +361,6 @@ public:
     start = _start_time;
     end = _end_time;
   }
-#endif
 };
 
 #endif // TASK_HPP
