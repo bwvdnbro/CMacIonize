@@ -707,7 +707,7 @@ execute_task(const size_t itask,
  *    for time values that are written to the Log (default: s).
  *  - restart (no abbreviation, optional, string argument): restart a run from
  *    the restart file stored in the given folder (default: .).
- *  - task-plot (no abbreviation, optional, integer argument): output task
+ *  - task-plot-rhd (no abbreviation, optional, integer argument): output task
  *    information for the first N steps of the algorithm (default: 0).
  *  - number-of-steps (no abbreviation, optional, integer argument): number of
  *    time steps to execute before halting the code (negative values mean no
@@ -725,7 +725,7 @@ void TaskBasedRadiationHydrodynamicsSimulation::add_command_line_parameters(
                     "Restart from the restart file stored in the given folder.",
                     COMMANDLINEOPTION_STRINGARGUMENT, ".");
   parser.add_option(
-      "task-plot", 0,
+      "task-plot-rhd", 0,
       "Output task information for the first N steps of the algorithm",
       COMMANDLINEOPTION_INTARGUMENT, "0");
   parser.add_option("number-of-steps", 0,
@@ -936,7 +936,7 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
       parser.get_value< std::string >("output-time-unit");
 
   const int_fast32_t task_plot_N =
-      parser.get_value< int_fast32_t >("task-plot");
+      parser.get_value< int_fast32_t >("task-plot-rhd");
 
   const int_fast32_t number_of_steps =
       parser.get_value< int_fast32_t >("number-of-steps");
