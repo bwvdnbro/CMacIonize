@@ -399,6 +399,15 @@ public:
         _mask_velocities[i].write_restart_file(restart_writer);
       }
     }
+    {
+      const auto size = _subgrid_offsets.size();
+      restart_writer.write(size);
+      for (auto it = _subgrid_offsets.begin(); it != _subgrid_offsets.end();
+           ++it) {
+        restart_writer.write(it->first);
+        restart_writer.write(it->second);
+      }
+    }
   }
 
   /**
@@ -421,6 +430,15 @@ public:
     _mask_velocities.resize(size);
     for (std::vector< CoordinateVector<> >::size_type i = 0; i < size; ++i) {
       _mask_velocities[i] = CoordinateVector<>(restart_reader);
+    }
+    const std::map< uint_fast32_t, uint_fast32_t >::size_type msize =
+        restart_reader
+            .read< std::map< uint_fast32_t, uint_fast32_t >::size_type >();
+    for (std::map< uint_fast32_t, uint_fast32_t >::size_type i = 0; i < msize;
+         ++i) {
+      const uint_fast32_t key = restart_reader.read< uint_fast32_t >();
+      const uint_fast32_t val = restart_reader.read< uint_fast32_t >();
+      _subgrid_offsets[key] = val;
     }
   }
 };
