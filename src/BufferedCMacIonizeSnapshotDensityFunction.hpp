@@ -440,7 +440,7 @@ public:
   inline uint_fast32_t buffer_subgrid(const uint_fast32_t subgrid_index) {
 
     // sort the buffers according to their last access time
-    const std::vector< uint_fast32_t > buffer_timestamps_copy(
+    const std::vector< uint_fast64_t > buffer_timestamps_copy(
         _buffer_timestamps);
     const std::vector< uint_fast32_t > timesort =
         Utilities::argsort(buffer_timestamps_copy);

@@ -69,7 +69,7 @@ public:
    * @param packet photon packet retrieved to be terminated
    */
   inline void absorb_photon(const PhotonPacket &packet) {
-    uint_fast32_t scatter_counter = packet.get_scatter_counter();
+    size_t scatter_counter = packet.get_scatter_counter();
     _scatter_histogram[std::min(scatter_counter, _scatter_histogram.size() - 1)]
         .pre_increment();
   }
@@ -79,7 +79,7 @@ public:
    * @param packet Photon packet.
    */
   inline void escape_photon(const PhotonPacket &packet) {
-    uint_fast32_t scatter_counter = packet.get_scatter_counter();
+    size_t scatter_counter = packet.get_scatter_counter();
     _scatter_histogram[std::min(scatter_counter, _scatter_histogram.size() - 1)]
         .pre_increment();
   }
