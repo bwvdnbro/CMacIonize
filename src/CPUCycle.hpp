@@ -1,6 +1,7 @@
 /*******************************************************************************
  * This file is part of CMacIonize
  * Copyright (C) 2018 Bert Vandenbroucke (bert.vandenbroucke@gmail.com)
+ *               2021 Bert Vandenbroucke
  *
  * CMacIonize is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -31,11 +32,16 @@
  *
  * @param time_variable Variable to store the result in.
  */
+#if defined(__x86_64__) || defined(__amd64__)
 #define cpucycle_tick(time_variable)                                           \
   {                                                                            \
     unsigned int lo, hi;                                                       \
     __asm__ __volatile__("rdtsc" : "=a"(lo), "=d"(hi));                        \
     time_variable = ((unsigned long)hi << 32) | lo;                            \
   }
+#else
+#define cpucycle_tick(time_variable)                                           \
+  { time_variable = 0; }
+#endif
 
 #endif // CPUCYCLE_HPP
