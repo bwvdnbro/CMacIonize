@@ -160,6 +160,7 @@ set(LIBSHAREDENGINE_SOURCES
   PlanckPhotonSourceSpectrum.cpp
   PopStarPhotonSourceSpectrum.cpp
   Signals.cpp
+  SKIRTAsciiFileDensityFunction.cpp
   SPHNGSnapshotDensityFunction.cpp
   SPHNGVoronoiGeneratorDistribution.cpp
   TemperatureCalculator.cpp

@@ -42,6 +42,7 @@
 #include "HomogeneousDensityFunction.hpp"
 #include "InterpolatedDensityFunction.hpp"
 #include "PhantomSnapshotDensityFunction.hpp"
+#include "SKIRTAsciiFileDensityFunction.hpp"
 #include "SPHNGSnapshotDensityFunction.hpp"
 #include "SpiralGalaxyDensityFunction.hpp"
 
@@ -116,6 +117,7 @@ public:
    *    of this format)
    *  - PhantomSnapshot: Implementation that reads a density field from the
    *    binary file format used by the SPH simulation code Phantom
+   *  - SKIRTAsciiFile: SKIRT type ASCII text file
    *
    * @param params ParameterFile containing the parameters used by the specific
    * implementation.
@@ -153,6 +155,8 @@ public:
       return new InterpolatedDensityFunction(params, log);
     } else if (type == "PhantomSnapshot") {
       return new PhantomSnapshotDensityFunction(params, log);
+    } else if (type == "SKIRTAsciiFile") {
+      return new SKIRTAsciiFileDensityFunction(params, log);
     } else if (type == "SPHNGSnapshot") {
       return new SPHNGSnapshotDensityFunction(params, log);
     } else if (type == "SpiralGalaxy") {

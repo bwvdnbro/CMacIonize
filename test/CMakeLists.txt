@@ -1149,6 +1149,14 @@ configure_file(${PROJECT_SOURCE_DIR}/test/skirt_ascii.txt
 add_unit_test(NAME testSKIRTAsciiFile
               SOURCES ${TESTSKIRTASCIIFILE_SOURCES})
 
+## Unit test for SKIRTAsciiFileDensityFunction
+set(TESTSKIRTASCIIFILEDENSITYFUNCTION_SOURCES
+    testSKIRTAsciiFileDensityFunction.cpp
+)
+add_unit_test(NAME testSKIRTAsciiFileDensityFunction
+              SOURCES ${TESTSKIRTASCIIFILEDENSITYFUNCTION_SOURCES}
+              LIBS SharedEngine)
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME MODULE)
