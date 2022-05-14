@@ -1139,6 +1139,16 @@ if(HAVE_HDF5)
                 LIBS SharedEngine)
 endif(HAVE_HDF5)
 
+## Unit test for SKIRTAsciiFile
+set(TESTSKIRTASCIIFILE_SOURCES
+    testSKIRTAsciiFile.cpp
+)
+configure_file(${PROJECT_SOURCE_DIR}/test/skirt_ascii.txt
+               ${PROJECT_BINARY_DIR}/rundir/test/skirt_ascii.txt
+               COPYONLY)
+add_unit_test(NAME testSKIRTAsciiFile
+              SOURCES ${TESTSKIRTASCIIFILE_SOURCES})
+
 ### Python module unit tests ###################################################
 macro(add_python_unit_test)
     set(oneValueArgs NAME MODULE)

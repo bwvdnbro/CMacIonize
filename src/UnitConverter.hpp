@@ -133,7 +133,7 @@ public:
       return Unit(1., 0, 0, 1, 0, 0, 0);
     } else if (name == "g") {
       return Unit(0.001, 0, 0, 1, 0, 0, 0);
-    } else if (name == "Msol") {
+    } else if (name == "Msol" || name == "Msun") {
       return Unit(1.98855e30, 0, 0, 1, 0, 0, 0);
       /// temperature units
     } else if (name == "K") {
@@ -361,7 +361,7 @@ public:
    * @param name std::string representation of a Unit.
    * @return Unit corresponding to that name.
    */
-  static inline Unit get_unit(std::string name) {
+  static inline Unit get_unit(const std::string name) {
     // find the first unit name
     size_t pos1 = 0;
     while (pos1 < name.size() && !isalpha(name[pos1])) {
