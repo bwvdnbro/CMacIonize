@@ -34,6 +34,7 @@
 
 // implementations
 #include "PerturbedCartesianVoronoiGeneratorDistribution.hpp"
+#include "SKIRTAsciiFileVoronoiGeneratorDistribution.hpp"
 #include "SPHNGVoronoiGeneratorDistribution.hpp"
 #include "SPHVoronoiGeneratorDistribution.hpp"
 #include "UniformRandomVoronoiGeneratorDistribution.hpp"
@@ -107,6 +108,8 @@ public:
     if (type == "PerturbedCartesian") {
       return new PerturbedCartesianVoronoiGeneratorDistribution(simulation_box,
                                                                 params, log);
+    } else if (type == "SKIRTAsciiFile") {
+      return new SKIRTAsciiFileVoronoiGeneratorDistribution(params, log);
     } else if (type == "SPH") {
       // added by Maya
       return new SPHVoronoiGeneratorDistribution(params, log);
