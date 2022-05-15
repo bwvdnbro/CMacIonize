@@ -45,6 +45,12 @@ SKIRTAsciiFileDensityFunction::SKIRTAsciiFileDensityFunction(
     Log *log)
     : _octree(nullptr) {
 
+  if (log) {
+    log->write_info("Initialising SKIRTAsciiFileDensityFunction from file \"",
+                    filename, "\", reading fields \"", xname, "\", \"", yname,
+                    "\", \"", zname, "\" and \"", rhoname, "\".");
+  }
+
   SKIRTAsciiFile file(filename);
 
   if (!file.has_column(xname) || !file.is_quantity(xname, QUANTITY_LENGTH)) {
@@ -113,13 +119,13 @@ SKIRTAsciiFileDensityFunction::SKIRTAsciiFileDensityFunction(
     ParameterFile &params, Log *log)
     : SKIRTAsciiFileDensityFunction(
           params.get_filename("DensityFunction:filename"),
-          params.get_value< std::string >("DensityFuntion:xname",
+          params.get_value< std::string >("DensityFunction:xname",
                                           "x-coordinate"),
-          params.get_value< std::string >("DensityFuntion:yname",
+          params.get_value< std::string >("DensityFunction:yname",
                                           "y-coordinate"),
-          params.get_value< std::string >("DensityFuntion:zname",
+          params.get_value< std::string >("DensityFunction:zname",
                                           "z-coordinate"),
-          params.get_value< std::string >("DensityFuntion:rhoname", "density"),
+          params.get_value< std::string >("DensityFunction:rhoname", "density"),
           log) {}
 
 /**
