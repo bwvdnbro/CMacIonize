@@ -414,8 +414,10 @@ int RadiationHydrodynamicsSimulation::do_simulation(CommandLineParser &parser,
   }
 
 #ifdef VARIABLE_ABUNDANCES
-  for (auto it = grid->begin(); it != grid->end(); ++it) {
-    it.get_ionization_variables().get_abundances().set_abundances(abundances);
+  if (!density_function->has_abundances()) {
+    for (auto it = grid->begin(); it != grid->end(); ++it) {
+      it.get_ionization_variables().get_abundances().set_abundances(abundances);
+    }
   }
 #endif
 

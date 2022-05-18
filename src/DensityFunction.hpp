@@ -56,6 +56,13 @@ public:
   virtual void free() {}
 
   /**
+   * @brief Does this DensityFunction set up cell abundances?
+   *
+   * @return False, which is the default.
+   */
+  virtual bool has_abundances() { return false; }
+
+  /**
    * @brief Function that gives the density for a given cell.
    *
    * @param cell Geometrical information about the cell.

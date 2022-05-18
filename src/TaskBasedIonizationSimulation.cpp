@@ -469,11 +469,14 @@ void TaskBasedIonizationSimulation::initialize(
   }
 
 #ifdef VARIABLE_ABUNDANCES
-  for (auto gridit = _grid_creator->begin();
-       gridit != _grid_creator->original_end(); ++gridit) {
-    for (auto cellit = (*gridit).begin(); cellit != (*gridit).end(); ++cellit) {
-      cellit.get_ionization_variables().get_abundances().set_abundances(
-          _abundances);
+  if (!density_function->has_abundances()) {
+    for (auto gridit = _grid_creator->begin();
+         gridit != _grid_creator->original_end(); ++gridit) {
+      for (auto cellit = (*gridit).begin(); cellit != (*gridit).end();
+           ++cellit) {
+        cellit.get_ionization_variables().get_abundances().set_abundances(
+            _abundances);
+      }
     }
   }
 #endif
