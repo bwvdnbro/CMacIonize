@@ -59,6 +59,9 @@ enum DensityGridField {
   DENSITYGRIDFIELD_MOMENTUM,
   DENSITYGRIDFIELD_TOTAL_ENERGY,
   DENSITYGRIDFIELD_ACCELERATION,
+#ifdef VARIABLE_ABUNDANCES
+  DENSITYGRIDFIELD_ABUNDANCE,
+#endif
   DENSITYGRIDFIELD_NUMBER
 };
 
@@ -122,6 +125,10 @@ public:
       return DENSITYGRIDFIELDTYPE_SCALAR_DOUBLE;
     case DENSITYGRIDFIELD_ACCELERATION:
       return DENSITYGRIDFIELDTYPE_VECTOR_DOUBLE;
+#ifdef VARIABLE_ABUNDANCES
+    case DENSITYGRIDFIELD_ABUNDANCE:
+      return DENSITYGRIDFIELDTYPE_SCALAR_DOUBLE;
+#endif
     default:
       cmac_error("Unknown DensityGridField: %" PRIiFAST32, field_name);
       return DENSITYGRIDFIELDTYPE_NUMBER;
@@ -172,6 +179,10 @@ public:
       return "TotalEnergy";
     case DENSITYGRIDFIELD_ACCELERATION:
       return "Acceleration";
+#ifdef VARIABLE_ABUNDANCES
+    case DENSITYGRIDFIELD_ABUNDANCE:
+      return "Abundance";
+#endif
     default:
       cmac_error("Unknown DensityGridField: %" PRIiFAST32, field_name);
       return "";
@@ -226,6 +237,10 @@ public:
       return false;
     case DENSITYGRIDFIELD_ACCELERATION:
       return false;
+#ifdef VARIABLE_ABUNDANCES
+    case DENSITYGRIDFIELD_ABUNDANCE:
+      return false;
+#endif
     default:
       cmac_error("Unknown DensityGridField: %" PRIiFAST32, field_name);
       return false;
@@ -276,6 +291,10 @@ public:
       return false;
     case DENSITYGRIDFIELD_ACCELERATION:
       return false;
+#ifdef VARIABLE_ABUNDANCES
+    case DENSITYGRIDFIELD_ABUNDANCE:
+      return false;
+#endif
     default:
       cmac_error("Unknown DensityGridField: %" PRIiFAST32, field_name);
       return false;
@@ -326,6 +345,10 @@ public:
       return false;
     case DENSITYGRIDFIELD_ACCELERATION:
       return false;
+#ifdef VARIABLE_ABUNDANCES
+    case DENSITYGRIDFIELD_ABUNDANCE:
+      return false;
+#endif
     default:
       cmac_error("Unknown DensityGridField: %" PRIiFAST32, field_name);
       return false;
@@ -376,6 +399,64 @@ public:
       return true;
     case DENSITYGRIDFIELD_ACCELERATION:
       return true;
+#ifdef VARIABLE_ABUNDANCES
+    case DENSITYGRIDFIELD_ABUNDANCE:
+      return false;
+#endif
+    default:
+      cmac_error("Unknown DensityGridField: %" PRIiFAST32, field_name);
+      return false;
+    }
+  }
+
+  /**
+   * @brief Is the given DensityGridField an element property?
+   *
+   * @param field_name DensityGridField.
+   * @return True if the given field has a value for each element.
+   */
+  inline static bool is_element_property(const int_fast32_t field_name) {
+    switch (field_name) {
+    case DENSITYGRIDFIELD_COORDINATES:
+      return false;
+    case DENSITYGRIDFIELD_NUMBER_DENSITY:
+      return false;
+    case DENSITYGRIDFIELD_TEMPERATURE:
+      return false;
+    case DENSITYGRIDFIELD_NEUTRAL_FRACTION:
+      return false;
+#ifdef DO_OUTPUT_COOLING
+    case DENSITYGRIDFIELD_COOLING:
+      return false;
+#endif
+#ifdef DO_OUTPUT_PHOTOIONIZATION_RATES
+    case DENSITYGRIDFIELD_PHOTOIONIZATION_RATE:
+      return false;
+#endif
+#ifdef DO_OUTPUT_HEATING
+    case DENSITYGRIDFIELD_HEATING_RATE:
+      return false;
+#endif
+    case DENSITYGRIDFIELD_COSMIC_RAY_FACTOR:
+      return false;
+    case DENSITYGRIDFIELD_DENSITY:
+      return false;
+    case DENSITYGRIDFIELD_VELOCITIES:
+      return false;
+    case DENSITYGRIDFIELD_PRESSURE:
+      return false;
+    case DENSITYGRIDFIELD_MASS:
+      return false;
+    case DENSITYGRIDFIELD_MOMENTUM:
+      return false;
+    case DENSITYGRIDFIELD_TOTAL_ENERGY:
+      return false;
+    case DENSITYGRIDFIELD_ACCELERATION:
+      return false;
+#ifdef VARIABLE_ABUNDANCES
+    case DENSITYGRIDFIELD_ABUNDANCE:
+      return true;
+#endif
     default:
       cmac_error("Unknown DensityGridField: %" PRIiFAST32, field_name);
       return false;
@@ -705,6 +786,59 @@ public:
     }
   }
 
+  /**
+   * @brief Get the value of the double scalar element property field with the
+   * given name.
+   *
+   * @param field_name DensityGridField.
+   * @param element_name ElementName.
+   * @param it DensityGrid::iterator to a cell.
+   * @return Value fo the double scalar heating property field.
+   */
+  inline static double
+  get_scalar_double_element_value(const int_fast32_t field_name,
+                                  const int_fast32_t element_name,
+                                  const DensityGrid::iterator &it) {
+    switch (field_name) {
+#ifdef VARIABLE_ABUNDANCES
+    case DENSITYGRIDFIELD_ABUNDANCE:
+      return it.get_ionization_variables().get_abundances().get_abundance(
+          element_name);
+#endif
+    default:
+      cmac_error("Not a scalar element property DensityGridField: %" PRIiFAST32,
+                 field_name);
+      return false;
+    }
+  }
+
+  /**
+   * @brief Get the value of the double scalar element property field with the
+   * given name.
+   *
+   * @param field_name DensityGridField.
+   * @param element_name ElementName.
+   * @param it DensitySubGrid::iterator to a cell.
+   * @return Value fo the double scalar heating property field.
+   */
+  template < typename _cell_iterator_ >
+  inline static double
+  get_scalar_double_element_value(const int_fast32_t field_name,
+                                  const int_fast32_t element_name,
+                                  const _cell_iterator_ &it) {
+    switch (field_name) {
+#ifdef VARIABLE_ABUNDANCES
+    case DENSITYGRIDFIELD_ABUNDANCE:
+      return it.get_ionization_variables().get_abundances().get_abundance(
+          element_name);
+#endif
+    default:
+      cmac_error("Not a scalar element property DensityGridField: %" PRIiFAST32,
+                 field_name);
+      return false;
+    }
+  }
+
 private:
   /*! @brief Field flag for each DensityGridField. For fields with multiple
    *  variables this flag encodes the variables that should be written to the
@@ -825,6 +959,17 @@ public:
                     default_flag(property, hydro) & (1u << heating))
                 << heating;
           }
+        } else if (is_element_property(property)) {
+          _field_flag[property] = 0;
+          for (int_fast32_t element = 0; element < NUMBER_OF_ELEMENTNAMES;
+               ++element) {
+            const std::string name = prop_name + get_element_name(element);
+            _field_flag[property] +=
+                params.get_value< uint_fast32_t >(
+                    "DensityGridWriterFields:" + name,
+                    default_flag(property, hydro) & (1u << element))
+                << element;
+          }
         } else {
           // normal single variable property
           _field_flag[property] = params.get_value< uint_fast32_t >(
@@ -871,6 +1016,19 @@ public:
   inline bool heatingterm_present(const int_fast32_t field_name,
                                   const int_fast32_t heating) const {
     return (_field_flag[field_name] >> heating) > 0;
+  }
+
+  /**
+   * @brief Check if the given element property for the given field should be
+   * output.
+   *
+   * @param field_name DensityGridField.
+   * @param element ElementName.
+   * @return True if the given field should be output for the given element.
+   */
+  inline bool element_present(const int_fast32_t field_name,
+                              const int_fast32_t element) const {
+    return (_field_flag[field_name] >> element) > 0;
   }
 
   /**

@@ -27,6 +27,7 @@
 #ifndef SKIRTASCIIFILEDENSITYFUNCTION_HPP
 #define SKIRTASCIIFILEDENSITYFUNCTION_HPP
 
+#include "Abundances.hpp"
 #include "DensityFunction.hpp"
 
 #include <string>
@@ -50,17 +51,29 @@ private:
   /*! @brief Number densities in the file (in m^-3). */
   std::vector< double > _number_densities;
 
+  /*! @brief Abundances in the file. */
+  std::vector< Abundances > _abundances;
+
   /*! @brief Octree used to speed up neighbour searching. */
   Octree *_octree;
 
 public:
-  SKIRTAsciiFileDensityFunction(const std::string filename,
-                                const std::string xname,
-                                const std::string yname,
-                                const std::string zname,
-                                const std::string nHname, Log *log = nullptr);
+  SKIRTAsciiFileDensityFunction(
+      const std::string filename, const std::string x_name,
+      const std::string y_name, const std::string z_name,
+      const std::string rho_name, const std::string He_name,
+      const std::string C_name, const std::string N_name,
+      const std::string O_name, const std::string Ne_name,
+      const std::string S_name, Log *log = nullptr);
   SKIRTAsciiFileDensityFunction(ParameterFile &params, Log *log = nullptr);
   ~SKIRTAsciiFileDensityFunction();
+
+  /**
+   * @brief Does this DensityFunction set up cell abundances?
+   *
+   * @return True, since we read them from the input file.
+   */
+  virtual bool has_abundances() { return true; }
 
   virtual DensityValues operator()(const Cell &cell);
 };

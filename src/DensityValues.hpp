@@ -26,6 +26,7 @@
 #ifndef DENSITYVALUES_HPP
 #define DENSITYVALUES_HPP
 
+#include "Abundances.hpp"
 #include "CoordinateVector.hpp"
 #include "ElementNames.hpp"
 
@@ -57,6 +58,11 @@ private:
 
   /*! @brief Cosmic ray heating factor (in kg m A^-1 s^-4). */
   double _cosmic_ray_factor;
+
+#ifdef VARIABLE_ABUNDANCES
+  /*! @brief Abundances. */
+  Abundances _abundances;
+#endif
 
 public:
   /**
@@ -134,6 +140,17 @@ public:
     _cosmic_ray_factor = cosmic_ray_factor;
   }
 
+#ifdef VARIABLE_ABUNDANCES
+  /**
+   * @brief Set the abundances.
+   *
+   * @param abundances Abundances.
+   */
+  inline void set_abundances(const Abundances &abundances) {
+    _abundances.set_abundances(abundances);
+  }
+#endif
+
   /**
    * @brief Get the number density of hydrogen.
    *
@@ -187,6 +204,15 @@ public:
    * @return Cosmic ray factor (in kg m A^-1 s^-4).
    */
   inline double get_cosmic_ray_factor() const { return _cosmic_ray_factor; }
+
+#ifdef VARIABLE_ABUNDANCES
+  /**
+   * @brief Get the abundances.
+   *
+   * @return Abundances.
+   */
+  inline Abundances get_abundances() const { return _abundances; }
+#endif
 };
 
 #endif // DENSITYVALUES_HPP

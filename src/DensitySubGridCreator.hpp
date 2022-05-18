@@ -422,6 +422,10 @@ public:
           }
           it.get_ionization_variables().set_temperature(
               values.get_temperature());
+#ifdef VARIABLE_ABUNDANCES
+          it.get_ionization_variables().get_abundances().set_abundances(
+              values.get_abundances());
+#endif
           _subgrids[this_igrid]->initialize_hydro(it.get_index(), values);
         }
       }

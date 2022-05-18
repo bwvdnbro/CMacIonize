@@ -33,52 +33,100 @@
  * @brief Constructor.
  *
  * @param filename Name of the ASCII text file to read.
- * @param xname Name of the x positions column.
- * @param yname Name of the y positions column.
- * @param zname Name of the z positions column.
- * @param rhoname Name of the density column.
+ * @param x_name Name of the x positions column.
+ * @param y_name Name of the y positions column.
+ * @param z_name Name of the z positions column.
+ * @param rho_name Name of the density column.
+ * @param He_name Name of the helium abundance column.
+ * @param C_name Name of the carbon abundance column.
+ * @param N_name Name of the nitrogen abundance column.
+ * @param O_name Name of the oxygen abundance column.
+ * @param Ne_name Name of the neon abundance column.
+ * @param S_name Name of the sulphur abundance column.
  * @param log Log to write logging info to.
  */
 SKIRTAsciiFileDensityFunction::SKIRTAsciiFileDensityFunction(
-    const std::string filename, const std::string xname,
-    const std::string yname, const std::string zname, const std::string rhoname,
-    Log *log)
+    const std::string filename, const std::string x_name,
+    const std::string y_name, const std::string z_name,
+    const std::string rho_name, const std::string He_name,
+    const std::string C_name, const std::string N_name,
+    const std::string O_name, const std::string Ne_name,
+    const std::string S_name, Log *log)
     : _octree(nullptr) {
 
   if (log) {
     log->write_info("Initialising SKIRTAsciiFileDensityFunction from file \"",
-                    filename, "\", reading fields \"", xname, "\", \"", yname,
-                    "\", \"", zname, "\" and \"", rhoname, "\".");
+                    filename, "\", reading fields \"", x_name, "\", \"", y_name,
+                    "\", \"", z_name, "\" and \"", rho_name, "\".");
   }
 
   SKIRTAsciiFile file(filename);
 
-  if (!file.has_column(xname) || !file.is_quantity(xname, QUANTITY_LENGTH)) {
+  if (!file.has_column(x_name) || !file.is_quantity(x_name, QUANTITY_LENGTH)) {
     cmac_error("Could not initiate x positions from column \"%s\"!",
-               xname.c_str());
+               x_name.c_str());
   }
-  if (!file.has_column(yname) || !file.is_quantity(yname, QUANTITY_LENGTH)) {
+  if (!file.has_column(y_name) || !file.is_quantity(y_name, QUANTITY_LENGTH)) {
     cmac_error("Could not initiate y positions from column \"%s\"!",
-               yname.c_str());
+               y_name.c_str());
   }
-  if (!file.has_column(zname) || !file.is_quantity(zname, QUANTITY_LENGTH)) {
+  if (!file.has_column(z_name) || !file.is_quantity(z_name, QUANTITY_LENGTH)) {
     cmac_error("Could not initiate z positions from column \"%s\"!",
-               zname.c_str());
+               z_name.c_str());
   }
-  if (!file.has_column(rhoname) ||
-      !file.is_quantity(rhoname, QUANTITY_DENSITY)) {
+  if (!file.has_column(rho_name) ||
+      !file.is_quantity(rho_name, QUANTITY_DENSITY)) {
     cmac_error("Could not initiate density from column \"%s\"!",
-               rhoname.c_str());
+               rho_name.c_str());
+  }
+  if (!file.has_column(He_name)) {
+    cmac_error("Could not initiate helium abundance from column \"%s\"!",
+               He_name.c_str());
+  }
+  if (!file.has_column(C_name)) {
+    cmac_error("Could not initiate carbon abundance from column \"%s\"!",
+               C_name.c_str());
+  }
+  if (!file.has_column(N_name)) {
+    cmac_error("Could not initiate nitrogen abundance from column \"%s\"!",
+               N_name.c_str());
+  }
+  if (!file.has_column(O_name)) {
+    cmac_error("Could not initiate oxygen abundance from column \"%s\"!",
+               O_name.c_str());
+  }
+  if (!file.has_column(Ne_name)) {
+    cmac_error("Could not initiate neon abundance from column \"%s\"!",
+               Ne_name.c_str());
+  }
+  if (!file.has_column(S_name)) {
+    cmac_error("Could not initiate sulphur abundance from column \"%s\"!",
+               S_name.c_str());
   }
 
-  const std::vector< double > &x = file.get_column(xname);
-  const std::vector< double > &y = file.get_column(yname);
-  const std::vector< double > &z = file.get_column(zname);
-  const std::vector< double > &rho = file.get_column(rhoname);
+#ifndef VARIABLE_ABUNDANCES
+  if (log) {
+    log->write_warning(
+        "Code was not configured with ACTIVATE_VARIABLE_ABUNDANCES, so "
+        "abundance values in SKIRTAsciiFileDensityFunction are ignored!");
+  }
+#endif
+
+  const std::vector< double > &x = file.get_column(x_name);
+  const std::vector< double > &y = file.get_column(y_name);
+  const std::vector< double > &z = file.get_column(z_name);
+  const std::vector< double > &rho = file.get_column(rho_name);
+  const std::vector< double > &aHe = file.get_column(He_name);
+  const std::vector< double > &aC = file.get_column(C_name);
+  const std::vector< double > &aN = file.get_column(N_name);
+  const std::vector< double > &aO = file.get_column(O_name);
+  const std::vector< double > &aNe = file.get_column(Ne_name);
+  const std::vector< double > &aS = file.get_column(S_name);
 
   CoordinateVector<> minpos(x[0], x[1], x[2]), maxpos(x[0], x[1], x[2]);
   _positions.resize(file.number_of_rows());
   _number_densities.resize(file.number_of_rows());
+  _abundances.resize(file.number_of_rows());
   for (size_t i = 0; i < file.number_of_rows(); ++i) {
     _positions[i][0] = x[i];
     _positions[i][1] = y[i];
@@ -87,6 +135,24 @@ SKIRTAsciiFileDensityFunction::SKIRTAsciiFileDensityFunction(
     maxpos = CoordinateVector<>::max(maxpos, _positions[i]);
     _number_densities[i] = rho[i] / PhysicalConstants::get_physical_constant(
                                         PHYSICALCONSTANT_PROTON_MASS);
+#ifdef HAS_HELIUM
+    _abundances[i].set_abundance(ELEMENT_He, aHe[i]);
+#endif
+#ifdef HAS_CARBON
+    _abundances[i].set_abundance(ELEMENT_C, aC[i]);
+#endif
+#ifdef HAS_NITROGEN
+    _abundances[i].set_abundance(ELEMENT_N, aN[i]);
+#endif
+#ifdef HAS_OXYGEN
+    _abundances[i].set_abundance(ELEMENT_O, aO[i]);
+#endif
+#ifdef HAS_NEON
+    _abundances[i].set_abundance(ELEMENT_Ne, aNe[i]);
+#endif
+#ifdef HAS_SULPHUR
+    _abundances[i].set_abundance(ELEMENT_S, aS[i]);
+#endif
   }
 
   // add some margins to the box to avoid problems with the Octree construction
@@ -107,10 +173,17 @@ SKIRTAsciiFileDensityFunction::SKIRTAsciiFileDensityFunction(
  *
  * Parameters are:
  *  - filename: Name of the ASCII file (required)
- *  - xname: Name of the x positions column (default: x-coordinate)
- *  - yname: Name of the y positions column (default: y-coordinate)
- *  - zname: Name of the z positions column (default: z-coordinate)
- *  - rhoname: Name of the density column (default: density)
+ *  - x_name: Name of the x positions column (default: x-coordinate)
+ *  - y_name: Name of the y positions column (default: y-coordinate)
+ *  - z_name: Name of the z positions column (default: z-coordinate)
+ *  - rho_name: Name of the density column (default: density)
+ *  - He_name: Name of the helium abundance column (default: helium-abundance)
+ *  - C_name: Name of the carbon abundance column (default: carbon-abundance)
+ *  - N_name: Name of the nitrogen abundance column (default:
+ * nitrogen-abundance)
+ *  - O_name: Name of the oxygen abundance column (default: oxygen-abundance)
+ *  - Ne_name: Name of the neon abundance column (default: neon-abundance)
+ *  - S_name: Name of the sulphur abundance column (default: sulphur-abundance)
  *
  * @param params ParameterFile to read from.
  * @param log Log to write logging information to.
@@ -119,13 +192,26 @@ SKIRTAsciiFileDensityFunction::SKIRTAsciiFileDensityFunction(
     ParameterFile &params, Log *log)
     : SKIRTAsciiFileDensityFunction(
           params.get_filename("DensityFunction:filename"),
-          params.get_value< std::string >("DensityFunction:xname",
+          params.get_value< std::string >("DensityFunction:x_name",
                                           "x-coordinate"),
-          params.get_value< std::string >("DensityFunction:yname",
+          params.get_value< std::string >("DensityFunction:y_name",
                                           "y-coordinate"),
-          params.get_value< std::string >("DensityFunction:zname",
+          params.get_value< std::string >("DensityFunction:z_name",
                                           "z-coordinate"),
-          params.get_value< std::string >("DensityFunction:rhoname", "density"),
+          params.get_value< std::string >("DensityFunction:rho_name",
+                                          "density"),
+          params.get_value< std::string >("DensityFunction:He_name",
+                                          "helium-abundance"),
+          params.get_value< std::string >("DensityFunction:C_name",
+                                          "carbon-abundance"),
+          params.get_value< std::string >("DensityFunction:N_name",
+                                          "nitrogen-abundance"),
+          params.get_value< std::string >("DensityFunction:O_name",
+                                          "oxygen-abundance"),
+          params.get_value< std::string >("DensityFunction:Ne_name",
+                                          "neon-abundance"),
+          params.get_value< std::string >("DensityFunction:S_name",
+                                          "sulphur-abundance"),
           log) {}
 
 /**
@@ -156,6 +242,9 @@ DensityValues SKIRTAsciiFileDensityFunction::operator()(const Cell &cell) {
   for (int_fast32_t ion = 0; ion < NUMBER_OF_IONNAMES; ++ion) {
     values.set_ionic_fraction(ion, 1.e-6);
   }
+#ifdef VARIABLE_ABUNDANCES
+  values.set_abundances(_abundances[closest]);
+#endif
 
   return values;
 }

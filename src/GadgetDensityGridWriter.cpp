@@ -232,6 +232,15 @@ void GadgetDensityGridWriter::write(DensityGrid &grid, uint_fast32_t iteration,
                                                   _compression);
             }
           }
+        } else if (DensityGridWriterFields::is_element_property(property)) {
+          for (int_fast32_t element = 0; element < NUMBER_OF_ELEMENTNAMES;
+               ++element) {
+            if (_fields.element_present(property, element)) {
+              const std::string prop_name = name + get_element_name(element);
+              HDF5Tools::create_dataset< double >(group, prop_name, numpart[0],
+                                                  _compression);
+            }
+          }
         } else {
           HDF5Tools::create_dataset< double >(group, name, numpart[0],
                                               _compression);
@@ -290,6 +299,16 @@ void GadgetDensityGridWriter::write(DensityGrid &grid, uint_fast32_t iteration,
                   ++scalar_index;
                 }
               }
+            } else if (DensityGridWriterFields::is_element_property(property)) {
+              for (int_fast32_t element = 0; element < NUMBER_OF_ELEMENTNAMES;
+                   ++element) {
+                if (_fields.element_present(property, element)) {
+                  scalar_props[scalar_index][index] =
+                      DensityGridWriterFields::get_scalar_double_element_value(
+                          property, element, it);
+                  ++scalar_index;
+                }
+              }
             } else {
               scalar_props[scalar_index][index] =
                   DensityGridWriterFields::get_scalar_double_value(property, it,
@@ -328,6 +347,16 @@ void GadgetDensityGridWriter::write(DensityGrid &grid, uint_fast32_t iteration,
                  ++heating) {
               if (_fields.heatingterm_present(property, heating)) {
                 const std::string prop_name = name + get_ion_name(heating);
+                HDF5Tools::append_dataset< double >(group, prop_name, offset,
+                                                    scalar_props[scalar_index]);
+                ++scalar_index;
+              }
+            }
+          } else if (DensityGridWriterFields::is_element_property(property)) {
+            for (int_fast32_t element = 0; element < NUMBER_OF_ELEMENTNAMES;
+                 ++element) {
+              if (_fields.element_present(property, element)) {
+                const std::string prop_name = name + get_element_name(element);
                 HDF5Tools::append_dataset< double >(group, prop_name, offset,
                                                     scalar_props[scalar_index]);
                 ++scalar_index;
@@ -500,6 +529,15 @@ void GadgetDensityGridWriter::write(
                                                   _compression);
             }
           }
+        } else if (DensityGridWriterFields::is_element_property(property)) {
+          for (int_fast32_t element = 0; element < NUMBER_OF_ELEMENTNAMES;
+               ++element) {
+            if (fields.element_present(property, element)) {
+              const std::string prop_name = name + get_element_name(element);
+              HDF5Tools::create_dataset< double >(group, prop_name, numpart[0],
+                                                  _compression);
+            }
+          }
         } else {
           HDF5Tools::create_dataset< double >(group, name, numpart[0],
                                               _compression);
@@ -565,6 +603,18 @@ void GadgetDensityGridWriter::write(
                     ++scalar_index;
                   }
                 }
+              } else if (DensityGridWriterFields::is_element_property(
+                             property)) {
+                for (int_fast32_t element = 0; element < NUMBER_OF_ELEMENTNAMES;
+                     ++element) {
+                  if (fields.element_present(property, element)) {
+                    scalar_props[scalar_index][index] =
+                        DensityGridWriterFields::
+                            get_scalar_double_element_value(property, element,
+                                                            cellit);
+                    ++scalar_index;
+                  }
+                }
               } else {
                 scalar_props[scalar_index][index] =
                     DensityGridWriterFields::get_scalar_double_value(property,
@@ -604,6 +654,18 @@ void GadgetDensityGridWriter::write(
                    ++heating) {
                 if (fields.heatingterm_present(property, heating)) {
                   const std::string prop_name = name + get_ion_name(heating);
+                  HDF5Tools::append_dataset< double >(
+                      group, prop_name, block_offset + offset,
+                      scalar_props[scalar_index]);
+                  ++scalar_index;
+                }
+              }
+            } else if (DensityGridWriterFields::is_element_property(property)) {
+              for (int_fast32_t element = 0; element < NUMBER_OF_ELEMENTNAMES;
+                   ++element) {
+                if (fields.element_present(property, element)) {
+                  const std::string prop_name =
+                      name + get_element_name(element);
                   HDF5Tools::append_dataset< double >(
                       group, prop_name, block_offset + offset,
                       scalar_props[scalar_index]);
@@ -780,6 +842,15 @@ void GadgetDensityGridWriter::write(
                                                   _compression);
             }
           }
+        } else if (DensityGridWriterFields::is_element_property(property)) {
+          for (int_fast32_t element = 0; element < NUMBER_OF_ELEMENTNAMES;
+               ++element) {
+            if (fields.element_present(property, element)) {
+              const std::string prop_name = name + get_element_name(element);
+              HDF5Tools::create_dataset< double >(group, prop_name, numpart[0],
+                                                  _compression);
+            }
+          }
         } else {
           HDF5Tools::create_dataset< double >(group, name, numpart[0],
                                               _compression);
@@ -845,6 +916,18 @@ void GadgetDensityGridWriter::write(
                     ++scalar_index;
                   }
                 }
+              } else if (DensityGridWriterFields::is_element_property(
+                             property)) {
+                for (int_fast32_t element = 0; element < NUMBER_OF_ELEMENTNAMES;
+                     ++element) {
+                  if (fields.element_present(property, element)) {
+                    scalar_props[scalar_index][index] =
+                        DensityGridWriterFields::
+                            get_scalar_double_element_value(property, element,
+                                                            cellit);
+                    ++scalar_index;
+                  }
+                }
               } else {
                 scalar_props[scalar_index][index] =
                     DensityGridWriterFields::get_scalar_double_value(property,
@@ -884,6 +967,18 @@ void GadgetDensityGridWriter::write(
                    ++heating) {
                 if (fields.heatingterm_present(property, heating)) {
                   const std::string prop_name = name + get_ion_name(heating);
+                  HDF5Tools::append_dataset< double >(
+                      group, prop_name, block_offset + offset,
+                      scalar_props[scalar_index]);
+                  ++scalar_index;
+                }
+              }
+            } else if (DensityGridWriterFields::is_element_property(property)) {
+              for (int_fast32_t element = 0; element < NUMBER_OF_ELEMENTNAMES;
+                   ++element) {
+                if (fields.element_present(property, element)) {
+                  const std::string prop_name =
+                      name + get_element_name(element);
                   HDF5Tools::append_dataset< double >(
                       group, prop_name, block_offset + offset,
                       scalar_props[scalar_index]);
