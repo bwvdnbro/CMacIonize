@@ -442,6 +442,10 @@ void TaskBasedIonizationSimulation::initialize(
 
   _time_log.start("initialisation");
 
+  if (_log) {
+    _log->write_status("Initialising grid.");
+  }
+
   if (density_function == nullptr) {
     density_function = _density_function;
   }
@@ -574,7 +578,7 @@ void TaskBasedIonizationSimulation::run(
   }
 
   DistributedPhotonSource< DensitySubGrid > *photon_source = nullptr;
-  uint_fast32_t number_of_discrete_photons = 0;
+  uint_fast64_t number_of_discrete_photons = 0;
   if (_photon_source_distribution != nullptr) {
     number_of_discrete_photons = _number_of_photons;
   }
@@ -609,7 +613,7 @@ void TaskBasedIonizationSimulation::run(
     continuous_photon_weight = 2. * luminosity_ratio / (luminosity_ratio + 1.);
   }
 
-  const uint_fast32_t fixed_number_of_continuous_photons =
+  uint_fast64_t fixed_number_of_continuous_photons =
       number_of_continuous_photons;
 
   if (_photon_source_distribution != nullptr) {
@@ -668,11 +672,24 @@ void TaskBasedIonizationSimulation::run(
         _log->write_status("Adding trackers...");
       }
       _trackers->add_trackers(*_grid_creator);
-      _number_of_photons =
-          std::max(_number_of_photons, _trackers->get_number_of_photons());
+      const uint_fast64_t number_of_photons_multiplier =
+          _trackers->get_number_of_photons_multiplier();
+      _number_of_photons *= number_of_photons_multiplier;
+      number_of_discrete_photons *= number_of_photons_multiplier;
+      fixed_number_of_continuous_photons *= number_of_photons_multiplier;
+      if (photon_source) {
+        photon_source->multiply_photon_packets(number_of_photons_multiplier);
+      }
       if (_log) {
         _log->write_status("Done adding trackers.");
       }
+    }
+
+    if (_log) {
+      _log->write_status("Using ", number_of_discrete_photons,
+                         " photon packets from discrete sources and ",
+                         fixed_number_of_continuous_photons,
+                         " photon packets from continuous sources.");
     }
 
     // reset mean intensity counters
@@ -714,6 +731,10 @@ void TaskBasedIonizationSimulation::run(
       stop_parallel_timing_block();
     }
     _time_log.end("diffuse field variables");
+
+    if (_log) {
+      _log->write_status("Creating photon source tasks.");
+    }
 
     _time_log.start("photon source tasks");
     size_t number_of_photons_done = 0;
@@ -819,6 +840,10 @@ void TaskBasedIonizationSimulation::run(
 
     Scheduler scheduler(*_tasks, _queues, *_shared_queue);
 
+    if (_log) {
+      _log->write_status("Propagating photon packets.");
+    }
+
     start_parallel_timing_block();
 #ifdef HAVE_OPENMP
 #pragma omp parallel default(shared)
@@ -907,8 +932,8 @@ void TaskBasedIonizationSimulation::run(
     _photon_propagation_timer.stop();
 
     if (_log != nullptr) {
-      _log->write_info("Done shooting photons.");
-      _log->write_info("Starting temperature calculation...");
+      _log->write_status("Done shooting photons.");
+      _log->write_status("Starting temperature calculation...");
     }
     _cell_update_timer.start();
     _time_log.start("temperature calculation");

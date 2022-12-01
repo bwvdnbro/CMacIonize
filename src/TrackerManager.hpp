@@ -63,8 +63,9 @@ private:
   /*! @brief List of output file names. */
   std::vector< std::string > _output_names;
 
-  /*! @brief Number of photon packets to use during the tracking step. */
-  const uint_fast64_t _number_of_photons;
+  /*! @brief Multiplier for the number of photon packets during the tracking
+   * step. */
+  const uint_fast64_t _number_of_photons_multiplier;
 
   /*! @brief Output all trackers to a single HDF5 file? */
   const bool _hdf5_output;
@@ -89,17 +90,17 @@ public:
    *
    * @param filename Name of the file that contains the positions of the
    * trackers.
-   * @param number_of_photons Number of photon packets to use during the
-   * tracking step.
+   * @param number_of_photons_multiplier Multiplier for the number of photon
+   * packets to use during the tracking step.
    * @param hdf5_output Output all trackers to a single HDF5 file?
    * @param hdf5_name Name of the HDF5 output file.
    */
   TrackerManager(const std::string filename,
-                 const uint_fast64_t number_of_photons,
+                 const uint_fast64_t number_of_photons_multiplier,
                  const bool hdf5_output = false,
                  const std::string hdf5_name = "")
-      : _number_of_photons(number_of_photons), _hdf5_output(hdf5_output),
-        _hdf5_name(hdf5_name) {
+      : _number_of_photons_multiplier(number_of_photons_multiplier),
+        _hdf5_output(hdf5_output), _hdf5_name(hdf5_name) {
 
 #ifndef HAVE_HDF5
     if (hdf5_output) {
@@ -184,7 +185,7 @@ public:
       : TrackerManager(
             params.get_filename("TrackerManager:filename"),
             params.get_value< uint_fast64_t >(
-                "TrackerManager:minimum number of photon packets", 0),
+                "TrackerManager:number of photon packet multiplier", 1),
             params.get_value< bool >("TrackerManager:HDF5 output", false),
             params.get_value< std::string >("TrackerManager:HDF5 output name",
                                             "trackers.hdf5")) {}
@@ -368,12 +369,14 @@ public:
   }
 
   /**
-   * @brief Get the number of photon packets to use during the tracking step.
+   * @brief Get the multiplier for the number of photon packets to use during
+   * the tracking step.
    *
-   * @return Number of photons to use during the tracking step.
+   * @return Multiplier for the number of photons to use during the tracking
+   * step.
    */
-  inline uint_fast64_t get_number_of_photons() const {
-    return _number_of_photons;
+  inline uint_fast64_t get_number_of_photons_multiplier() const {
+    return _number_of_photons_multiplier;
   }
 };
 

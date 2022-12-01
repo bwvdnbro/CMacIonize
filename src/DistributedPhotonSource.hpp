@@ -189,6 +189,17 @@ public:
   }
 
   /**
+   * @brief Multiply the number of photon packets with a constant factor.
+   *
+   * @param multiplier Constant factor to multiply with.
+   */
+  inline void multiply_photon_packets(const uint_fast64_t multiplier) {
+    for (size_t i = 0; i < _subgrids.size(); ++i) {
+      _total_number_of_photons[i] *= multiplier;
+    }
+  }
+
+  /**
    * @brief Reset the internal counters to start a new photon propagation step.
    */
   inline void reset() {
