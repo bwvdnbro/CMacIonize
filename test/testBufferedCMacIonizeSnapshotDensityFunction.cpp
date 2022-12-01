@@ -46,7 +46,7 @@ int main() {
   const Box<> box(-5. * pc, 10. * pc);
   const CoordinateVector< uint_fast32_t > ncell(8);
   BufferedCMacIonizeSnapshotDensityFunction density_function(
-      "taskbased.hdf5", 10, box, ncell, &log);
+      "taskbased.hdf5", 10, false, box, ncell, &log);
 
   density_function.initialize();
 

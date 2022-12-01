@@ -242,10 +242,13 @@ public:
         CoordinateVector<>::dot_product(p100_101, p100_111);
     const double p100_110_p100_111 =
         CoordinateVector<>::dot_product(p100_110, p100_111);
-    const double ax1 = std::sqrt(p100_101.norm2() * p100_111.norm2() -
-                                 p100_101_p100_111 * p100_101_p100_111);
-    const double ax2 = std::sqrt(p100_110.norm2() * p100_111.norm2() -
-                                 p100_110_p100_111 * p100_110_p100_111);
+    // make sure we don't get NaN
+    const double ax1_2 = p100_101.norm2() * p100_111.norm2() -
+                         p100_101_p100_111 * p100_101_p100_111;
+    const double ax1 = (ax1_2 > 0.) ? std::sqrt(ax1_2) : 0.;
+    const double ax2_2 = p100_110.norm2() * p100_111.norm2() -
+                         p100_110_p100_111 * p100_110_p100_111;
+    const double ax2 = (ax2_2 > 0.) ? std::sqrt(ax2_2) : 0.;
 
     const CoordinateVector<> p110_111 = p111 - p110;
     const CoordinateVector<> p110_011 = p011 - p110;
