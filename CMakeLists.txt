@@ -274,6 +274,10 @@ endif(MAX_NUM_THREADS GREATER 1)
 
 # Find MPI
 find_package(MPI)
+if(DEACTIVATE_MPI)
+  message(STATUS "MPI found, but disabled on request.")
+  set(MPI_CXX_FOUND False)
+endif(DEACTIVATE_MPI)
 if(MPI_CXX_FOUND)
   add_configuration_option(HAVE_MPI True)
   message(STATUS "MPI found. Distributed memory parallelization will work.")
