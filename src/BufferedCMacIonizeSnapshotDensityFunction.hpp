@@ -131,9 +131,8 @@ public:
    */
   BufferedCMacIonizeSnapshotDensityFunction(
       const std::string filename, const uint_fast32_t buffer_size,
-      const bool read_velocity,
-      const Box<> new_box, const CoordinateVector< uint_fast32_t > new_ncell,
-      Log *log = nullptr)
+      const bool read_velocity, const Box<> new_box,
+      const CoordinateVector< uint_fast32_t > new_ncell, Log *log = nullptr)
       : _buffer_size(buffer_size), _buffer_timestamps(buffer_size, 0),
         _buffer_subgrid_indices(buffer_size),
         _buffer_element_locks(buffer_size), _log(log) {
@@ -354,7 +353,7 @@ public:
       _read_ionic_fraction[i] = HDF5Tools::group_exists(
           _particle_group, "NeutralFraction" + get_ion_name(i));
     }
-    if(read_velocity){
+    if (read_velocity) {
       _read_velocity = HDF5Tools::group_exists(_particle_group, "Velocities");
     } else {
       _read_velocity = false;
@@ -396,7 +395,7 @@ public:
             params.get_filename("DensityFunction:filename"),
             params.get_value< uint_fast32_t >("DensityFunction:buffer size",
                                               100),
-            params.get_value<bool>("DensityFunction:read velocity", false),
+            params.get_value< bool >("DensityFunction:read velocity", false),
             Box<>(params.get_physical_vector< QUANTITY_LENGTH >(
                       "SimulationBox:anchor"),
                   params.get_physical_vector< QUANTITY_LENGTH >(
