@@ -124,12 +124,14 @@ public:
    *
    * @param filename Name of the snapshot file.
    * @param buffer_size Number of subgrids that can be buffered.
+   * @param read_velocity Read the velocity?
    * @param new_box Simulation box of the current simulation (in m).
    * @param new_ncell Number of cells in the current simulation.
    * @param log Log to write logging info to.
    */
   BufferedCMacIonizeSnapshotDensityFunction(
       const std::string filename, const uint_fast32_t buffer_size,
+      const bool read_velocity,
       const Box<> new_box, const CoordinateVector< uint_fast32_t > new_ncell,
       Log *log = nullptr)
       : _buffer_size(buffer_size), _buffer_timestamps(buffer_size, 0),
@@ -352,7 +354,11 @@ public:
       _read_ionic_fraction[i] = HDF5Tools::group_exists(
           _particle_group, "NeutralFraction" + get_ion_name(i));
     }
-    _read_velocity = HDF5Tools::group_exists(_particle_group, "Velocities");
+    if(read_velocity){
+      _read_velocity = HDF5Tools::group_exists(_particle_group, "Velocities");
+    } else {
+      _read_velocity = false;
+    }
 
     if (log) {
       log->write_info("Old anchor: [", _old_anchor.x(), " m, ", _old_anchor.y(),
@@ -390,6 +396,7 @@ public:
             params.get_filename("DensityFunction:filename"),
             params.get_value< uint_fast32_t >("DensityFunction:buffer size",
                                               100),
+            params.get_value<bool>("DensityFunction:read velocity", false),
             Box<>(params.get_physical_vector< QUANTITY_LENGTH >(
                       "SimulationBox:anchor"),
                   params.get_physical_vector< QUANTITY_LENGTH >(
