@@ -53,11 +53,16 @@ private:
   /*! @brief Number of subgrids that can be buffered. */
   const uint_fast32_t _buffer_size;
 
+#ifdef H5_HAVE_THREADSAFE
+  /*! @brief Name of the snapshot file. */
+  const std::string _filename;
+#else
   /*! @brief Snapshot file. */
   HDF5Tools::HDF5File _file;
 
   /*! @brief Particle group within the snapshot file. */
   HDF5Tools::HDF5Group _particle_group;
+#endif
 
   /*! @brief Number of old cells per new cell (in 1 coordinate dimension). If
    *  larger than one, a mass-conserving mapping is used during read. */
@@ -97,8 +102,10 @@ private:
    *  thread did not swap it out). */
   std::vector< uint_fast32_t > _buffer_subgrid_indices;
 
+#ifndef H5_HAVE_THREADSAFE
   /*! @brief Lock protecting the buffer and HDF5 file. */
   ThreadLock _buffer_lock;
+#endif
 
   /*! @brief Locks per buffer element. */
   std::vector< ThreadLock > _buffer_element_locks;
@@ -133,21 +140,34 @@ public:
       const std::string filename, const uint_fast32_t buffer_size,
       const bool read_velocity, const Box<> new_box,
       const CoordinateVector< uint_fast32_t > new_ncell, Log *log = nullptr)
-      : _buffer_size(buffer_size), _buffer_timestamps(buffer_size, 0),
+      : _buffer_size(buffer_size),
+#ifdef H5_HAVE_THREADSAFE
+        _filename(filename),
+#endif
+        _buffer_timestamps(buffer_size, 0),
         _buffer_subgrid_indices(buffer_size),
         _buffer_element_locks(buffer_size), _log(log) {
 
     // check that the file can be opened
-    std::ifstream file(filename);
-    if (!file.is_open()) {
+    std::ifstream test_file(filename);
+    if (!test_file.is_open()) {
       cmac_error("Could not open file \"%s\"!", filename.c_str());
     }
 
     // open the file using HDF5
-    _file = HDF5Tools::open_file(filename, HDF5Tools::HDF5FILEMODE_READ);
+    HDF5Tools::HDF5File file =
+        HDF5Tools::open_file(filename, HDF5Tools::HDF5FILEMODE_READ);
+#ifdef H5_HAVE_THREADSAFE
+    if (_log) {
+      _log->write_info(
+          "Using thread-safe HDF5 library, reading input file in parallel.");
+    }
+#else
+    _file = file;
+#endif
 
     // parse the parameter block
-    HDF5Tools::HDF5Group group = HDF5Tools::open_group(_file, "/Parameters");
+    HDF5Tools::HDF5Group group = HDF5Tools::open_group(file, "/Parameters");
     std::vector< std::string > parameternames =
         HDF5Tools::get_attribute_names(group);
     ParameterFile parameters;
@@ -330,34 +350,43 @@ public:
                            _mapped_subgrid_ncell.z();
 
     // open the particle group
-    _particle_group = HDF5Tools::open_group(_file, "PartType0");
+    HDF5Tools::HDF5Group particle_group =
+        HDF5Tools::open_group(file, "PartType0");
+#ifndef H5_HAVE_THREADSAFE
+    _particle_group = particle_group;
+#endif
 
     // figure out which values to read
-    if (HDF5Tools::group_exists(_particle_group, "NumberDensity")) {
+    if (HDF5Tools::group_exists(particle_group, "NumberDensity")) {
       _read_number_density = true;
     } else {
-      if (!HDF5Tools::group_exists(_particle_group, "Density")) {
+      if (!HDF5Tools::group_exists(particle_group, "Density")) {
         cmac_error("No density variable present in snapshot file!");
       }
       _read_number_density = false;
     }
-    if (HDF5Tools::group_exists(_particle_group, "Temperature")) {
+    if (HDF5Tools::group_exists(particle_group, "Temperature")) {
       _read_temperature = true;
     } else {
-      if (!HDF5Tools::group_exists(_particle_group, "Pressure")) {
+      if (!HDF5Tools::group_exists(particle_group, "Pressure")) {
         cmac_error("No temperature variable present in snapshot file!");
       }
       _read_temperature = false;
     }
     for (int_fast32_t i = 0; i < NUMBER_OF_IONNAMES; ++i) {
       _read_ionic_fraction[i] = HDF5Tools::group_exists(
-          _particle_group, "NeutralFraction" + get_ion_name(i));
+          particle_group, "NeutralFraction" + get_ion_name(i));
     }
     if (read_velocity) {
-      _read_velocity = HDF5Tools::group_exists(_particle_group, "Velocities");
+      _read_velocity = HDF5Tools::group_exists(particle_group, "Velocities");
     } else {
       _read_velocity = false;
     }
+
+#ifdef H5_HAVE_THREADSAFE
+    HDF5Tools::close_group(particle_group);
+    HDF5Tools::close_file(file);
+#endif
 
     if (log) {
       log->write_info("Old anchor: [", _old_anchor.x(), " m, ", _old_anchor.y(),
@@ -423,8 +452,10 @@ public:
    * @brief Close the HDF5 file and free the buffer.
    */
   virtual void free() {
+#ifndef H5_HAVE_THREADSAFE
     HDF5Tools::close_group(_particle_group);
     HDF5Tools::close_file(_file);
+#endif
     _buffer.clear();
     _buffer_timestamps.clear();
     _buffer_element_locks.clear();
@@ -463,9 +494,19 @@ public:
     // buffer_index is now locked and can be overwritten
     const uint_fast32_t buffer_index = timesort[ibuffer];
 
+#ifdef H5_HAVE_THREADSAFE
+    // open the file using HDF5
+    HDF5Tools::HDF5File file =
+        HDF5Tools::open_file(_filename, HDF5Tools::HDF5FILEMODE_READ);
+    // open the particle group
+    HDF5Tools::HDF5Group particle_group =
+        HDF5Tools::open_group(file, "PartType0");
+#else
     // we are going to read the HDF5 file, so from this point we need to be
     // thread-safe
     _buffer_lock.lock();
+    HDF5Tools::HDF5Group particle_group = _particle_group;
+#endif
 
     if (_log) {
       _log->write_info("Reading subgrid ", subgrid_index,
@@ -477,20 +518,20 @@ public:
     std::vector< double > number_density;
     if (_read_number_density) {
       number_density = HDF5Tools::read_dataset_part< double >(
-          _particle_group, "NumberDensity", subgrid_offset,
+          particle_group, "NumberDensity", subgrid_offset,
           _original_subgrid_size);
     } else {
       number_density = HDF5Tools::read_dataset_part< double >(
-          _particle_group, "Density", subgrid_offset, _original_subgrid_size);
+          particle_group, "Density", subgrid_offset, _original_subgrid_size);
     }
     std::vector< double > temperature;
     if (_read_temperature) {
       temperature = HDF5Tools::read_dataset_part< double >(
-          _particle_group, "Temperature", subgrid_offset,
+          particle_group, "Temperature", subgrid_offset,
           _original_subgrid_size);
     } else {
       temperature = HDF5Tools::read_dataset_part< double >(
-          _particle_group, "Pressure", subgrid_offset, _original_subgrid_size);
+          particle_group, "Pressure", subgrid_offset, _original_subgrid_size);
     }
     std::vector< std::vector< double > > neutral_fractions(
         NUMBER_OF_IONNAMES,
@@ -499,8 +540,8 @@ public:
       // skip ionic fractions that do not exist
       if (_read_ionic_fraction[i]) {
         neutral_fractions[i] = HDF5Tools::read_dataset_part< double >(
-            _particle_group, "NeutralFraction" + get_ion_name(i),
-            subgrid_offset, _original_subgrid_size);
+            particle_group, "NeutralFraction" + get_ion_name(i), subgrid_offset,
+            _original_subgrid_size);
       }
     }
     std::vector< CoordinateVector<> > velocities(_original_subgrid_size);
@@ -508,9 +549,14 @@ public:
     //      cmac_warning("Not reading velocities for now!");
     //    }
 
+#ifdef H5_HAVE_THREADSAFE
+    HDF5Tools::close_group(particle_group);
+    HDF5Tools::close_file(file);
+#else
     // we are done reading the file, unlock the file so that another thread
     // can access it
     _buffer_lock.unlock();
+#endif
 
     if (!_read_number_density || !_read_temperature) {
       for (uint_fast32_t i = 0; i < _original_subgrid_size; ++i) {
