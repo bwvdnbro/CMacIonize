@@ -106,12 +106,14 @@ public:
    * @brief Add a task to the queue.
    *
    * @param task Task to add.
+   * @return True if we managed to add the task to the queue.
    */
-  inline void add_task(const size_t task) {
+  inline bool add_task(const size_t task) {
     _queue_lock.lock();
-    cmac_assert_message(_current_queue_size < _size,
-                        "Too many tasks in queue (%zu < %zu)! (%s)",
-                        _current_queue_size, _size, _label.c_str());
+    if (_current_queue_size == _size) {
+      _queue_lock.unlock();
+      return false;
+    }
     _queue[_current_queue_size] = task;
     ++_current_queue_size;
 #ifdef QUEUE_STATS
@@ -121,6 +123,7 @@ public:
     ++_avg_queue_size_count;
 #endif
     _queue_lock.unlock();
+    return true;
   }
 
   /**

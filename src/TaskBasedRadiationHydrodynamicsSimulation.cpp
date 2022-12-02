@@ -1719,7 +1719,9 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
                 (*tasks)[new_task].set_type(TASKTYPE_SOURCE_DISCRETE_PHOTON);
                 (*tasks)[new_task].set_subgrid(isrc);
                 (*tasks)[new_task].set_buffer(number_of_photons_this_batch);
-                shared_queue->add_task(new_task);
+                if (!shared_queue->add_task(new_task)) {
+                  cmac_error("Unable to add task to shared queue!");
+                }
                 number_of_photons_done += number_of_photons_this_batch;
               }
             }
@@ -1809,9 +1811,16 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
                      ++itask) {
                   if (queues_to_add[itask] < 0) {
                     // general queue
-                    shared_queue->add_task(tasks_to_add[itask]);
+                    if (!shared_queue->add_task(tasks_to_add[itask])) {
+                      cmac_error("Unable to add task to shared queue!");
+                    }
                   } else {
-                    queues[queues_to_add[itask]]->add_task(tasks_to_add[itask]);
+                    if (!queues[queues_to_add[itask]]->add_task(
+                            tasks_to_add[itask])) {
+                      if (!shared_queue->add_task(tasks_to_add[itask])) {
+                        cmac_error("Unable to add task to shared queue!");
+                      }
+                    }
                   }
                 }
 
@@ -2070,7 +2079,9 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
         const size_t itask = (*cellit).get_hydro_task(i);
         if (itask != NO_TASK &&
             (*tasks)[itask].get_number_of_unfinished_parents() == 0) {
-          queues[(*cellit).get_owning_thread()]->add_task(itask);
+          if (!queues[(*cellit).get_owning_thread()]->add_task(itask)) {
+            cmac_error("Unable to add task to queue!");
+          }
           number_of_tasks.pre_increment();
         }
       }
@@ -2108,10 +2119,12 @@ int TaskBasedRadiationHydrodynamicsSimulation::do_simulation(
             const size_t ichild = (*tasks)[current_task].get_child(i);
             if ((*tasks)[ichild].decrement_number_of_unfinished_parents() ==
                 0) {
-              queues[(*grid_creator->get_subgrid(
-                          (*tasks)[ichild].get_subgrid()))
-                         .get_owning_thread()]
-                  ->add_task(ichild);
+              if (!queues[(*grid_creator->get_subgrid(
+                               (*tasks)[ichild].get_subgrid()))
+                              .get_owning_thread()]
+                       ->add_task(ichild)) {
+                cmac_error("Unable to add task to queue!");
+              }
               number_of_tasks.pre_increment();
             }
           }
