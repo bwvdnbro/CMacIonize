@@ -750,9 +750,7 @@ void TaskBasedIonizationSimulation::run(
             (*_tasks)[new_task].set_type(TASKTYPE_SOURCE_DISCRETE_PHOTON);
             (*_tasks)[new_task].set_subgrid(isrc);
             (*_tasks)[new_task].set_buffer(number_of_photons_this_batch);
-            if (!_shared_queue->add_task(new_task)) {
-              cmac_error("Unable to add task to shared queue!");
-            }
+            _shared_queue->add_task(new_task);
             number_of_photons_done += number_of_photons_this_batch;
           }
         }
@@ -773,9 +771,7 @@ void TaskBasedIonizationSimulation::run(
         (*_tasks)[new_task].set_dependency(
             &continuous_source_lock[block_index % number_of_continuous_blocks]);
         ++block_index;
-        if (!_shared_queue->add_task(new_task)) {
-          cmac_error("Unable to add task to shared queue!");
-        }
+        _shared_queue->add_task(new_task);
         number_of_photons_done += batch_size;
       }
       const uint_fast32_t num_last_batch =
@@ -789,9 +785,7 @@ void TaskBasedIonizationSimulation::run(
         (*_tasks)[new_task].set_dependency(
             &continuous_source_lock[block_index % number_of_continuous_blocks]);
         ++block_index;
-        if (!_shared_queue->add_task(new_task)) {
-          cmac_error("Unable to add task to shared queue!");
-        }
+        _shared_queue->add_task(new_task);
         number_of_photons_done += num_last_batch;
       }
       number_of_continuous_photons = fixed_number_of_continuous_photons;
@@ -903,16 +897,9 @@ void TaskBasedIonizationSimulation::run(
           for (uint_fast32_t itask = 0; itask < num_tasks_to_add; ++itask) {
             if (queues_to_add[itask] < 0) {
               // general queue
-              if (!_shared_queue->add_task(tasks_to_add[itask])) {
-                cmac_error("Unable to add task to shared queue!");
-              }
+              _shared_queue->add_task(tasks_to_add[itask]);
             } else {
-              if (!_queues[queues_to_add[itask]]->add_task(
-                      tasks_to_add[itask])) {
-                if (!_shared_queue->add_task(tasks_to_add[itask])) {
-                  cmac_error("Unable to add task to shared queue!");
-                }
-              }
+              _queues[queues_to_add[itask]]->add_task(tasks_to_add[itask]);
             }
           }
 
