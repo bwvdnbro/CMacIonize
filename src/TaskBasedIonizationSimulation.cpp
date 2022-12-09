@@ -686,9 +686,13 @@ void TaskBasedIonizationSimulation::run(
     }
 
     if (_log) {
-      _log->write_status("Using ", number_of_discrete_photons,
+      // use floats rather than ints to make the values more human friendly to
+      // read
+      const float f_num_discrete = number_of_discrete_photons;
+      const float f_num_continuous = fixed_number_of_continuous_photons;
+      _log->write_status("Using ", f_num_discrete,
                          " photon packets from discrete sources and ",
-                         fixed_number_of_continuous_photons,
+                         f_num_continuous,
                          " photon packets from continuous sources.");
     }
 
