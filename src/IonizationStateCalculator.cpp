@@ -139,35 +139,35 @@ void IonizationStateCalculator::calculate_ionization_state(
 
     const double j_metals[12] = {
 #ifdef HAS_CARBON
-        ionization_variables.get_mean_intensity(ION_C_p1),
-        ionization_variables.get_mean_intensity(ION_C_p2),
+        jfac * ionization_variables.get_mean_intensity(ION_C_p1),
+        jfac * ionization_variables.get_mean_intensity(ION_C_p2),
 #else
         0., 0.,
 #endif
 #ifdef HAS_NITROGEN
-        ionization_variables.get_mean_intensity(ION_N_n),
-        ionization_variables.get_mean_intensity(ION_N_p1),
-        ionization_variables.get_mean_intensity(ION_N_p2),
+        jfac * ionization_variables.get_mean_intensity(ION_N_n),
+        jfac * ionization_variables.get_mean_intensity(ION_N_p1),
+        jfac * ionization_variables.get_mean_intensity(ION_N_p2),
 #else
         0., 0.,
         0.,
 #endif
 #ifdef HAS_OXYGEN
-        ionization_variables.get_mean_intensity(ION_O_n),
-        ionization_variables.get_mean_intensity(ION_O_p1),
+        jfac * ionization_variables.get_mean_intensity(ION_O_n),
+        jfac * ionization_variables.get_mean_intensity(ION_O_p1),
 #else
         0., 0.,
 #endif
 #ifdef HAS_NEON
-        ionization_variables.get_mean_intensity(ION_Ne_n),
-        ionization_variables.get_mean_intensity(ION_Ne_p1),
+        jfac * ionization_variables.get_mean_intensity(ION_Ne_n),
+        jfac * ionization_variables.get_mean_intensity(ION_Ne_p1),
 #else
         0., 0.,
 #endif
 #ifdef HAS_SULPHUR
-        ionization_variables.get_mean_intensity(ION_S_p1),
-        ionization_variables.get_mean_intensity(ION_S_p2),
-        ionization_variables.get_mean_intensity(ION_S_p3)
+        jfac * ionization_variables.get_mean_intensity(ION_S_p1),
+        jfac * ionization_variables.get_mean_intensity(ION_S_p2),
+        jfac * ionization_variables.get_mean_intensity(ION_S_p3)
 #else
         0., 0.,
         0.
